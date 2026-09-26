@@ -135,7 +135,7 @@ Cơ chế ballooning bộ nhớ cho phép máy chủ thu hồi bộ nhớ từ c
 
 ```
 ┌─────────────────────────────────────┐
-│         Virtual Machine             │
+│         Máy ảo                      │
 │                                     │
 │  ┌────────────────────────────┐     │
 │  │   Balloon Driver (virtio)  │     │
@@ -143,10 +143,10 @@ Cơ chế ballooning bộ nhớ cho phép máy chủ thu hồi bộ nhớ từ c
 │  └────────────────────────────┘     │
 │           │                         │
 └───────────┼─────────────────────────┘
-            │ Balloon Control
+            │ Điều khiển Balloon
 ┌───────────▼─────────────────────────┐
-│         Host System                 │
-│   Memory reclaimed/allocated        │
+│         Hệ thống chủ                │
+│   Bộ nhớ đã được thu hồi/cấp phát   │
 └─────────────────────────────────────┘
 ```
 
