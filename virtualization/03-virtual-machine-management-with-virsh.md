@@ -21,17 +21,17 @@ Virsh là một công cụ dòng lệnh giao tiếp với tiến trình nền li
 
 ### Kiến trúc Libvirt
 ```
-┌──────────────────────────────────────┐
-│         virsh (CLI Tool)             │
-├──────────────────────────────────────┤
-│      libvirt API (libvirt-client)    │
-├──────────────────────────────────────┤
-│    libvirtd (Virtualization Daemon)  │
-├──────────────────────────────────────┤
-│  Hypervisor Drivers (KVM, QEMU, Xen) │
-├──────────────────────────────────────┤
-│          Physical Hardware           │
-└──────────────────────────────────────┘
+┌───────────────────────────────────────────────┐
+│          virsh (Công cụ dòng lệnh)            │
+├───────────────────────────────────────────────┤
+│         libvirt API (libvirt-client)          │
+├───────────────────────────────────────────────┤
+│       libvirtd (Tiến trình nền ảo hóa)        │
+├───────────────────────────────────────────────┤
+│  Trình điều khiển Hypervisor (KVM, QEMU, Xen) │
+├───────────────────────────────────────────────┤
+│               Phần cứng vật lý                │
+└───────────────────────────────────────────────┘
 ```
 
 ### URI kết nối
@@ -95,7 +95,7 @@ virsh list --all --uuid
 ```
  Id   Name        State
 ----------------------------
- 1    my-vn    running
+ 1    my-vn       running
  2    centos-vm   running
  -    debian-vm   shut off
 ```
