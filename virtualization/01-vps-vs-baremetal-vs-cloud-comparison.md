@@ -232,9 +232,9 @@ done
         - Mua sắm máy chủ mới
         - Thiết lập và cấu hình thủ công
 4. Tài nguyên cố định
-* Khó hạ cấp
-* Trả phí cho dung lượng không sử dụng
-* Lãng phí tài nguyên khi nhu cầu thấp
+    * Khó hạ cấp
+    * Trả phí cho dung lượng không sử dụng
+    * Lãng phí tài nguyên khi nhu cầu thấp
 
 ### Các trường hợp sử dụng lý tưởng cho Bare Metal
 **Tính toán hiệu năng cao:**  
