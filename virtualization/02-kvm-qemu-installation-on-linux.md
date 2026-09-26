@@ -38,19 +38,19 @@ QEMU cung cấp các công cụ ở không gian người dùng, trong khi KVM đ
 ### Tổng quan về kiến trúc
 ```
 ┌─────────────────────────────────────────┐
-│         Virtual Machine (Guest OS)      │
+│       Máy ảo (Hệ điều hành khách)       │
 ├─────────────────────────────────────────┤
-│  Virtual CPU │ Virtual RAM │ Virtual I/O│
+│        CPU ảo │ RAM ảo │ I/O ảo         │
 ├─────────────────────────────────────────┤
-│             QEMU Process                │
-│    (Device Emulation & Management)      │
+│            Tiến trình QEMU              │
+│      (Mô phỏng & Quản lý Thiết bị)      │
 ├─────────────────────────────────────────┤
-│         KVM Kernel Module               │
-│       (Hardware Virtualization)         │
+│            Mô-đun nhân KVM              │
+│           (Ảo hóa phần cứng)            │
 ├─────────────────────────────────────────┤
-│            Linux Kernel                 │
+│              Nhân Linux                 │
 ├─────────────────────────────────────────┤
-│       Physical Hardware (CPU/RAM/I/O)   │
+│      Phần cứng vật lý (CPU/RAM/I/O)     │
 └─────────────────────────────────────────┘
 ```
 

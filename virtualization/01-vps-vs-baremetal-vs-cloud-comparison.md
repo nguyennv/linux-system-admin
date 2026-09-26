@@ -295,7 +295,7 @@ aws autoscaling create-auto-scaling-group \
 
 2. Phân bố địa lý:
 
-```
+```console
 # Triển khai trên nhiều khu vực
 aws ec2 describe-regions --output table
 # Chọn các khu vực dựa trên khoảng cách đến người dùng
