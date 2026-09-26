@@ -125,7 +125,7 @@ modinfo kvm_intel  # Cho Intel
 modinfo kvm_amd    # Cho AMD
 ```
 
-## Cài đặt trên rocky/Debian
+## Cài đặt trên Ubuntu/Debian
 ### Bước 1: Cập nhật hệ thống
 ```console
 # Cập nhật danh sách gói
