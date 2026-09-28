@@ -78,11 +78,13 @@ NUMA (Non-Uniform Memory Access) có nghĩa là thời gian truy cập bộ nh�
 └────────────────────────────────────────┘
 ```
 
-**Truy cập bộ nhớ cục bộ và từ xa:**  
+**Truy cập bộ nhớ cục bộ và từ xa:**
+
 * Cục bộ: CPU truy cập bộ nhớ trên cùng một nút NUMA (nhanh)
 * Từ xa: CPU truy cập bộ nhớ trên một nút NUMA khác (chậm hơn, độ trễ gấp khoảng 2 lần)
 
 ### Kiểm tra cấu hình NUMA
+
 ```console
 # Cài đặt numactl
 apt install numactl  # Debian/Ubuntu
@@ -144,17 +146,17 @@ watch -n 1 'numastat -c qemu-system-x86'
     * VM có 4 vCPU → Gán vào các CPU 0, 1, 2, 3
     * Hiệu năng tối ưu, tài nguyên độc quyền
 2. Gán CPU chia sẻ (Shared CPU Assignment):
-  * Nhiều VM cùng chia sẻ các CPU vật lý
-  * Phù hợp cho các tác vụ không yêu cầu khắt khe về hiệu năng
-  * Mật độ VM cao hơn, chi phí thấp hơn
+    * Nhiều VM cùng chia sẻ các CPU vật lý
+    * Phù hợp cho các tác vụ không yêu cầu khắt khe về hiệu năng
+    * Mật độ VM cao hơn, chi phí thấp hơn
 3. Gán cố định theo cấu trúc NUMA (NUMA-Aware Pinning):
-  * Gán VM nằm trọn vẹn trong một node NUMA duy nhất
-  * Tránh việc truy cập bộ nhớ giữa các node (cross-node)
-  * Yếu tố then chốt đối với hiệu năng
+    * Gán VM nằm trọn vẹn trong một node NUMA duy nhất
+    * Tránh việc truy cập bộ nhớ giữa các node (cross-node)
+    * Yếu tố then chốt đối với hiệu năng
 4. Lưu ý về Hyper-threading:
-  * Các luồng "anh em" (siblings) chia sẻ tài nguyên của cùng một nhân (core) CPU
-  * CPU 0 và CPU 16 có thể là các luồng "anh em"
-  * Kiểm tra bằng lệnh: cat /sys/devices/system/cpu/cpu0/topology/thread_siblings_list
+    * Các luồng "anh em" (siblings) chia sẻ tài nguyên của cùng một nhân (core) CPU
+    * CPU 0 và CPU 16 có thể là các luồng "anh em"
+    * Kiểm tra bằng lệnh: cat /sys/devices/system/cpu/cpu0/topology/thread_siblings_list
 
 ## Triển khai ghim CPU (CPU Pinning)
 ### Kiểm tra cấu hình CPU của máy ảo
@@ -353,9 +355,9 @@ virsh edit my-vm
 ```
 
 * Điều này đảm bảo:
-  - Tất cả vCPU từ nút NUMA 0
-  - Tất cả bộ nhớ từ nút NUMA 0
-  - Không có truy cập chéo giữa các nút
+    - Tất cả vCPU từ nút NUMA 0
+    - Tất cả bộ nhớ từ nút NUMA 0
+    - Không có truy cập chéo giữa các nút
 
 ### Cấu trúc tô-pô NUMA nhiều node
 Tạo cấu trúc tô-pô NUMA cho máy khách khớp với máy chủ:
@@ -430,9 +432,9 @@ virsh edit my-vm
 ```
 
 * libvirt sẽ:
-  - Phân tích cấu trúc tô-pô NUMA của máy chủ (host)
-  - Tìm nút có đủ tài nguyên
-  - Tự động gán (pin) máy ảo vào nút đó
+    - Phân tích cấu trúc tô-pô NUMA của máy chủ (host)
+    - Tìm nút có đủ tài nguyên
+    - Tự động gán (pin) máy ảo vào nút đó
 
 Xem kết quả tự động sắp xếp
 
@@ -538,6 +540,7 @@ virsh edit my-vm
 
 ## Tối ưu hóa hiệu năng
 ### Cấu hình điều tiết CPU
+
 ```console
 # Thiết lập chế độ điều tiết CPU sang hiệu năng cao
 echo performance | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
@@ -563,6 +566,7 @@ systemctl start cpu-performance
 ```
 
 ### Vô hiệu hóa tính năng tiết kiệm điện của CPU
+
 ```console
 # Vô hiệu hóa C-state để duy trì độ trễ ổn định.
 # Thêm vào các tham số kernel
@@ -647,6 +651,7 @@ cat /proc/sys/kernel/numa_balancing
 
 ## Giám sát và Xác minh
 ### Xác minh việc ghim CPU
+
 ```console
 # Kiểm tra độ gắn kết vCPU
 virsh vcpupin my-vm
@@ -667,6 +672,7 @@ ps -mo pid,tid,comm,psr -p <qemu-pid>
 PSR = Số hiệu bộ xử lý (CPU nào)
 
 ### Theo dõi số liệu thống kê NUMA
+
 ```console
 # Số liệu thống kê NUMA của máy ảo
 virsh numastat my-vm
@@ -685,6 +691,7 @@ numastat | grep numa_miss
 ```
 
 ### Giám sát hiệu năng CPU
+
 ```console
 # Cài đặt perf
 apt install linux-tools-generic  # Debian/Ubuntu
@@ -704,6 +711,7 @@ perf top -p <qemu-pid>
 ```
 
 ### Kiểm thử độ trễ
+
 ```console
 # Bên trong VM: Kiểm tra độ trễ bằng cyclictest
 apt install rt-tests  # Debian/Ubuntu
@@ -718,6 +726,7 @@ cyclictest -t4 -p80 -n -i1000 -l10000
 
 ## Khắc phục sự cố
 ### Vấn đề: Hiệu suất kém dù đã ghim
+
 ```console
 # Kiểm tra xem các CPU có thực sự bị cô lập hay không.
 cat /sys/devices/system/cpu/isolated
@@ -740,6 +749,7 @@ top -d 1
     4. Sử dụng huge pages
 
 ### Vấn đề: Tỷ lệ trượt NUMA cao
+
 ```console
 # Kiểm tra số liệu thống kê NUMA
 numastat -c qemu-system-x86 | grep numa_miss
@@ -765,6 +775,7 @@ echo 0 > /proc/sys/kernel/numa_balancing
 ```
 
 ### Vấn đề: Tính năng ghim CPU (CPU Pinning) không hoạt động
+
 ```console
 # Xác minh rằng tính năng ghim đã được thiết lập.
 virsh vcpupin my-vm
@@ -810,6 +821,7 @@ Giải pháp 3: Đảm bảo cấu trúc liên kết CPU giống hệt nhau trê
 
 ## Các ví dụ về cấu hình trong thực tế
 ### Máy chủ cơ sở dữ liệu hiệu năng cao
+
 ```xml
 <domain type='kvm'>
   <name>db-server</name>
@@ -844,6 +856,7 @@ Giải pháp 3: Đảm bảo cấu trúc liên kết CPU giống hệt nhau trê
 ```
 
 ### Máy chủ ứng dụng thời gian thực
+
 ```xml
 <domain type='kvm'>
   <name>rt-app</name>
@@ -873,6 +886,7 @@ Giải pháp 3: Đảm bảo cấu trúc liên kết CPU giống hệt nhau trê
 ```
 
 ### Máy ảo cỡ lớn đa NUMA
+
 ```xml
 <domain type='kvm'>
   <name>large-vm</name>
@@ -922,8 +936,8 @@ lstopo
     * Ưu tiên đặt các máy ảo trong cùng một nút NUMA
     * Nếu cần sử dụng nhiều nút, hãy căn chỉnh theo cấu trúc tô-pô của máy chủ vật lý
 3. Dành riêng CPU cho máy chủ
-  * Đừng gán toàn bộ CPU cho các máy ảo.
-  * Hãy dành lại 1-2 CPU cho các tiến trình của máy chủ vật lý (host).
+    * Đừng gán toàn bộ CPU cho các máy ảo.
+    * Hãy dành lại 1-2 CPU cho các tiến trình của máy chủ vật lý (host).
 4. Chiến lược ghim tài liệu: Tạo bản đồ phân bổ
 
 ```
@@ -935,6 +949,7 @@ lstopo
 ```
 
 ### Danh mục kiểm tra tối ưu hóa hiệu năng
+
 ```console
 # 1. Bật huge pages
 echo 8192 > /proc/sys/vm/nr_hugepages
@@ -964,7 +979,8 @@ virsh edit vm # <cache mode='passthrough'/>
 ## Kết luận
 CPU pinning và cấu hình NUMA là những kỹ thuật mạnh mẽ giúp tối ưu hóa hiệu năng máy ảo trong môi trường KVM/QEMU. Bằng cách đảm bảo thiết lập CPU affinity (gắn kết CPU) và tính cục bộ của bộ nhớ (memory locality) một cách hợp lý, cũng như giảm thiểu việc truy cập chéo giữa các nút NUMA, bạn có thể đạt được mức hiệu năng tiệm cận với máy chủ vật lý (bare-metal).
 
-Các điểm chính:  
+Các điểm chính:
+
 * Luôn phân tích cấu trúc liên kết máy chủ trước khi cấu hình máy ảo
 * Ưu tiên bố trí một nút NUMA duy nhất để đạt hiệu suất tốt nhất
 * Sử dụng ghim CPU để có hiệu suất ổn định và dễ dự đoán
@@ -973,7 +989,8 @@ Các điểm chính:
 * Cách ly CPU cho các ứng dụng nhạy cảm với độ trễ
 * Ghi lại các chiến lược phân bổ CPU để bảo trì
 
-Các tối ưu hóa này đặc biệt quan trọng đối với:  
+Các tối ưu hóa này đặc biệt quan trọng đối với:
+
 * Các cơ sở dữ liệu hiệu năng cao
 * Các ứng dụng thời gian thực
 * Các khối lượng công việc HPC (Tính toán hiệu năng cao)

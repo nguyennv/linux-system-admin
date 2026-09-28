@@ -120,7 +120,8 @@ ls -la /var/lib/libvirt/images/
 echo "nfs-server:/exports/vms /var/lib/libvirt/images nfs defaults 0 0" >> /etc/fstab
 ```
 
-**Tùy chọn 2: Di trú lưu trữ**  
+**Tùy chọn 2: Di trú lưu trữ**
+
 * Sao chép các ảnh đĩa trong quá trình di trú
 * Yêu cầu băng thông đủ lớn
 * Mất nhiều thời gian hơn so với di trú sử dụng bộ lưu trữ chia sẻ
@@ -399,7 +400,8 @@ virsh migrate --live --p2p --tunnelled my-vm \
   qemu+ssh://destination-host/system
 ```
 
-Ưu điểm:  
+**Ưu điểm:**
+
 - Cấu trúc mạng đơn giản hơn
 - Chỉ cần kết nối từ nguồn đến đích
 - Tự động chọn URI đích
@@ -516,8 +518,8 @@ virsh migrate-postcopy my-vm
     - Tổng thời gian di trú ngắn hơn
     - Giai đoạn tiền di trú ngắn hơn
 * Nhược điểm:
-  - Sự cố mạng có thể dẫn đến mất máy ảo (VM)
-  - Có thể gặp vấn đề về hiệu năng cho đến khi hoàn tất quá trình chuyển giao
+    - Sự cố mạng có thể dẫn đến mất máy ảo (VM)
+    - Có thể gặp vấn đề về hiệu năng cho đến khi hoàn tất quá trình chuyển giao
 
 ### Di trú với cấu hình bền vững
 ```console
@@ -835,6 +837,7 @@ iotop
 ```
 
 **Giải pháp:**
+
 1. Tăng băng thông di trú dữ liệu: `virsh migrate-setspeed my-vm 1000`
 2. Sử dụng nén nếu có tài nguyên CPU: `virsh migrate --live --compressed my-vm qemu+ssh://dest/system`
 3. Sử dụng mạng di trú chuyên dụng với khung dữ liệu lớn (jumbo frames)
@@ -973,6 +976,7 @@ fi
 
 ### Script di trú cân bằng tải
 Di trú các máy ảo để cân bằng tải giữa các máy chủ vật lý.
+
 ```bash
 #!/bin/bash
 # load-balance.sh

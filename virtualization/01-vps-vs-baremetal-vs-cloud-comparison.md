@@ -240,22 +240,26 @@ done
     * Lãng phí tài nguyên khi nhu cầu thấp
 
 ### Các trường hợp sử dụng lý tưởng cho Bare Metal
-**Tính toán hiệu năng cao:**  
+**Tính toán hiệu năng cao:**
+
 * Tính toán khoa học, mô phỏng
 * Huấn luyện học máy
 * Xử lý dữ liệu lớn
 
-**Cơ sở dữ liệu quy mô lớn:**  
+**Cơ sở dữ liệu quy mô lớn:**
+
 * PostgreSQL với dữ liệu quy mô terabyte (TB)
 * Các bộ bản sao (replica sets) MongoDB
 * Các cụm MySQL xử lý khối lượng giao dịch lớn
 
-**Máy chủ trò chơi:**  
+**Máy chủ trò chơi:**
+
 * Yêu cầu độ trễ thấp
 * Tốc độ cập nhật (tick rate) ổn định
 * Tài nguyên chuyên dụng
 
-**Các khối lượng công việc bắt buộc tuân thủ:**  
+**Các khối lượng công việc bắt buộc tuân thủ:**
+
 * Chăm sóc sức khỏe - Healthcare (HIPAA)
 * Tài chính - Finance (PCI-DSS)
 * Chính phủ - Government (FedRAMP)
@@ -276,11 +280,13 @@ aws ec2 run-instances \
     --key-name my-key
 ```
 
-**Nền tảng như một Dịch vụ (PaaS):**  
+**Nền tảng như một Dịch vụ (PaaS):**
+
 * Heroku, Google App Engine, Azure App Service
 * Quản lý cơ sở hạ tầng được trừu tượng hóa
 
-**Điện toán không máy chủ:**  
+**Điện toán không máy chủ:**
+
 * AWS Lambda, Google Cloud Functions
 * Không cần quản lý máy chủ
 
@@ -371,22 +377,26 @@ aws ce get-cost-and-usage \
     * Ít quyền kiểm soát hơn so với Bare Metal
 
 ### Các trường hợp sử dụng đám mây lý tưởng
-**Các ứng dụng web có khả năng mở rộng:**  
+**Các ứng dụng web có khả năng mở rộng:**
+
 * Các nền tảng thương mại điện tử
 * Các ứng dụng SaaS
 * Các hệ thống quản lý nội dung
 
-**Xử lý và phân tích dữ liệu:**  
+**Xử lý và phân tích dữ liệu:**
+
 * Các luồng dữ liệu lớn (Big data pipelines)
 * Phân tích thời gian thực
 * Các tác vụ ETL
 
-**Phát triển và CI/CD:**  
+**Phát triển và CI/CD:**
+
 * Môi trường kiểm thử tự động
 * Máy chủ build
 * Môi trường staging
 
-**Các ứng dụng toàn cầu:**  
+**Các ứng dụng toàn cầu:**
+
 * Triển khai đa khu vực
 * Phân phối nội dung hỗ trợ bởi CDN
 * Truy cập toàn cầu với độ trễ thấp
@@ -402,19 +412,22 @@ aws ce get-cost-and-usage \
 | Tính nhất quán   | Trung bình (hàng xóm ồn ào) | Xuất sắc                     | Trung bình (được ảo hóa)          |
 
 ### So sánh chi phí
-**Cấu trúc giá VPS:**  
+**Cấu trúc giá VPS:**
+
 * Mức giá VPS phổ biến (theo tháng)
 * 2 vCPU, 4GB RAM, 80GB SSD: 10-25 USD/tháng
 * 4 vCPU, 8GB RAM, 160GB SSD: 20-50 USD/tháng
 * 8 vCPU, 16GB RAM, 320GB SSD: 40-100 USD/tháng
 
-**Cấu trúc giá dịch vụ Bare Metal:**  
+**Cấu trúc giá dịch vụ Bare Metal:**
+
 * Mức giá tham khảo cho máy chủ vật lý (Bare-metal) theo tháng
 * Cấu hình cơ bản: 4C/8T, 32GB RAM, 2TB HDD: $80-150/tháng
 * Cấu hình tầm trung: 8C/16T, 64GB RAM, 2x1TB NVMe: $150-300/tháng
 * Cấu hình cao cấp: 16C/32T, 128GB RAM, 4x2TB NVMe: $300-600/tháng
 
-**Cấu trúc giá dịch vụ đám mây:**  
+**Cấu trúc giá dịch vụ đám mây:**
+
 * AWS EC2 theo nhu cầu (tính phí theo giờ)
 * t3.medium (2 vCPU, 4GB): $0,0416/giờ ($30/tháng)
 * c5.2xlarge (8 vCPU, 16GB): $0,34/giờ ($247/tháng)
@@ -426,7 +439,8 @@ aws ce get-cost-and-usage \
 * Giảm giá lên đến 90% (có thể bị chấm dứt sử dụng)
 
 ### So sánh khả năng mở rộng
-**Mở rộng quy mô VPS:**  
+**Mở rộng quy mô VPS:**
+
 * Mở rộng theo chiều dọc (nâng cấp gói dịch vụ)
 * Thường yêu cầu:
     1. Tắt instance
@@ -436,7 +450,8 @@ aws ce get-cost-and-usage \
 * Thủ công: Triển khai VPS mới
 * Cấu hình cân bằng tải
 
-**Mở rộng quy mô Bare-metal:**  
+**Mở rộng quy mô Bare-metal:**
+
 * Mở rộng theo chiều dọc (Vertical scaling)
     * Yêu cầu nâng cấp phần cứng vật lý
     * Thời gian ngừng hoạt động đáng kể
@@ -461,7 +476,8 @@ aws autoscaling put-scaling-policy \
 ```
 
 ### Quản lý và Bảo trì
-**Quản lý VPS:**  
+**Quản lý VPS:**
+
 * Hệ điều hành và ứng dụng do người dùng tự quản lý
 * Sao lưu tự động (thường được bao gồm)
 * Bảng điều khiển (đôi khi có)
@@ -475,7 +491,8 @@ systemctl status
 htop
 ```
 
-**Quản lý máy chủ vật lý:**  
+**Quản lý máy chủ vật lý:**
+
 * Chịu trách nhiệm toàn diện về:
     - Giám sát phần cứng
     - Quản lý hệ điều hành
@@ -491,7 +508,8 @@ ipmitool sel list
 rsync -avz /data/ backup-server:/backups/
 ```
 
-**Quản lý đám mây:**  
+**Quản lý đám mây:**
+
 * Quản lý dựa trên API
 * Các tùy chọn tự động hóa đa dạng
 * Tích hợp dịch vụ được quản lý
@@ -513,7 +531,8 @@ aws backup create-backup-plan --backup-plan file://plan.json
 4. Yêu cầu triển khai nhanh (tính bằng phút)
 5. Phục vụ học tập và thử nghiệm (thử nghiệm rủi ro thấp)
 
-**Ví dụ về tình huống:**  
+**Ví dụ về tình huống:**
+
 * Website doanh nghiệp nhỏ
     - 1.000–10.000 lượt truy cập mỗi ngày
     - WordPress hoặc CMS tùy chỉnh
@@ -530,7 +549,8 @@ aws backup create-backup-plan --backup-plan file://plan.json
 4. Cần tùy chỉnh phần cứng (CPU, GPU cụ thể)
 5. Tính dự báo được về chi phí là yếu tố quan trọng (chi phí cố định hàng tháng)
 
-**Ví dụ về tình huống:**  
+**Ví dụ về tình huống:**
+
 * Máy chủ cơ sở dữ liệu có lưu lượng truy cập cao
     - PostgreSQL với cơ sở dữ liệu dung lượng 500GB
     - Hơn 10.000 kết nối đồng thời
@@ -547,7 +567,8 @@ aws backup create-backup-plan --backup-plan file://plan.json
 4. Mong muốn sử dụng các dịch vụ được quản lý (RDS, S3, v.v.)
 5. Chú trọng vào DevOps/tự động hóa (Cơ sở hạ tầng dưới dạng mã - IaC)
 
-**Ví dụ về tình huống:**  
+**Ví dụ về tình huống:**
+
 * Nền tảng thương mại điện tử
     - Lưu lượng truy cập biến động (cao điểm theo mùa)
     - Cơ sở khách hàng toàn cầu
@@ -808,7 +829,8 @@ PasswordAuthentication no
 ```
 
 ### Bảo mật Bare-metal
-**Tất cả các biện pháp bảo mật VPS, cùng với:**  
+**Tất cả các biện pháp bảo mật VPS, cùng với:**
+
 1. Bảo mật phần cứng: Mật khẩu BIOS; Secure Boot
 2. Kiểm soát truy cập vật lý: Bảo mật trung tâm dữ liệu
 3. Bảo mật IPMI: Mạng quản lý tách biệt; Mật khẩu IPMI mạnh.

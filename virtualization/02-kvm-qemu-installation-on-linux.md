@@ -58,17 +58,20 @@ QEMU cung cấp các công cụ ở không gian người dùng, trong khi KVM đ
 ### Yêu cầu về CPU
 CPU của bạn phải hỗ trợ các phần mở rộng ảo hóa phần cứng:
 
-**Đối với bộ xử lý Intel:**  
+**Đối với bộ xử lý Intel:**
+
 * Công nghệ ảo hóa Intel VT-x (Intel Virtualization Technology)
 * Có sẵn trong hầu hết các CPU Intel từ năm 2006 trở đi
 * Tên model: Core i3/i5/i7/i9, Xeon
 
-**Đối với bộ vi xử lý AMD:**  
+**Đối với bộ vi xử lý AMD:**
+
 * AMD-V (AMD Virtualization)
 * Có sẵn trên hầu hết các CPU AMD từ năm 2006 trở đi
 * Tên dòng sản phẩm: Ryzen, EPYC, Opteron (có hậu tố "V")
 
 ### Kiểm tra hỗ trợ ảo hóa của CPU
+
 ```console
 # Kiểm tra xem CPU có hỗ trợ ảo hóa hay không.
 egrep -c '(vmx|svm)' /proc/cpuinfo
@@ -92,20 +95,23 @@ Nếu lệnh trả về giá trị 0, bạn cần:
 ### Bật tính năng ảo hóa trong BIOS/UEFI
 Nếu tính năng ảo hóa bị vô hiệu hóa: Khởi động lại và truy cập BIOS/UEFI (thường là phím DEL, F2, F10 hoặc F12 trong quá trình khởi động).
 
-Hãy tìm các cài đặt sau:  
+Hãy tìm các cài đặt sau:
+
 * Intel: "Intel Virtualization Technology", "Intel VT-x", "Virtualization Extensions"
 * AMD: "AMD-V", "SVM Mode", "Secure Virtual Machine"
 
 Bật cài đặt và lưu các thay đổi.
 
 ### Yêu cầu hệ thống
-**Yêu cầu tối thiểu:**  
+**Yêu cầu tối thiểu:**
+
 * CPU: Bộ xử lý 64-bit có hỗ trợ ảo hóa
 * RAM: 4GB (hệ điều hành máy chủ cần tối thiểu 2GB, phần còn lại dành cho các máy ảo)
 * Lưu trữ: 20GB dung lượng trống
 * Kernel Linux: 2.6.20 hoặc mới hơn
 
-**Khuyến nghị cho môi trường sản xuất:**  
+**Khuyến nghị cho môi trường sản xuất:**
+
 * CPU: Bộ xử lý đa nhân (từ 4 nhân trở lên)
 * RAM: 16GB trở lên (cho phép chạy nhiều máy ảo)
 * Lưu trữ: SSD với dung lượng trống từ 100GB trở lên
@@ -147,7 +153,8 @@ sudo apt install -y virt-manager virt-viewer virtinst
 sudo apt install -y libguestfs-tools libosinfo-bin
 ```
 
-Giải thích về gói dịch vụ:  
+Giải thích về gói dịch vụ:
+
 * `qemu-kvm`: Các tệp thực thi QEMU có hỗ trợ KVM
 * `libvirt-daemon-system`: Tiến trình nền Libvirt để quản lý máy ảo (VM)
 * `libvirt-clients`: Các công cụ dòng lệnh (virsh)
@@ -159,6 +166,7 @@ Giải thích về gói dịch vụ:
 * `libosinfo-bin`: Cơ sở dữ liệu thông tin hệ điều hành
 
 ### Bước 3: Xác minh việc cài đặt
+
 ```console
 # Kiểm tra xem các mô-đun KVM đã được nạp chưa
 lsmod | grep kvm
@@ -179,6 +187,7 @@ sudo systemctl enable libvirtd
 ```
 
 ### Bước 4: Thêm người dùng vào các nhóm bắt buộc
+
 ```console
 # Thêm người dùng của bạn vào các nhóm libvirt và kvm.
 sudo usermod -aG libvirt $USER
@@ -192,6 +201,7 @@ groups $USER
 ```
 
 ### Bước 5: Xác minh khả năng ảo hóa
+
 ```console
 # Kiểm tra khả năng ảo hóa
 virt-host-validate
@@ -207,12 +217,14 @@ virt-host-validate
 
 ## Cài đặt trên CentOS/RHEL/Rocky Linux
 ### Bước 1: Cập nhật hệ thống
+
 ```console
 # Cập nhật các gói hệ thống
 sudo dnf update -y
 ```
 
 ### Bước 2: Cài đặt KVM và các gói liên quan
+
 ```console
 # Cài đặt nhóm ảo hóa (khuyên dùng)
 sudo dnf groupinstall "Virtualization Host" -y
@@ -225,6 +237,7 @@ sudo dnf install -y libguestfs-tools libvirt-client
 ```
 
 ### Bước 3: Khởi động và kích hoạt dịch vụ Libvirt
+
 ```console
 # Khởi động dịch vụ libvirtd
 sudo systemctl start libvirtd
@@ -237,6 +250,7 @@ sudo systemctl status libvirtd
 ```
 
 ### Bước 4: Cấu hình tường lửa
+
 ```console
 # Cho phép các dịch vụ libvirt đi qua tường lửa
 sudo firewall-cmd --permanent --add-service=libvirt
@@ -248,6 +262,7 @@ sudo firewall-cmd --reload
 ```
 
 ### Bước 5: Thêm người dùng vào các nhóm
+
 ```console
 # Thêm người dùng vào nhóm libvirt
 sudo usermod -aG libvirt $USER
@@ -259,6 +274,7 @@ groups $USER
 ```
 
 ### Bước 6: Xác minh việc cài đặt
+
 ```console
 # Kiểm tra mô-đun KVM
 lsmod | grep kvm
@@ -269,12 +285,14 @@ virt-host-validate
 
 ## Cài đặt trên Arch Linux
 ### Bước 1: Cập nhật hệ thống
+
 ```console
 # Cập nhật hệ thống
 sudo pacman -Syu
 ```
 
 ### Bước 2: Cài đặt các gói KVM
+
 ```console
 # Cài đặt KVM và QEMU
 sudo pacman -S qemu-full virt-manager virt-viewer libvirt bridge-utils dnsmasq
@@ -284,6 +302,7 @@ sudo pacman -S ebtables iptables-nft
 ```
 
 ### Bước 3: Kích hoạt dịch vụ Libvirt
+
 ```console
 # Khởi động và kích hoạt libvirtd
 sudo systemctl enable libvirtd.service
@@ -295,6 +314,7 @@ sudo virsh net-start default
 ```
 
 ### Bước 4: Cấu hình quyền người dùng
+
 ```console
 # Thêm người dùng vào nhóm libvirt
 sudo usermod -aG libvirt $USER
@@ -308,6 +328,7 @@ sudo nvim /etc/libvirt/libvirtd.conf
 ```
 
 ### Bước 5: Khởi động lại Libvirt
+
 ```console
 # Khởi động lại dịch vụ libvirt
 sudo systemctl restart libvirtd.service
@@ -318,6 +339,7 @@ sudo systemctl status libvirtd.service
 
 ## Cấu hình sau khi cài đặt
 ### Cấu hình mạng mặc định
+
 ```console
 # Kiểm tra trạng thái mạng mặc định
 sudo virsh net-list --all
@@ -332,7 +354,8 @@ sudo virsh net-autostart default
 sudo virsh net-dumpxml default
 ```
 
-**Cấu hình XML mạng mặc định:**  
+**Cấu hình XML mạng mặc định:**
+
 ```xml
 <network>
   <name>default</name>
@@ -347,6 +370,7 @@ sudo virsh net-dumpxml default
 ```
 
 ### Cấu hình nhóm lưu trữ
+
 ```console
 # Liệt kê các nhóm lưu trữ
 sudo virsh pool-list --all
@@ -367,6 +391,7 @@ sudo virsh pool-info mypool
 ```
 
 ### Tối ưu hóa các thiết lập hiệu năng KVM
+
 ```console
 # Bật ảo hóa lồng nhau (Intel)
 sudo modprobe -r kvm_intel
@@ -385,6 +410,7 @@ cat /sys/module/kvm_amd/parameters/nested
 ```
 
 ### Cấu hình điều tiết CPU để tối ưu hiệu năng
+
 ```console
 # Kiểm tra cơ chế điều tiết CPU hiện tại
 cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
@@ -410,6 +436,7 @@ sudo systemctl start cpu-performance.service
 ```
 
 ### Bật Huge Pages để cải thiện hiệu năng bộ nhớ
+
 ```console
 # Kiểm tra cấu hình huge pages hiện tại
 cat /proc/meminfo | grep Huge
@@ -429,6 +456,7 @@ cat /proc/meminfo | grep HugePages_Total
 ```
 
 ### Định cấu hình IOMMU để truyền qua PCI
+
 ```console
 # Bật IOMMU trong GRUB (Intel)
 sudo vim /etc/default/grub
@@ -475,7 +503,8 @@ sudo virt-install \
   --cdrom /var/lib/libvirt/images/Rocky-10.2-x86_64-minimal.iso
 ```
 
-Giải thích các tham số:  
+Giải thích các tham số:
+
 * `--name`: Tên máy ảo (VM)
 * `--ram`: Dung lượng bộ nhớ (tính bằng MB)
 * `--vcpus`: Số lượng CPU ảo
@@ -492,7 +521,8 @@ Khởi chạy virt-manager
 virt-manager
 ```
 
-**Các bước thực hiện trên giao diện đồ họa (GUI):**  
+**Các bước thực hiện trên giao diện đồ họa (GUI):**
+
 1. Nhấn vào "Create a new virtual machine" (Tạo máy ảo mới)
 2. Chọn "Local install media (ISO image or CDROM)" (Phương tiện cài đặt cục bộ - tệp ISO hoặc CDROM)
 3. Duyệt và chọn tệp ISO của bạn
@@ -502,6 +532,7 @@ virt-manager
 7. Máy ảo sẽ tự động khởi động
 
 ### Xác minh việc tạo máy ảo
+
 ```console
 # Liệt kê tất cả các máy ảo
 sudo virsh list --all
@@ -531,13 +562,15 @@ sudo virt-install \
   --cdrom /var/lib/libvirt/images/Rocky-10.2-x86_64-minimal.iso
 ```
 
-Các thay đổi chính:
+**Các thay đổi chính:**
+
 * bus=virtio: Sử dụng virtio cho ổ đĩa (hiệu năng tốt hơn)
 * model=virtio: Sử dụng virtio cho mạng (hiệu năng tốt hơn)
 * graphics spice: Hiệu năng đồ họa tốt hơn
 * video qxl: Trình điều khiển video QXL
 
 ### Cấu hình ghim CPU
+
 ```console
 # Kiểm tra cấu trúc liên kết CPU của máy chủ
 lscpu
@@ -612,6 +645,7 @@ cat /sys/kernel/mm/ksm/pages_shared
 
 ## Cấu hình mạng
 ### Tạo mạng cầu nối
+
 ```console
 # Cài đặt các tiện ích bridge (nếu chưa được cài đặt)
 sudo apt install bridge-utils
@@ -638,6 +672,7 @@ brctl show
 ```
 
 ### Tạo mạng cầu nối cho Libvirt
+
 ```console
 # Tạo XML cho mạng cầu nối
 cat << 'EOF' > bridge-net.xml
@@ -658,6 +693,7 @@ sudo virsh net-list --all
 ```
 
 ### Tạo mạng cô lập
+
 ```console
 # Tạo mạng cô lập cho các máy ảo
 cat << 'EOF' > isolated-net.xml
@@ -679,6 +715,7 @@ sudo virsh net-autostart isolated
 
 ## Tinh chỉnh hiệu năng
 ### Tối ưu hóa I/O đĩa
+
 Sử dụng virtio-scsi để có hiệu năng tốt hơn.
 
 ```console
@@ -704,6 +741,7 @@ Thay đổi cấu hình ổ đĩa:
 ```
 
 ### Tối ưu hóa bộ lập lịch I/O
+
 ```console
 # Kiểm tra bộ lập lịch hiện tại
 cat /sys/block/sda/queue/scheduler
@@ -748,6 +786,7 @@ sudo ethtool -L eth0 combined 4
 
 ## Giám sát và Quản lý
 ### Theo dõi hiệu năng máy ảo
+
 ```console
 # Mức sử dụng tài nguyên máy ảo
 sudo virt-top
@@ -769,6 +808,7 @@ sudo virsh domifstat my-vn vnet0
 ```
 
 ### Quản lý vòng đời máy ảo
+
 ```console
 # Khởi động máy ảo
 sudo virsh start my-vn
@@ -796,6 +836,7 @@ sudo virsh autostart --disable my-vn
 ```
 
 ### Quản lý bản chụp nhanh
+
 ```console
 # Tạo bản chụp nhanh
 sudo virsh snapshot-create-as my-vn \
@@ -814,6 +855,7 @@ sudo virsh snapshot-delete my-vn snapshot1
 
 ## Sao lưu và nhân bản
 ### Nhân bản máy ảo
+
 ```console
 # Nhân bản máy ảo (khi đã tắt nguồn)
 sudo virt-clone \
@@ -826,6 +868,7 @@ sudo virsh list --all
 ```
 
 ### Sao lưu đĩa máy ảo
+
 ```console
 # Sao lưu tệp ảnh đĩa máy ảo
 sudo cp /var/lib/libvirt/images/my-vn.qcow2 \
@@ -841,6 +884,7 @@ sudo virsh dumpxml my-vn > /backup/my-vn.xml
 ```
 
 ### Xuất và nhập máy ảo
+
 ```console
 # Xuất máy ảo
 sudo virsh dumpxml my-vn > my-vn.xml
@@ -956,6 +1000,7 @@ virt-viewer vm-name
 
 ## Các biện pháp bảo mật tốt nhất
 ### Bảo mật quyền truy cập Libvirt
+
 ```console
 # Cấu hình xác thực libvirt
 sudo vim /etc/libvirt/libvirtd.conf
@@ -972,6 +1017,7 @@ sudo systemctl restart libvirtd
 ```
 
 ### Bật SELinux/AppArmor cho các máy ảo
+
 ```console
 # Ubuntu/Debian (AppArmor)
 sudo apt install apparmor-utils
@@ -986,6 +1032,7 @@ ls -Z /var/lib/libvirt/images/
 ```
 
 ### Cô lập mạng máy ảo
+
 ```console
 # Tạo mạng cô lập không sử dụng NAT hoặc chuyển tiếp.
 cat << 'EOF' > secure-net.xml
@@ -1003,7 +1050,8 @@ sudo virsh net-start secure
 ## Kết luận
 Giờ đây, bạn đã cài đặt và cấu hình thành công một môi trường ảo hóa KVM/QEMU hoàn chỉnh trên hệ thống Linux của mình. Bộ công cụ ảo hóa mã nguồn mở mạnh mẽ này mang lại các tính năng cấp doanh nghiệp cùng hiệu năng gần như tương đương với hệ thống chạy trực tiếp trên phần cứng (native), khiến nó trở thành lựa chọn phù hợp cho mọi nhu cầu, từ môi trường phát triển đến các hệ thống vận hành thực tế (production).
 
-Những điểm chính cần lưu ý từ hướng dẫn này:  
+Những điểm chính cần lưu ý từ hướng dẫn này:
+
 * KVM tận dụng công nghệ ảo hóa phần cứng để đạt hiệu suất tối ưu
 * Việc cấu hình đúng CPU, bộ nhớ và I/O đóng vai trò then chốt đối với hiệu suất
 * Các trình điều khiển Virtio mang lại hiệu suất tốt nhất nhờ cơ chế ảo hóa bán phần (paravirtualization)

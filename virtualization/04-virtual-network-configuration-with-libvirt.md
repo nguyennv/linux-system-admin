@@ -41,22 +41,26 @@ Sau khi hoàn thành hướng dẫn này, bạn sẽ nắm vững kỹ năng c�
 ```
 
 ### Các thành phần mạng
-**Giao diện mạng ảo (vnet):**  
+**Giao diện mạng ảo (vnet):**
+
 * Thiết bị TAP được kết nối với máy ảo khách
 * Hiển thị như một card mạng (NIC) thông thường bên trong máy ảo khách
 * Được libvirt tự động quản lý
 
-**Cầu nối ảo (virbr):**  
+**Cầu nối ảo (virbr):**
+
 * Bộ chuyển mạch phần mềm kết nối các máy ảo
 * Kết nối các thiết bị TAP với nhau
 * Cung cấp khả năng kết nối ở Lớp 2 (Layer 2)
 
-**dnsmasq:**  
+**dnsmasq:**
+
 * Cung cấp dịch vụ DHCP
 * Chuyển tiếp và lưu đệm DNS
 * Được quản lý bởi libvirt
 
-**iptables:**  
+**iptables:**
+
 * NAT và các quy tắc chuyển tiếp
 * Tường lửa và lọc dữ liệu
 * Định tuyến giữa các mạng
@@ -65,13 +69,15 @@ Sau khi hoàn thành hướng dẫn này, bạn sẽ nắm vững kỹ năng c�
 ### 1. Chế độ NAT (Mặc định)
 Chế độ NAT (Network Address Translation) cung cấp khả năng kết nối Internet cho các máy ảo (VM) trong khi vẫn giữ chúng tách biệt khỏi mạng bên ngoài.
 
-**Đặc trưng:**  
+**Đặc trưng:**
+
 * Các máy ảo được cấp địa chỉ IP riêng (mặc định là 192.168.122.0/24)
 * Các máy ảo có thể truy cập mạng bên ngoài
 * Mạng bên ngoài không thể truy cập trực tiếp vào các máy ảo
 * Máy chủ đóng vai trò là bộ định tuyến (router) có sử dụng NAT
 
-**Các trường hợp sử dụng:**  
+**Các trường hợp sử dụng:**
+
 * Môi trường phát triển
 * Máy ảo kiểm thử
 * Máy ảo cần kết nối Internet nhưng không cần truy cập từ bên ngoài
@@ -138,7 +144,8 @@ siptables-save | grep virbr1
 ### 2. Chế độ định tuyến
 Chế độ định tuyến (Routed mode) kết nối các máy ảo với mạng vật lý thông qua định tuyến thay vì bắc cầu (bridging), qua đó duy trì các mạng con riêng biệt.
 
-**Đặc trưng**: 
+**Đặc trưng**:
+
 * Các máy ảo sử dụng địa chỉ IP có thể định tuyến
 * Không thực hiện chuyển đổi NAT
 * Yêu cầu cấu hình định tuyến tĩnh trên mạng vật lý
@@ -181,7 +188,8 @@ iptables -A FORWARD -o virbr-route -j ACCEPT
 ### 3. Chế độ Bridge
 Chế độ Bridge kết nối trực tiếp các máy ảo với mạng vật lý, khiến chúng xuất hiện như các máy chủ vật lý trên cùng một mạng.
 
-**Đặc trưng:**  
+**Đặc trưng:**
+
 * Các máy ảo nhận địa chỉ IP từ DHCP của mạng vật lý
 * Kết nối trực tiếp ở lớp 2 (Layer 2)
 * Các máy ảo hiển thị trên mạng vật lý
@@ -286,7 +294,8 @@ virt-install \
 ### 4. Chế độ Cô lập
 Chế độ cô lập (Isolated mode) tạo ra một mạng lưới nơi các máy ảo có thể giao tiếp với nhau nhưng không có kết nối với máy chủ vật lý (host) hoặc các mạng bên ngoài.
 
-**Đặc trưng:**  
+**Đặc trưng:**
+
 * Cách ly mạng hoàn toàn
 * Các máy ảo chỉ có thể giao tiếp với nhau
 * Không thể truy cập Internet hoặc máy chủ vật lý (host)
@@ -515,6 +524,7 @@ virsh edit ubuntu-vm
 
 ## Tối ưu hóa hiệu năng mạng
 ### Multi-queue virtio-net
+
 ```console
 # Bật tính năng đa hàng đợi trong cấu hình máy ảo
 virsh edit ubuntu-vm
@@ -537,6 +547,7 @@ ethtool -l eth0
 ```
 
 ### Tối ưu hóa vhost-net
+
 ```console
 # Đảm bảo mô-đun vhost-net đã được nạp.
 lsmod | grep vhost
@@ -556,6 +567,7 @@ virsh edit ubuntu-vm
 ```
 
 ### Giảm tải mạng
+
 ```console
 # Cấu hình tính năng giảm tải trong tệp XML của máy ảo
 <interface type='network'>
@@ -572,6 +584,7 @@ ethtool -k eth0 | grep offload
 ```
 
 ### Giới hạn băng thông
+
 ```console
 # Giới hạn băng thông cho giao diện máy ảo
 virsh domiftune ubuntu-vm vnet0 \
@@ -597,6 +610,7 @@ virsh edit ubuntu-vm
 
 ## Cấu hình DNS
 ### Các mục DNS tùy chỉnh
+
 ```console
 # Thêm các mục DNS tùy chỉnh vào mạng
 virsh net-update default add dns-host \
@@ -619,6 +633,7 @@ virsh net-update default add dns-forwarder \
 ```
 
 ### Cấu hình DNS trong XML
+
 ```console
 cat > dns-network.xml << 'EOF'
 <network>
@@ -654,6 +669,7 @@ virsh net-start dns-network
 
 ## Tường lửa và Bảo mật
 ### Các quy tắc tường lửa tùy chỉnh
+
 ```console
 # Thêm các quy tắc tùy chỉnh vào mạng
 cat > secure-network.xml << 'EOF'
@@ -683,6 +699,7 @@ iptables-save > /etc/iptables/rules.v4
 ```
 
 ### Lọc mạng (nwfilter)
+
 ```console
 # Liệt kê các bộ lọc khả dụng
 virsh nwfilter-list
@@ -728,6 +745,7 @@ virsh edit ubuntu-vm
 ```
 
 ### Giới hạn tốc độ và QoS
+
 ```console
 # Tạo mạng hỗ trợ QoS
 cat > qos-network.xml << 'EOF'
@@ -810,6 +828,7 @@ ip addr add 172.16.0.2/30 dev gre1
 
 ## Khắc phục sự cố mạng
 ### Các lệnh chẩn đoán
+
 ```console
 # Liệt kê tất cả các mạng
 virsh net-list --all
@@ -1021,9 +1040,9 @@ virsh net-update default add ip-dhcp-host \
 ```
 
 * Triển khai cách ly mạng:
-	* Sử dụng các mạng cô lập để thử nghiệm
-	* Sử dụng các mạng riêng biệt cho môi trường vận hành thực tế (production)
-	* Thiết lập các quy tắc tường lửa giữa các mạng
+    * Sử dụng các mạng cô lập để thử nghiệm
+    * Sử dụng các mạng riêng biệt cho môi trường vận hành thực tế (production)
+    * Thiết lập các quy tắc tường lửa giữa các mạng
 
 * Ghi lại cấu trúc liên kết mạng:
 
@@ -1053,6 +1072,7 @@ virsh net-autostart unused-network --disable
 Các khả năng về mạng ảo của Libvirt mang lại nền tảng mạnh mẽ và linh hoạt để xây dựng các cấu trúc liên kết mạng phức tạp trong môi trường ảo hóa. Từ các cấu hình NAT đơn giản đến những kịch bản đa máy chủ (multi-host) nâng cao sử dụng VXLAN và SR-IOV, Libvirt giúp trừu tượng hóa sự phức tạp của hệ thống mạng Linux nhưng vẫn đảm bảo khả năng kiểm soát toàn diện khi cần thiết.
 
 Những điểm chính:
+
 * Lựa chọn chế độ mạng phù hợp (NAT, bridge, routed, isolated) dựa trên các yêu cầu cụ thể
 * Tận dụng DHCP tĩnh để đảm bảo việc cấp phát địa chỉ IP có thể dự đoán trước
 * Sử dụng các bộ lọc mạng và iptables để đảm bảo tính bảo mật

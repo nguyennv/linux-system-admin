@@ -56,6 +56,7 @@ virsh uri
 
 ## Các lệnh Virsh cơ bản
 ### Tìm kiếm sự trợ giúp
+
 ```console
 # Trợ giúp chung
 virsh help
@@ -72,6 +73,7 @@ virsh help | grep snapshot
 ```
 
 ### Liệt kê các máy ảo
+
 ```console
 # Liệt kê các máy ảo đang chạy
 virsh list
@@ -101,6 +103,7 @@ virsh list --all --uuid
 ```
 
 ### Thông tin và chi tiết về máy ảo
+
 ```console
 # Hiển thị thông tin máy ảo
 virsh dominfo my-vn
@@ -129,6 +132,7 @@ virsh dumpxml my-vn > my-vn.xml
 
 ## Quản lý vòng đời máy ảo
 ### Khởi động máy ảo
+
 ```console
 # Khởi động máy ảo
 virsh start my-vn
@@ -147,6 +151,7 @@ virsh start my-vn --boot-device cdrom
 ```
 
 ### Dừng các máy ảo
+
 ```console
 # Tắt máy an toàn (tín hiệu ACPI)
 virsh shutdown my-vn
@@ -168,6 +173,7 @@ virsh reset my-vn
 ```
 
 ### Tạm dừng và Tiếp tục
+
 ```console
 # Tạm dừng (tạm ngưng) máy ảo
 virsh suspend my-vn
@@ -186,6 +192,7 @@ virsh save my-vn --xml custom.xml /tmp/my-vn.save
 ```
 
 ### Cấu hình Tự động khởi động
+
 ```console
 # Bật tự động khởi động khi máy chủ khởi động
 virsh autostart my-vn
@@ -198,6 +205,7 @@ virsh dominfo my-vn | grep Autostart
 ```
 
 ### Xóa máy ảo
+
 ```console
 # Hủy định nghĩa VM (xóa cấu hình, giữ lại đĩa)
 virsh undefine my-vn
@@ -220,6 +228,7 @@ virsh undefine my-vn \
 
 ## Tạo và định nghĩa máy ảo
 ### Tạo máy ảo từ XML
+
 ```console
 # Tạo tệp XML cấu hình máy ảo
 cat > my-vn.xml << 'EOF'
@@ -258,6 +267,7 @@ virsh define my-vn.xml
 ```
 
 ### Sử dụng virt-install với virsh
+
 ```console
 # Tạo máy ảo bằng virt-install
 virt-install \
@@ -288,6 +298,7 @@ virsh edit my-vn
 Thao tác này mở tệp XML của máy ảo trong trình soạn thảo mặc định của bạn. Các thay đổi sẽ được kiểm tra tính hợp lệ trước khi lưu.
 
 ### Thay đổi cài đặt máy ảo
+
 ```console
 # Thay đổi mô tả máy ảo
 virsh desc my-vn "Development web server"
@@ -309,6 +320,7 @@ virsh metadata my-vn \
 ```
 
 ### Sửa đổi tài nguyên
+
 ```console
 # Thay đổi bộ nhớ tối đa (yêu cầu khởi động lại máy ảo)
 virsh setmaxmem my-vn 8G --config
@@ -334,6 +346,7 @@ virsh vcpuinfo my-vn
 
 ## Quản lý tài nguyên máy ảo
 ### Quản lý CPU
+
 ```console
 # Ghim vCPU vào CPU vật lý
 virsh vcpupin my-vn 0 0
@@ -356,6 +369,7 @@ virsh cpu-stats my-vn --total
 ```
 
 ### Quản lý bộ nhớ
+
 ```console
 # Thiết lập mục tiêu bong bóng bộ nhớ
 virsh setmem my-vn 2G
@@ -374,6 +388,7 @@ virsh dominfo my-vn | grep memory
 ```
 
 ### Quản lý đĩa
+
 ```console
 # Liệt kê các đĩa VM
 virsh domblklist my-vn
@@ -410,6 +425,7 @@ virsh domblkinfo my-vn vda
 ```
 
 ### Quản lý giao diện mạng
+
 ```console
 # Liệt kê các giao diện mạng của máy ảo
 virsh domiflist my-vn
@@ -440,6 +456,7 @@ virsh domif-setlink my-vn vnet0 down
 
 ## Quản lý nhóm lưu trữ
 ### Liệt kê các nhóm lưu trữ
+
 ```console
 # Liệt kê tất cả các nhóm lưu trữ
 virsh pool-list --all
@@ -455,6 +472,7 @@ virsh pool-list --all --details
 ```
 
 ### Tạo các pool lưu trữ
+
 ```console
 # Tạo pool lưu trữ dựa trên thư mục
 virsh pool-define-as mypool dir \
@@ -477,6 +495,7 @@ virsh pool-autostart mypool
 ```
 
 ### Các thao tác với pool lưu trữ
+
 ```console
 # Hiển thị thông tin hồ bơi
 virsh pool-info mypool
@@ -498,6 +517,7 @@ virsh pool-delete mypool
 ```
 
 ### Quản lý phân vùng lưu trữ
+
 ```console
 # Liệt kê các ổ đĩa trong pool
 virsh vol-list mypool
@@ -535,6 +555,7 @@ virsh vol-download --pool mypool my-vn-disk.qcow2 /backup/image.qcow2
 
 ## Quản lý mạng
 ### Liệt kê các mạng
+
 ```console
 # Liệt kê tất cả các mạng
 virsh net-list --all
@@ -547,6 +568,7 @@ virsh net-list --inactive
 ```
 
 ### Tạo mạng ảo
+
 ```console
 # Tạo mạng NAT
 cat > nat-network.xml << 'EOF'
@@ -601,6 +623,7 @@ virsh net-start bridge-network
 ```
 
 ### Vận hành mạng
+
 ```console
 # Hiển thị thông tin mạng
 virsh net-info default
@@ -631,6 +654,7 @@ virsh net-dhcp-leases default
 ```
 
 ### Quản lý DHCP mạng
+
 ```console
 # Thêm mục DHCP tĩnh
 virsh net-update default add ip-dhcp-host \
@@ -653,6 +677,7 @@ virsh net-dhcp-leases default --mac 52:54:00:xx:xx:xx
 
 ## Quản lý bản chụp nhanh
 ### Tạo bản chụp nhanh
+
 ```console
 # Tạo bản chụp nhanh
 virsh snapshot-create-as my-vn \
@@ -678,6 +703,7 @@ virsh snapshot-create-as my-vn snapshot4 \
 ```
 
 ### Ảnh chụp nhanh về tin đăng
+
 ```console
 # Liệt kê tất cả các bản chụp nhanh
 virsh snapshot-list my-vn
@@ -696,6 +722,7 @@ virsh snapshot-current my-vn --name
 ```
 
 ### Các thao tác snapshot
+
 ```console
 # Hiển thị thông tin ảnh chụp nhanh
 virsh snapshot-info my-vn snapshot1
@@ -720,6 +747,7 @@ virsh snapshot-delete my-vn snapshot1 --metadata
 ```
 
 ### Tổng quan về mối quan hệ cha mẹ - con cái
+
 ```console
 # Hiển thị ảnh chụp nhanh của phần tử cha
 virsh snapshot-parent my-vn snapshot2
@@ -735,6 +763,7 @@ virsh snapshot-create-as my-vn child-snapshot \
 
 ## Quản lý Bảng điều khiển và Màn hình hiển thị
 ### Truy cập Bảng điều khiển VM
+
 ```console
 # Kết nối với bảng điều khiển nối tiếp
 virsh console my-vn
@@ -749,6 +778,7 @@ virsh console my-vn --force
 ```
 
 ### Quản lý hiển thị VNC
+
 ```console
 # Hiển thị màn hình VNC
 virsh vncdisplay my-vn
@@ -766,6 +796,7 @@ virsh domdisplay my-vn
 ```
 
 ### Đồ họa và Màn hình
+
 ```console
 # Lấy URI hiển thị
 virsh domdisplay my-vn
@@ -784,6 +815,7 @@ convert /tmp/screenshot.ppm /tmp/screenshot.png
 
 ## Giám sát và Thống kê
 ### Giám sát tài nguyên hệ thống
+
 ```console
 # Số liệu thống kê máy ảo theo thời gian thực
 virt-top
@@ -811,6 +843,7 @@ virsh domifstat my-vn vnet0
 ```
 
 ### Giám sát hiệu năng
+
 ```console
 # Get VM job info (for long-running operations)
 virsh domjobinfo my-vn
@@ -835,6 +868,7 @@ virsh domstate my-vn --reason
 ```
 
 ### Giám sát sự kiện
+
 ```console
 # Theo dõi tất cả các sự kiện
 virsh event --all
@@ -855,6 +889,7 @@ virsh event --list
 
 ## Các hoạt động nâng cao
 ### Chuẩn bị cho Di chuyển Trực tuyến
+
 ```console
 # Kiểm tra khả năng di chuyển dữ liệu
 virsh capabilities
@@ -869,6 +904,7 @@ virsh migrate --verbose --live --p2p my-vn \
 ```
 
 ### Nhân bản máy ảo
+
 ```console
 # Sao chép máy ảo (Máy ảo phải được tắt)
 virt-clone --original my-vn \
@@ -886,6 +922,7 @@ virt-clone --original my-vn \
 ```
 
 ### Sao lưu và Khôi phục
+
 ```console
 # Sao lưu cấu hình máy ảo
 virsh dumpxml my-vn > /backup/my-vn-config.xml
@@ -907,6 +944,7 @@ virsh blockcommit my-vn vda --active --pivot
 ```
 
 ### Quản lý các trạng thái đã lưu
+
 ```console
 # Lưu trạng thái máy ảo vào tệp
 virsh save my-vn /var/lib/libvirt/save/my-vn.save
@@ -946,6 +984,7 @@ Thêm các nhãn bảo mật (ví dụ: SELinux)
 ```
 
 ### Quản lý thông tin bí mật
+
 ```console
 # Xác định bí mật (cho các ổ đĩa được mã hóa, v.v.)
 cat > secret.xml << 'EOF'
@@ -973,6 +1012,7 @@ virsh secret-undefine 12345678-1234-1234-1234-123456789abc
 
 ## Khắc phục sự cố với Virsh
 ### Gỡ lỗi các sự cố máy ảo
+
 ```console
 # Nhận thông tin chi tiết về lỗi
 virsh domstate my-vn --reason
@@ -994,6 +1034,7 @@ virsh send-key my-vn KEY_LEFTCTRL KEY_LEFTALT KEY_DELETE
 ```
 
 ### Quản lý tiến trình nền Libvirt
+
 ```console
 # Kiểm tra phiên bản libvirt
 virsh version
@@ -1078,6 +1119,7 @@ virsh net-dhcp-leases default
 
 ## Tự động hóa và Viết kịch bản
 ### Các thao tác theo lô
+
 ```bash
 #!/bin/bash
 # Khởi động tất cả các máy ảo
@@ -1101,6 +1143,7 @@ done
 ```
 
 ### Tập lệnh giám sát tài nguyên
+
 ```bash
 #!/bin/bash
 # Giám sát tài nguyên máy ảo
@@ -1131,6 +1174,7 @@ done
 ```
 
 ### Tự động hóa sao lưu
+
 ```bash
 #!/bin/bash
 # Tập lệnh sao lưu máy ảo tự động
@@ -1205,6 +1249,7 @@ Thiết lập bộ nhớ đệm
 ```
 
 ### Tinh chỉnh thiết bị khối
+
 ```console
 # Thiết lập các tham số tinh chỉnh I/O
 virsh blkiotune ubuntu-vm --device /dev/vda --total-bytes-sec 104857600
@@ -1218,7 +1263,8 @@ virsh blockresize ubuntu-vm vda 50G
 ## Kết luận
 Virsh là công cụ không thể thiếu để quản lý các máy ảo KVM/QEMU, mang lại khả năng kiểm soát toàn diện đối với mọi khía cạnh của cơ sở hạ tầng ảo hóa. Hướng dẫn này đã đề cập đến các lệnh và thao tác thiết yếu phục vụ công tác quản lý máy ảo hàng ngày, từ các thao tác cơ bản trong vòng đời máy ảo cho đến việc tinh chỉnh nâng cao và khắc phục sự cố.
 
-Những điểm chính cần lưu ý:  
+Những điểm chính cần lưu ý:
+
 * Virsh cung cấp khả năng quản lý máy ảo (VM) hỗ trợ viết kịch bản và tự động hóa
 * Nắm vững các thao tác cơ bản (khởi động, dừng, liệt kê) trước khi chuyển sang các tính năng nâng cao
 * Hiểu rõ về các nhóm lưu trữ (storage pool) và mạng để quản lý tài nguyên hiệu quả

@@ -26,13 +26,15 @@ Tỷ lệ phân bổ vượt mức: 1.25:1 (80/64)
 ```
 
 ### Tại sao lại thực hiện cấp phát bộ nhớ quá mức?
-**Lợi ích:**  
+**Lợi ích:**
+
 * Mật độ máy ảo (VM) cao hơn (nhiều VM hơn trên mỗi máy chủ vật lý)
 * Hiệu suất sử dụng tài nguyên tốt hơn (các VM hiếm khi sử dụng 100% dung lượng RAM)
 * Tiết kiệm chi phí (giảm số lượng máy chủ vật lý cần thiết)
 * Linh hoạt trong việc xác định quy mô máy ảo
 
-**Các rủi ro:**  
+**Các rủi ro:**
+
 * Suy giảm hiệu năng khi gặp áp lực về bộ nhớ
 * Hoán đổi dữ liệu sang đĩa (tốc độ cực chậm)
 * Bị chấm dứt tiến trình do lỗi OOM (Hết bộ nhớ)
@@ -40,28 +42,29 @@ Tỷ lệ phân bổ vượt mức: 1.25:1 (80/64)
 
 ### Các công nghệ vượt mức phân bổ bộ nhớ
 1. Memory Ballooning
-  * Máy ảo (guest) phối hợp với máy chủ (host)
-  * Trả lại phần bộ nhớ không sử dụng cho máy chủ
-  * Yêu cầu có trình điều khiển "balloon" trong máy ảo
+    * Máy ảo (guest) phối hợp với máy chủ (host)
+    * Trả lại phần bộ nhớ không sử dụng cho máy chủ
+    * Yêu cầu có trình điều khiển "balloon" trong máy ảo
 2. KSM (Kernel Same-page Merging)
-  * Khử trùng lặp các trang bộ nhớ giống hệt nhau
-  * Giảm mức sử dụng bộ nhớ thực tế
-  * Tốn tài nguyên CPU cho việc quét bộ nhớ
+    * Khử trùng lặp các trang bộ nhớ giống hệt nhau
+    * Giảm mức sử dụng bộ nhớ thực tế
+    * Tốn tài nguyên CPU cho việc quét bộ nhớ
 3. Transparent Huge Pages (THP)
-  * Sử dụng các trang bộ nhớ 2MB thay vì 4KB
-  * Giảm số lần trượt TLB (TLB misses)
-  * Cải thiện hiệu năng
+    * Sử dụng các trang bộ nhớ 2MB thay vì 4KB
+    * Giảm số lần trượt TLB (TLB misses)
+    * Cải thiện hiệu năng
 4. Memory Swapping (Hoán đổi bộ nhớ)
-  * Cơ chế giải quyết cuối cùng
-  * Tốc độ cực kỳ chậm
-  * Nên tránh sử dụng
+    * Cơ chế giải quyết cuối cùng
+    * Tốc độ cực kỳ chậm
+    * Nên tránh sử dụng
 5. zswap/zram
-  * Bộ đệm RAM đã nén
-  * Hiệu quả hơn so với hoán đổi trên đĩa (disk swap)
-  * Tốn tài nguyên CPU cho việc nén dữ liệu
+    * Bộ đệm RAM đã nén
+    * Hiệu quả hơn so với hoán đổi trên đĩa (disk swap)
+    * Tốn tài nguyên CPU cho việc nén dữ liệu
 
 ## Kiểm tra trạng thái bộ nhớ máy chủ
 ### Xem bộ nhớ vật lý
+
 ```console
 # Tổng bộ nhớ hệ thống
 free -h
@@ -82,6 +85,7 @@ numastat -m
 ```
 
 ### Kiểm tra mức sử dụng bộ nhớ hiện tại của máy ảo
+
 ```console
 # Liệt kê tất cả các máy ảo cùng với thông tin cấp phát bộ nhớ.
 virsh list --all
@@ -241,9 +245,9 @@ virsh edit my-vm
 ```
 
 * numad sẽ tự động:
-  - Đặt máy ảo (VM) vào nút NUMA tối ưu
-  - Điều chỉnh bộ nhớ dựa trên mức sử dụng
-  - Cân bằng tải giữa các nút NUMA
+    - Đặt máy ảo (VM) vào nút NUMA tối ưu
+    - Điều chỉnh bộ nhớ dựa trên mức sử dụng
+    - Cân bằng tải giữa các nút NUMA
 
 ### Kernel Same-page Merging (KSM)
 ### Tìm hiểu về KSM
@@ -266,6 +270,7 @@ Tổng cộng: 1 trang (giải phóng 2 trang)
 ```
 
 ### Bật KSM
+
 ```console
 # Kiểm tra trạng thái KSM
 cat /sys/kernel/mm/ksm/run
@@ -308,6 +313,7 @@ systemctl start ksm
 ```
 
 ### Theo dõi hiệu suất KSM
+
 ```console
 # Số liệu thống kê KSM
 cat /sys/kernel/mm/ksm/pages_sharing
@@ -333,6 +339,7 @@ watch -n 5 'echo "Pages sharing: $(cat /sys/kernel/mm/ksm/pages_sharing)"; \
 ```
 
 ### Cấu hình các máy ảo cho KSM
+
 ```console
 # Bật tính năng gộp bộ nhớ trong máy ảo
 virsh edit my-vm
@@ -352,6 +359,7 @@ Hoặc kích hoạt một cách tường minh (hành vi mặc định). Chỉ c�
     - Có cấu hình tương đồng
 
 ### Tinh chỉnh hiệu suất KSM
+
 ```console
 # Quét tích cực (tốn nhiều CPU hơn, hợp nhất tốt hơn)
 echo 500 | sudo tee /sys/kernel/mm/ksm/pages_to_scan
@@ -374,7 +382,8 @@ top -d 1
 ### Tìm hiểu về THP
 Trang thông thường: 4KB Trang dung lượng lớn: 2MB (lớn hơn 512 lần)
 
-**Lợi ích:**  
+**Lợi ích:**
+
 * Giảm số lần trượt TLB
 * Giảm chi phí quản lý bảng trang
 * Hiệu năng bộ nhớ tốt hơn
@@ -451,7 +460,8 @@ echo 4096 > /proc/sys/vm/nr_hugepages
 
 ## Hoán đổi bộ nhớ và zswap
 ### Tìm hiểu về VM Swapping
-**Nên tránh việc hoán đổi:**  
+**Nên tránh việc hoán đổi:**
+
 * Cực kỳ chậm (so sánh giữa ổ đĩa và RAM)
 * Chậm hơn RAM từ 100 đến 1000 lần
 * Gây suy giảm hiệu năng nghiêm trọng
@@ -459,6 +469,7 @@ echo 4096 > /proc/sys/vm/nr_hugepages
 
 
 ### Cấu hình Swap cho Host
+
 ```console
 # Kiểm tra swap hiện tại
 free -h
@@ -482,6 +493,7 @@ echo "vm.swappiness=10" | sudo tee -a /etc/sysctl.conf
 ```
 
 ### Bật zswap (Bộ nhớ đệm RAM nén)
+
 ```console
 # zswap nén các trang dữ liệu trước khi ghi vào vùng swap.
 # Nhanh hơn nhiều so với hoán đổi dữ liệu trên đĩa.
@@ -530,6 +542,7 @@ cat /sys/block/zram0/mm_stat
 
 ## Theo dõi mức sử dụng bộ nhớ
 ### Giám sát bộ nhớ theo thời gian thực
+
 ```console
 # Giám sát bộ nhớ trên toàn hệ thống
 free -h -s 1  # Cập nhật mỗi giây
@@ -550,6 +563,7 @@ virt-top
 ```
 
 ### Giám sát bộ nhớ nâng cao
+
 ```bash
 #!/bin/bash
 # memory-monitor.sh - Giám sát bộ nhớ toàn diện
@@ -586,6 +600,7 @@ done
 ```
 
 ### Thiết lập cảnh báo
+
 ```bash
 #!/bin/bash
 # memory-alert.sh - Cảnh báo về áp lực bộ nhớ
@@ -758,24 +773,24 @@ sync; echo 3 > /proc/sys/vm/drop_caches
 
 **Các giải pháp dài hạn:**
 
+1. Thêm RAM vật lý
+2. Giảm tỷ lệ phân bổ vượt mức (overcommit ratio). Di chuyển các máy ảo sang các máy chủ bổ sung
+3. Tối ưu hóa việc cấp phát bộ nhớ cho máy ảo. Điều chỉnh quy mô máy ảo phù hợp với mức sử dụng thực tế
+4. Tinh chỉnh KSM mạnh mẽ hơn
+
 ```console
-# 1. Thêm RAM vật lý
-
-# 2. Giảm tỷ lệ phân bổ vượt mức (overcommit ratio)
-# Di chuyển các máy ảo sang các máy chủ bổ sung
-
-# 3. Tối ưu hóa việc cấp phát bộ nhớ cho máy ảo
-# Điều chỉnh quy mô máy ảo phù hợp với mức sử dụng thực tế
-
-# 4. Tinh chỉnh KSM mạnh mẽ hơn
 echo 500 > /sys/kernel/mm/ksm/pages_to_scan
 echo 10 > /sys/kernel/mm/ksm/sleep_millisecs
+```
 
-# 5. Bật huge pages
+5. Bật huge pages
+
+```console
 echo 4096 > /proc/sys/vm/nr_hugepages
 ```
 
 ### Xử lý các tình huống OOM (Hết bộ nhớ)
+
 ```console
 # Kiểm tra nhật ký OOM killer
 dmesg | grep -i "killed process"
@@ -896,7 +911,8 @@ done
 ## Kết luận
 Memory overcommit (phân bổ bộ nhớ vượt mức) là một kỹ thuật mạnh mẽ giúp tối đa hóa hiệu quả của cơ sở hạ tầng ảo hóa, nhưng nó đòi hỏi phải có sự lập kế hoạch, triển khai và giám sát kỹ lưỡng. Bằng cách tận dụng các công nghệ như memory ballooning, KSM và transparent huge pages, bạn có thể vận hành an toàn nhiều máy ảo (VM) hơn trên mỗi máy chủ vật lý (host) mà vẫn duy trì được hiệu năng ở mức chấp nhận được.
 
-Những điểm chính cần lưu ý:  
+Những điểm chính cần lưu ý:
+
 * Bắt đầu với tỷ lệ vượt mức phân bổ (overcommit ratio) ở mức thận trọng (1,2:1)
 * Kích hoạt tất cả các công nghệ tối ưu hóa bộ nhớ (KSM, THP, ballooning)
 * Liên tục theo dõi các dấu hiệu cho thấy bộ nhớ đang bị quá tải (memory pressure)
