@@ -14,19 +14,22 @@ Máy chủ riêng ảo (VPS) là một phiên bản máy chủ ảo hóa chạy 
 VPS hosting tận dụng công nghệ ảo hóa phần cứng để tạo ra các môi trường biệt lập:
 
 **KVM (Kernel-based Virtual Machine)** là công nghệ ảo hóa phổ biến nhất cho dịch vụ lưu trữ VPS:
-* Kiểm tra xem hệ thống của bạn có hỗ trợ ảo hóa hay không.  
+* Kiểm tra xem hệ thống của bạn có hỗ trợ ảo hóa hay không.
+
 ```console
 egrep -c '(vmx|svm)' /proc/cpuinfo
 # Nếu kết quả đầu ra > 0, tính năng ảo hóa được hỗ trợ.
 ```
 
-* Xác minh các mô-đun KVM đã được nạp.  
+* Xác minh các mô-đun KVM đã được nạp.
+
 ```console
 lsmod | grep kvm
 # Kết quả hiển thị cần là: kvm_intel hoặc kvm_amd
 ```
 
-Mỗi VPS hoạt động với:  
+Mỗi VPS hoạt động với:
+
 * Các nhân CPU chuyên dụng (hoặc phân bổ thời gian CPU)
 * Phân bổ RAM được đảm bảo
 * Bộ nhớ lưu trữ biệt lập (ổ đĩa ảo)
@@ -96,10 +99,10 @@ fio --name=random-write --ioengine=libaio --rw=randwrite \
 ```
 
 3. Khả năng tùy biến phần cứng hạn chế - Không thể thay đổi:
-* Mẫu (model) hoặc kiến trúc CPU
-* Loại hoặc tốc độ RAM
-* Bộ điều khiển lưu trữ
-* Card giao tiếp mạng
+    * Mẫu (model) hoặc kiến trúc CPU
+    * Loại hoặc tốc độ RAM
+    * Bộ điều khiển lưu trữ
+    * Card giao tiếp mạng
 
 ### Các trường hợp sử dụng VPS lý tưởng
 **Dịch vụ lưu trữ web và các ứng dụng:**
