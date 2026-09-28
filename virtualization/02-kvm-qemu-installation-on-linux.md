@@ -12,7 +12,8 @@ Sau khi hoàn thành hướng dẫn này, bạn sẽ sở hữu một môi trư�
 ### KVM là gì?
 KVM (Kernel-based Virtual Machine) là một cơ sở hạ tầng ảo hóa được tích hợp sẵn trong nhân Linux. Nó biến Linux thành một hypervisor loại 1 (bare-metal) bằng cách tận dụng các phần mở rộng ảo hóa phần cứng có sẵn trên các bộ vi xử lý hiện đại (Intel VT-x hoặc AMD-V).
 
-**Các đặc điểm chính của KVM:**  
+**Các đặc điểm chính của KVM:**
+
 * Được tích hợp vào nhân Linux từ phiên bản 2.6.20
 * Yêu cầu CPU hỗ trợ ảo hóa (Intel VT-x hoặc AMD-V)
 * Mang lại hiệu năng gần như tương đương với máy thật nhờ tăng tốc phần cứng
