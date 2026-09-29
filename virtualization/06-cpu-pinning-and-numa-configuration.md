@@ -27,9 +27,9 @@ Ví dụ về cấu trúc tô-pô (topology):
 * Tổng cộng: 32 CPU logic (luồng)
 
 ### Kiểm tra cấu trúc tô-pô CPU của máy chủ
+* Xem cấu trúc tô-pô CPU
 
 ```console
-# Xem cấu trúc tô-pô CPU
 lscpu
 
 # Kết quả đầu ra bao gồm:
@@ -40,8 +40,11 @@ lscpu
 # NUMA node(s):        2
 # NUMA node0 CPU(s):   0-15
 # NUMA node1 CPU(s):   16-31
+```
 
-# cấu trúc tô-pô chi tiết
+* cấu trúc tô-pô chi tiết
+
+```console
 lscpu -e
 
 # CPU NODE SOCKET CORE L1d:L1i:L2:L3
@@ -49,10 +52,17 @@ lscpu -e
 #   1    0      0    0 0:0:0:0
 #   2    0      0    1 1:1:1:0
 # ...
+```
 
-# Cấu trúc tô-pô trực quan
+* Cấu trúc tô-pô trực quan
+
+```console
 lstopo
-# Hoặc dành cho terminal
+```
+
+* Hoặc dành cho terminal
+
+```console
 lstopo-no-graphics
 ```
 
@@ -85,13 +95,16 @@ NUMA (Non-Uniform Memory Access) có nghĩa là thời gian truy cập bộ nh�
 * Từ xa: CPU truy cập bộ nhớ trên một nút NUMA khác (chậm hơn, độ trễ gấp khoảng 2 lần)
 
 ### Kiểm tra cấu hình NUMA
+* Cài đặt numactl
 
 ```console
-# Cài đặt numactl
 apt install numactl  # Debian/Ubuntu
 dnf install numactl  # RHEL/CentOS
+```
 
-# Xem cấu trúc tô-pô NUMA
+* Xem cấu trúc tô-pô NUMA
+
+```console
 numactl --hardware
 
 # Kết quả đầu ra:
@@ -106,22 +119,34 @@ numactl --hardware
 # node   0   1
 #   0:  10  20
 #   1:  20  10
+```
 
-# Giải thích khoảng cách:
-# 10 = cục bộ (cùng nút)
-# 20 = từ xa (nút khác)
-# Số càng cao = càng nhiều bước nhảy/chậm hơn
+> Giải thích khoảng cách:
+> - 10 = cục bộ (cùng nút)
+> - 20 = từ xa (nút khác)
+> - Số càng cao = càng nhiều bước nhảy/chậm hơn
 
-# Kiểm tra số liệu thống kê NUMA
+* Kiểm tra số liệu thống kê NUMA
+
+```console
 numastat
+```
 
-# Mức sử dụng bộ nhớ trên mỗi nút
+* Mức sử dụng bộ nhớ trên mỗi nút
+
+```console
 numastat -m
+```
 
-# Thành công và thất bại của NUMA
+* Thành công và thất bại của NUMA
+
+```console
 numastat -c qemu-system-x86
+```
 
-# Theo dõi số liệu thống kê NUMA
+* Theo dõi số liệu thống kê NUMA
+
+```console
 watch -n 1 'numastat -c qemu-system-x86'
 ```
 
@@ -161,9 +186,9 @@ watch -n 1 'numastat -c qemu-system-x86'
 
 ## Triển khai ghim CPU (CPU Pinning)
 ### Kiểm tra cấu hình CPU của máy ảo
+* Xem thông tin CPU hiện tại của máy ảo
 
 ```console
-# Xem thông tin CPU hiện tại của máy ảo
 virsh vcpuinfo my-vm
 
 # Kết quả đầu ra:
@@ -174,28 +199,43 @@ virsh vcpuinfo my-vm
 # CPU Affinity:   yyyyyyyyyyyyyyyy
 
 # "yyyyyyyy..." có nghĩa là có thể chạy trên bất kỳ CPU nào
+```
 
-# Xem số lượng vCPU
+* Xem số lượng vCPU
+
+```console
 virsh vcpucount my-vm
 ```
 
 ### Ghim vCPU vào CPU vật lý
-**Ghim CPU cơ bản:**
+#### Ghim CPU cơ bản:
+* Ghim vCPU 0 vào CPU vật lý 0
 
 ```console
-# Ghim vCPU 0 vào CPU vật lý 0
 virsh vcpupin my-vm 0 0
+```
 
-# Ghim vCPU 1 vào CPU vật lý 1
+* Ghim vCPU 1 vào CPU vật lý 1
+
+```console
 virsh vcpupin my-vm 1 1
+```
 
-# Ghim vCPU 2 vào CPU vật lý 2
+* Ghim vCPU 2 vào CPU vật lý 2
+
+```console
 virsh vcpupin my-vm 2 2
+```
 
-# Ghim vCPU 3 vào CPU vật lý 3
+* Ghim vCPU 3 vào CPU vật lý 3
+
+```console
 virsh vcpupin my-vm 3 3
+```
 
-# Xác minh việc ghim
+* Xác minh việc ghim
+
+```console
 virsh vcpupin my-vm
 
 # Kết quả đầu ra:
@@ -207,16 +247,22 @@ virsh vcpupin my-vm
 # 3      3
 ```
 
-**Ghim Dải CPU:**
+#### Ghim Dải CPU:
+* Cho phép vCPU chạy trên một dải các CPU.
 
 ```console
-# Cho phép vCPU chạy trên một dải các CPU.
 virsh vcpupin my-vm 0 0-3
+```
 
-# Ghim vào các CPU cụ thể (không liên tục)
+* Ghim vào các CPU cụ thể (không liên tục)
+
+```console
 virsh vcpupin my-vm 0 0,2,4,6
+```
 
-# Ghim tất cả vCPU cùng lúc
+* Ghim tất cả vCPU cùng lúc
+
+```console
 virsh vcpupin my-vm --vcpu 0 --cpulist 0
 virsh vcpupin my-vm --vcpu 1 --cpulist 1
 virsh vcpupin my-vm --vcpu 2 --cpulist 2
@@ -226,13 +272,15 @@ virsh vcpupin my-vm --vcpu 3 --cpulist 3
 ### Thiết lập ghim CPU cố định
 Việc gán CPU (CPU pinning) bằng virsh có hiệu lực ngay lập tức nhưng không được lưu lại lâu dài. Để thiết lập cố định:
 
+* Chỉnh sửa XML của máy ảo
+
 ```console
-# Chỉnh sửa XML của máy ảo
 virsh edit my-vm
 ```
 
+* Thêm cấu hình CPU pinning vào phần `<cputune>`:
+
 ```xml
-<!-- Thêm cấu hình CPU pinning vào phần <cputune>: -->
 <domain>
   <vcpu placement='static'>4</vcpu>
   <cputune>
@@ -245,12 +293,16 @@ virsh edit my-vm
 </domain>
 ```
 
+* Lưu và thoát. Khởi động lại máy ảo để các thay đổi có hiệu lực.
+
 ```console
-# Lưu và thoát. Khởi động lại máy ảo để các thay đổi có hiệu lực.
 virsh shutdown my-vm
 virsh start my-vm
+```
 
-# Xác minh
+* Xác minh
+
+```console
 virsh vcpupin my-vm
 ```
 
@@ -312,13 +364,16 @@ virsh edit my-vm
 </cputune>
 ```
 
-**Xác minh việc ghim trình giả lập:**
+#### Xác minh việc ghim trình giả lập:
+* Tìm tiến trình QEMU
 
 ```console
-# Tìm tiến trình QEMU
 ps aux | grep qemu | grep my-vm
+```
 
-# Kiểm tra sự gắn kết luồng
+* Kiểm tra sự gắn kết luồng
+
+```console
 ps -mo pid,tid,comm,psr -p <qemu-pid>
 ```
 
@@ -364,8 +419,9 @@ virsh edit my-vm
 ### Cấu trúc tô-pô NUMA nhiều node
 Tạo cấu trúc tô-pô NUMA cho máy khách khớp với máy chủ:
 
+* Đối với máy ảo trải rộng trên nhiều node NUMA
+
 ```console
-# Đối với máy ảo trải rộng trên nhiều node NUMA
 virsh edit my-vm
 ```
 
@@ -519,19 +575,23 @@ virsh edit my-vm
 Cải thiện hiệu năng đối với các khối lượng công việc nhạy cảm với bộ nhớ đệm.
 
 ### Lập lịch CPU
+* Thiết lập các tham số bộ lập lịch CPU
 
 ```console
-# Thiết lập các tham số bộ lập lịch CPU
 virsh schedinfo my-vm --set cpu_shares=2048
+```
 
-# Chia sẻ CPU (trọng số tương đối)
-# Mặc định: 1024
-# Giá trị càng cao = càng tốn nhiều thời gian CPU
+Chia sẻ CPU (trọng số tương đối). Mặc định: 1024. Giá trị càng cao = càng tốn nhiều thời gian CPU
 
-# Xem các cài đặt hiện tại
+* Xem các cài đặt hiện tại
+
+```console
 virsh schedinfo my-vm
+```
 
-# Lập lịch thời gian thực (yêu cầu nhân RT)
+* Lập lịch thời gian thực (yêu cầu nhân RT)
+
+```console
 virsh edit my-vm
 ```
 
@@ -543,15 +603,21 @@ virsh edit my-vm
 
 ## Tối ưu hóa hiệu năng
 ### Cấu hình điều tiết CPU
+* Thiết lập chế độ điều tiết CPU sang hiệu năng cao
 
 ```console
-# Thiết lập chế độ điều tiết CPU sang hiệu năng cao
 echo performance | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+```
 
-# Xác minh
+* Xác minh
+
+```console
 cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+```
 
-# Làm cho bền vững
+* Làm cho bền vững
+
+```console
 cat > /etc/systemd/system/cpu-performance.service << 'EOF'
 [Unit]
 Description=Set CPU governor to performance
@@ -563,46 +629,70 @@ ExecStart=/bin/bash -c 'echo performance | tee /sys/devices/system/cpu/cpu*/cpuf
 [Install]
 WantedBy=multi-user.target
 EOF
+```
 
+```console
 systemctl enable cpu-performance
 systemctl start cpu-performance
 ```
 
 ### Vô hiệu hóa tính năng tiết kiệm điện của CPU
+Vô hiệu hóa C-state để duy trì độ trễ ổn định.
+
+* Thêm vào các tham số kernel
 
 ```console
-# Vô hiệu hóa C-state để duy trì độ trễ ổn định.
-# Thêm vào các tham số kernel
 vim /etc/default/grub
+```
 
+```
 GRUB_CMDLINE_LINUX="intel_idle.max_cstate=0 processor.max_cstate=1 intel_pstate=disable idle=poll"
+```
 
-# Cập nhật GRUB
+* Cập nhật GRUB
+
+```console
 update-grub  # Debian/Ubuntu
 grub2-mkconfig -o /boot/grub2/grub.cfg  # RHEL/CentOS
+```
 
-# Khởi động lại
+* Khởi động lại
+
+```console
 reboot
+```
 
-# Xác minh
+* Xác minh
+
+```console
 cat /sys/module/intel_idle/parameters/max_cstate
 ```
 
 ### Cô lập CPU
 **Cô lập các CPU khỏi bộ lập lịch của máy chủ để chỉ dành riêng cho máy ảo sử dụng:**
 
+* Chỉnh sửa các tham số kernel
+
 ```console
-# Chỉnh sửa các tham số kernel
 vim /etc/default/grub
+```
 
-# Cô lập các CPU từ 0 đến 7 cho các máy ảo.
+* Cô lập các CPU từ 0 đến 7 cho các máy ảo.
+
+```console
 GRUB_CMDLINE_LINUX="isolcpus=0-7 nohz_full=0-7 rcu_nocbs=0-7"
+```
 
-# Cập nhật GRUB và khởi động lại.
+* Cập nhật GRUB và khởi động lại.
+
+```console
 update-grub
 reboot
+```
 
-# Xác minh sự cách ly
+* Xác minh sự cách ly
+
+```console
 cat /sys/devices/system/cpu/isolated
 ```
 
@@ -611,139 +701,210 @@ Giờ đây, các máy ảo được ghim vào các CPU từ 0 đến 7 sẽ ch�
 ### Cấu hình Huge Pages
 Tính toán số lượng huge page cần thiết. Ví dụ: VM 16GB = 8192 huge page (mỗi trang 2MB).
 
-```console
-# Cấu hình huge page
-echo 8192 > /proc/sys/vm/nr_hugepages
+* Cấu hình huge page
 
-# Làm cho bền vững
+```console
+echo 8192 > /proc/sys/vm/nr_hugepages
+```
+
+* Làm cho bền vững
+
+```console
 echo "vm.nr_hugepages=8192" >> /etc/sysctl.conf
 sysctl -p
+```
 
-# Xác minh
+* Xác minh
+
+```console
 cat /proc/meminfo | grep Huge
+```
 
-# Cấu hình máy ảo sử dụng huge page
+* Cấu hình máy ảo sử dụng huge page
+
+```console
 virsh edit my-vm
+```
 
+```xml
 <memoryBacking>
   <hugepages/>
   <locked/>
 </memoryBacking>
+```
 
-# Khởi động lại máy ảo
+* Khởi động lại máy ảo
+
+```console
 virsh shutdown my-vm
 virsh start my-vm
+```
 
-# Xác minh rằng máy ảo đang sử dụng huge pages.
+* Xác minh rằng máy ảo đang sử dụng huge pages.
+
+```console
 grep Huge /proc/meminfo
 ```
 
 ### Cân bằng NUMA
-Vô hiệu hóa tính năng cân bằng NUMA tự động (có thể gây xung đột với việc ghim tiến trình/luồng)
+* Vô hiệu hóa tính năng cân bằng NUMA tự động (có thể gây xung đột với việc ghim tiến trình/luồng)
 
 ```console
 echo 0 > /proc/sys/kernel/numa_balancing
+```
 
-# Làm cho bền vững
+* Làm cho bền vững
+
+```console
 echo "kernel.numa_balancing=0" >> /etc/sysctl.conf
 sysctl -p
+```
 
-# Xác minh
+* Xác minh
+
+```console
 cat /proc/sys/kernel/numa_balancing
 ```
 
 ## Giám sát và Xác minh
 ### Xác minh việc ghim CPU
+* Kiểm tra độ gắn kết vCPU
 
 ```console
-# Kiểm tra độ gắn kết vCPU
 virsh vcpupin my-vm
+```
 
-# Kiểm tra mức sử dụng CPU thực tế
+* Kiểm tra mức sử dụng CPU thực tế
+
+```console
 virsh vcpuinfo my-vm
+```
 
-# Tìm tiến trình QEMU
+* Tìm tiến trình QEMU
+
+```console
 ps aux | grep qemu | grep my-vm
+```
 
-# Kiểm tra sự gắn kết luồng
+* Kiểm tra sự gắn kết luồng
+
+```console
 taskset -cp <qemu-pid>
+```
 
-# Thông tin chi tiết theo từng luồng
+* Thông tin chi tiết theo từng luồng
+
+```console
 ps -mo pid,tid,comm,psr -p <qemu-pid>
 ```
 
-PSR = Số hiệu bộ xử lý (CPU nào)
+PSR = Số hiệu bộ xử lý (của CPU nào)
 
 ### Theo dõi số liệu thống kê NUMA
+* Số liệu thống kê NUMA của máy ảo
 
 ```console
-# Số liệu thống kê NUMA của máy ảo
 virsh numastat my-vm
+```
 
-# Số liệu thống kê NUMA toàn hệ thống
+* Số liệu thống kê NUMA toàn hệ thống
+
+```console
 numastat
+```
 
-# Mức sử dụng bộ nhớ trên mỗi node
+* Mức sử dụng bộ nhớ trên mỗi node
+
+```console
 numastat -m
+```
 
-# Xem theo thời gian thực
+* Xem theo thời gian thực
+
+```console
 watch -n 1 'numastat -c qemu-system-x86'
+```
 
-# Kiểm tra các trường hợp lỗi NUMA (không tốt – cho thấy có sự truy cập chéo giữa các node).
+* Kiểm tra các trường hợp lỗi NUMA (không tốt – cho thấy có sự truy cập chéo giữa các node).
+
+```console
 numastat | grep numa_miss
 ```
 
 ### Giám sát hiệu năng CPU
+* Cài đặt perf
 
 ```console
-# Cài đặt perf
 apt install linux-tools-generic  # Debian/Ubuntu
 dnf install perf  # RHEL/CentOS
+```
 
-# Theo dõi hiệu năng CPU của máy ảo
+* Theo dõi hiệu năng CPU của máy ảo
+
+```console
 perf stat -p <qemu-pid> -a sleep 10
+```
 
-# Kiểm tra lỗi bộ nhớ cache
+* Kiểm tra lỗi bộ nhớ cache
+
+```console
 perf stat -e cache-misses,cache-references -p <qemu-pid> sleep 10
+```
+* Theo dõi việc chuyển đổi ngữ cảnh
 
-# Theo dõi việc chuyển đổi ngữ cảnh
+```console
 perf stat -e context-switches -p <qemu-pid> sleep 10
+```
 
-# Phân tích chi tiết
+* Phân tích chi tiết
+
+```console
 perf top -p <qemu-pid>
 ```
 
 ### Kiểm thử độ trễ
+* Bên trong VM: Kiểm tra độ trễ bằng cyclictest
 
 ```console
-# Bên trong VM: Kiểm tra độ trễ bằng cyclictest
 apt install rt-tests  # Debian/Ubuntu
 dnf install rt-tests  # RHEL/CentOS
-
-# Chạy kiểm tra độ trễ
-cyclictest -t4 -p80 -n -i1000 -l10000
-
-# Kết quả đầu ra hiển thị độ trễ tối min/max/avg.
-# Độ trễ tối đa thấp hơn = tốt hơn cho các tác vụ thời gian thực.
 ```
+
+* Chạy kiểm tra độ trễ
+
+```console
+cyclictest -t4 -p80 -n -i1000 -l10000
+```
+
+Kết quả đầu ra hiển thị độ trễ tối min/max/avg. Độ trễ tối đa thấp hơn = tốt hơn cho các tác vụ thời gian thực.
 
 ## Khắc phục sự cố
 ### Vấn đề: Hiệu suất kém dù đã ghim
+* Kiểm tra xem các CPU có thực sự bị cô lập hay không.
 
 ```console
-# Kiểm tra xem các CPU có thực sự bị cô lập hay không.
 cat /sys/devices/system/cpu/isolated
-
-# Kiểm tra trình quản lý CPU
-cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
-
-# Kiểm tra các chuyển đổi ngữ cảnh cao
-pidstat -w -p <qemu-pid> 1 10
-
-# Theo dõi thời gian CPU bị chiếm dụng (steal time)
-top -d 1
-# Hãy tìm %st (thời gian ăn cắp) - giá trị phải là 0.
 ```
+
+* Kiểm tra trình quản lý CPU
+
+```console
+cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+```
+
+* Kiểm tra các chuyển đổi ngữ cảnh cao
+
+```console
+pidstat -w -p <qemu-pid> 1 10
+```
+
+* Theo dõi thời gian CPU bị chiếm dụng (steal time)
+
+```console
+top -d 1
+```
+
+Hãy tìm %st (thời gian ăn cắp) - giá trị phải là 0.
 
 * Giải pháp:
     1. Cách ly các CPU khỏi bộ lập lịch của máy chủ (host scheduler)
@@ -752,52 +913,83 @@ top -d 1
     4. Sử dụng huge pages
 
 ### Vấn đề: Tỷ lệ trượt NUMA cao
+* Kiểm tra số liệu thống kê NUMA
 
 ```console
-# Kiểm tra số liệu thống kê NUMA
 numastat -c qemu-system-x86 | grep numa_miss
+```
 
-# Xác minh VM đang chạy trên một node duy nhất.
+Xác minh VM đang chạy trên một node duy nhất.
+
+```console
 virsh numatune my-vm
+```
 
-# Kiểm tra xem bộ nhớ có bị phân chia giữa các node hay không.
+* Kiểm tra xem bộ nhớ có bị phân chia giữa các node hay không.
+
+```console
 numastat -p <qemu-pid>
+```
 
-# Giải pháp:
-# 1. Ghim VM vào một node NUMA duy nhất
+**Giải pháp:**
+
+1. Ghim VM vào một node NUMA duy nhất
+
+```console
 virsh numatune my-vm --mode strict --nodeset 0
+```
 
-# 2. Chỉnh sửa XML của máy ảo để áp dụng cấu hình NUMA nghiêm ngặt
+2. Chỉnh sửa XML của máy ảo để áp dụng cấu hình NUMA nghiêm ngặt
+
+```console
 virsh edit my-vm
+```
+
+```xml
 <numatune>
   <memory mode='strict' nodeset='0'/>
 </numatune>
+```
 
-# 3. Vô hiệu hóa tính năng tự động cân bằng NUMA
+3. Vô hiệu hóa tính năng tự động cân bằng NUMA
+
+```console
 echo 0 > /proc/sys/kernel/numa_balancing
 ```
 
 ### Vấn đề: Tính năng ghim CPU (CPU Pinning) không hoạt động
+Xác minh rằng tính năng ghim đã được thiết lập.
 
 ```console
-# Xác minh rằng tính năng ghim đã được thiết lập.
 virsh vcpupin my-vm
+```
 
-# Kiểm tra xem dịch vụ libvirt có đang chạy hay không.
+* Kiểm tra xem dịch vụ libvirt có đang chạy hay không.
+
+```console
 systemctl status libvirtd
+```
 
-# Xác minh cấu hình XML
+* Xác minh cấu hình XML
+
+```console
 virsh dumpxml my-vm | grep -A 10 cputune
+```
 
-# Kiểm tra xung đột
-# - Đảm bảo CPU không bị phân bổ vượt mức.
-# - Kiểm tra xem có sự trùng lặp ghim với các máy ảo khác hay không.
+> Kiểm tra xung đột:
+> - Đảm bảo CPU không bị phân bổ vượt mức.
+> - Kiểm tra xem có sự trùng lặp ghim với các máy ảo khác hay không.
 
-# Áp dụng lại tính năng ghim
+* Áp dụng lại tính năng ghim
+
+```console
 virsh vcpupin my-vm 0 0 --live --config
 virsh vcpupin my-vm 1 1 --live --config
+```
 
-# Khởi động lại máy ảo
+* Khởi động lại máy ảo
+
+```console
 virsh shutdown my-vm
 virsh start my-vm
 ```
@@ -805,22 +997,22 @@ virsh start my-vm
 ### Vấn đề: Di trú thất bại khi sử dụng tính năng ghim (pinning)
 Tính năng ghim CPU (CPU pinning) có thể ngăn chặn quá trình di chuyển nếu đích đến không có cùng loại CPU.
 
-Giải pháp 1: Sử dụng các dải cpuset để đảm bảo tính linh hoạt.
+1. **Giải pháp 1: Sử dụng các dải cpuset để đảm bảo tính linh hoạt.**
 
 ```xml 
 <vcpupin vcpu='0' cpuset='0-3'/>
-
 ```
 
-Giải pháp 2: Hủy ghim trước khi di chuyển
+2. **Giải pháp 2: Hủy ghim trước khi di chuyển**
 
 ```console
-virsh vcpupin ubuntu-vm 0 0-31  # Allow all CPUs
-virsh migrate --live ubuntu-vm qemu+ssh://dest/system
-# Ghim lại trên máy chủ đích
+virsh vcpupin my-vm 0 0-31  # Cho phép tất cả các CPU
+virsh migrate --live my-vm qemu+ssh://dest/system
 ```
 
-Giải pháp 3: Đảm bảo cấu trúc liên kết CPU giống hệt nhau trên cả hai máy chủ.
+Ghim lại trên máy chủ đích
+
+3. **Giải pháp 3: Đảm bảo cấu trúc liên kết CPU giống hệt nhau trên cả hai máy chủ.**
 
 ## Các ví dụ về cấu hình trong thực tế
 ### Máy chủ cơ sở dữ liệu hiệu năng cao
@@ -952,30 +1144,41 @@ lstopo
 ```
 
 ### Danh mục kiểm tra tối ưu hóa hiệu năng
+1. Bật huge pages
 
 ```console
-# 1. Bật huge pages
 echo 8192 > /proc/sys/vm/nr_hugepages
+```
 
-# 2. Thiết lập cơ chế điều tiết hiệu năng (performance governor)
+2. Thiết lập cơ chế điều tiết hiệu năng (performance governor)
+
+```console
 echo performance | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+```
 
-# 3. Vô hiệu hóa tính năng cân bằng NUMA
+3. Vô hiệu hóa tính năng cân bằng NUMA
+
+```console
 echo 0 > /proc/sys/kernel/numa_balancing
+```
 
-# 4. Cô lập các CPU (tùy chọn)
-# Thêm vào kernel: isolcpus=0-15
+4. Cô lập các CPU (tùy chọn): Thêm vào kernel: isolcpus=0-15
+5. Tắt chế độ tiết kiệm điện của CPU: Thêm vào kernel: intel_idle.max_cstate=0
+6. Ghim các máy ảo vào các node NUMA
 
-# 5. Tắt chế độ tiết kiệm điện của CPU
-# Thêm vào kernel: intel_idle.max_cstate=0
-
-# 6. Ghim các máy ảo vào các node NUMA
+```console
 virsh edit vm # Thêm numatune
+```
 
-# 7. Sử dụng chế độ CPU host-passthrough
+7. Sử dụng chế độ CPU host-passthrough
+
+```console
 virsh edit vm # <cpu mode='host-passthrough'/>
+```
 
-# 8. Bật tính năng chuyển trực tiếp bộ nhớ đệm (cache passthrough)
+8. Bật tính năng chuyển trực tiếp bộ nhớ đệm (cache passthrough)
+
+```console
 virsh edit vm # <cache mode='passthrough'/>
 ```
 
