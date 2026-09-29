@@ -263,15 +263,21 @@ sudo dnf install -y libguestfs-tools libvirt-client
 ```
 
 ### Bước 3: Khởi động và kích hoạt dịch vụ Libvirt
+* Khởi động dịch vụ libvirtd
 
 ```console
-# Khởi động dịch vụ libvirtd
 sudo systemctl start libvirtd
+```
 
-# Cho phép libvirtd khởi động cùng hệ thống
+* Cho phép libvirtd khởi động cùng hệ thống
+
+```console
 sudo systemctl enable libvirtd
+```
 
-# Xác minh trạng thái dịch vụ
+* Xác minh trạng thái dịch vụ
+
+```console
 sudo systemctl status libvirtd
 ```
 
