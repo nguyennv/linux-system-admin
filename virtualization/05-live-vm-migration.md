@@ -66,38 +66,52 @@ Di trú trực tiếp (hay còn gọi là di trú nóng) là quá trình chuyể
 
 ## Các điều kiện tiên quyết và yêu cầu
 ### Yêu cầu cấu hình máy chủ
-**Cả máy chủ nguồn và máy chủ đích đều phải có:**
+#### Cả máy chủ nguồn và máy chủ đích đều phải có:
+1. Cùng kiến trúc CPU
 
 ```console
-# 1. Cùng kiến trúc CPU
 lscpu | grep "Model name"
 lscpu | grep "Architecture"
+```
 
-# 2. Các tính năng CPU tương thích
+2. Các tính năng CPU tương thích
+
+```console
 virsh capabilities | grep -A 20 "<cpu>"
+```
 
-# 3. Cùng phiên bản libvirt (hoặc tương thích)
+3. Cùng phiên bản libvirt (hoặc tương thích)
+
+```console
 virsh version
+```
 
-# 4. Đã cài đặt KVM/QEMU
+4. Đã cài đặt KVM/QEMU
+
+```console
 which qemu-system-x86_64
 lsmod | grep kvm
+```
 
-# 5. Đã cấu hình lưu trữ chia sẻ hoặc di trú lưu trữ
-# (dành cho các tệp ảnh đĩa)
+5. Đã cấu hình lưu trữ chia sẻ hoặc di trú lưu trữ (dành cho các tệp ảnh đĩa)
 
-# 6. Kết nối mạng
+6. Kết nối mạng
+
+```console
 ping destination-host
 ```
 
 ### Yêu cầu về mạng
+* Mạng có độ trễ thấp (ưu tiên mạng chuyên dụng)
 
 ```console
-# Mạng có độ trễ thấp (ưu tiên mạng chuyên dụng)
 ping -c 100 destination-host | tail -n 1
 # RTT nên dưới 1ms để đạt hiệu suất tốt nhất.
+```
 
-# Băng thông cao (tối thiểu 1 Gbps, khuyến nghị 10 Gbps)
+* Băng thông cao (tối thiểu 1 Gbps, khuyến nghị 10 Gbps)
+
+```console
 iperf3 -s  # Trên máy chủ đích
 iperf3 -c destination-host -t 30  # Trên máy chủ nguồn
 ```
@@ -108,17 +122,22 @@ iperf3 -c destination-host -t 30  # Trên máy chủ nguồn
 * qemu+ssh: 22 (SSH)
 
 ### Yêu cầu lưu trữ
-**Lựa chọn 1: Lưu trữ dùng chung (Khuyên dùng)**
+#### Lựa chọn 1: Lưu trữ dùng chung (Khuyên dùng)
+* Lưu trữ chia sẻ NFS. Mount cùng một NFS share trên cả hai máy chủ.
 
 ```console
-# Lưu trữ chia sẻ NFS
-# Mount cùng một NFS share trên cả hai máy chủ.
 mount -t nfs nfs-server:/exports/vms /var/lib/libvirt/images
+```
 
-# Xác minh rằng cả hai máy chủ đều nhìn thấy cùng một bộ lưu trữ.
+* Xác minh rằng cả hai máy chủ đều nhìn thấy cùng một bộ lưu trữ.
+
+```console
 ls -la /var/lib/libvirt/images/
+```
 
-# Thêm vào /etc/fstab để duy trì cấu hình sau khi khởi động lại.
+* Thêm vào /etc/fstab để duy trì cấu hình sau khi khởi động lại.
+
+```console
 echo "nfs-server:/exports/vms /var/lib/libvirt/images nfs defaults 0 0" >> /etc/fstab
 ```
 
@@ -129,19 +148,24 @@ echo "nfs-server:/exports/vms /var/lib/libvirt/images nfs defaults 0 0" >> /etc/
 * Mất nhiều thời gian hơn so với di trú sử dụng bộ lưu trữ chia sẻ
 
 ### Khả năng tương thích với CPU
+* Kiểm tra các cờ CPU trên cả hai máy chủ.
 
 ```console
-# Kiểm tra các cờ CPU trên cả hai máy chủ.
 virsh capabilities | grep features
+```
 
-# Hãy thận trọng khi sử dụng host-passthrough hoặc host-model.
-# Tốt hơn: Sử dụng tên kiểu CPU để đảm bảo tính tương thích.
+> Hãy thận trọng khi sử dụng host-passthrough hoặc host-model. Tốt hơn: Sử dụng tên kiểu CPU để đảm bảo tính tương thích.
 
-# Xem các mẫu CPU có sẵn
+* Xem các mẫu CPU có sẵn
+
+```console
 virsh domcapabilities | grep -A 50 cpu
 qemu-system-x86_64 -cpu help
+```
 
-# Cấu hình máy ảo với CPU tương thích
+* Cấu hình máy ảo với CPU tương thích
+
+```console
 virsh edit vm-name
 ```
 
@@ -161,55 +185,85 @@ Hoặc sử dụng mô hình host kết hợp kiểm tra tính năng.
 
 ## Thiết lập bộ lưu trữ chia sẻ
 ### Cấu hình NFS
-**Trên máy chủ NFS:**
+#### Trên máy chủ NFS:
+* Cài đặt máy chủ NFS
 
 ```console
-# Cài đặt máy chủ NFS
 apt install nfs-kernel-server  # Debian/Ubuntu
 dnf install nfs-utils  # RHEL/CentOS
+```
 
-# Tạo thư mục xuất
+* Tạo thư mục xuất
+
+```console
 mkdir -p /exports/vms
 chown -R qemu:qemu /exports/vms
 chmod 755 /exports/vms
+```
 
-# Cấu hình xuất dữ liệu
+* Cấu hình xuất dữ liệu
+
+```console
 cat >> /etc/exports << 'EOF'
 /exports/vms 192.168.1.0/24(rw,sync,no_root_squash,no_subtree_check)
 EOF
+```
 
-# Áp dụng các thay đổi
+* Áp dụng các thay đổi
+
+```console
 exportfs -arv
+```
 
-# Khởi động NFS
+* Khởi động NFS
+
+```console
 systemctl enable nfs-server
 systemctl start nfs-server
+```
 
-# Xác minh dữ liệu xuất
+* Xác minh dữ liệu xuất
+
+```console
 showmount -e localhost
 ```
 
-**Trên các máy chủ KVM (cả nguồn và đích):**
+#### Trên các máy chủ KVM (cả nguồn và đích):
+* Cài đặt máy khách NFS
 
 ```console
-# Cài đặt máy khách NFS
 apt install nfs-common  # Debian/Ubuntu
 dnf install nfs-utils  # RHEL/CentOS
+```
 
-# Tạo điểm gắn
+* Tạo điểm gắn
+
+```console
 mkdir -p /var/lib/libvirt/images
+```
 
-# Gắn kết thư mục chia sẻ NFS
+* Gắn kết thư mục chia sẻ NFS
+
+```console
 mount -t nfs nfs-server:/exports/vms /var/lib/libvirt/images
+```
 
-# Kiểm tra quyền ghi
+* Kiểm tra quyền ghi
+
+```console
 touch /var/lib/libvirt/images/test
 rm /var/lib/libvirt/images/test
+```
 
-# Thêm vào fstab
+* Thêm vào fstab
+
+```console
 echo "nfs-server:/exports/vms /var/lib/libvirt/images nfs defaults 0 0" >> /etc/fstab
+```
 
-# Xác minh việc gắn kết
+* Xác minh việc gắn kết
+
+```console
 df -h | grep vms
 ```
 
@@ -246,40 +300,56 @@ virsh pool-info nfs-pool
 
 ## Cấu hình các máy chủ cho quá trình di trú
 ### Cấu hình mạng
-**Sử dụng libvirtd qua TCP (Không mã hóa - Chỉ dùng để thử nghiệm):**
+#### Sử dụng libvirtd qua TCP (Không mã hóa - Chỉ dùng để thử nghiệm):
+* Chỉnh sửa tệp /etc/libvirt/libvirtd.conf trên cả hai máy chủ.
 
 ```console
-# Chỉnh sửa tệp /etc/libvirt/libvirtd.conf trên cả hai máy chủ.
 sudo vim /etc/libvirt/libvirtd.conf
+```
 
-# Bỏ chú thích và sửa đổi:
+* Bỏ chú thích và sửa đổi:
+
+```
 listen_tls = 0
 listen_tcp = 1
 tcp_port = "16509"
 auth_tcp = "none"  # Chỉ dành cho mục đích thử nghiệm!
+```
 
-# Chỉnh sửa /etc/default/libvirtd (Debian/Ubuntu)
+* Chỉnh sửa /etc/default/libvirtd (Debian/Ubuntu) Hoặc /etc/sysconfig/libvirtd (RHEL/CentOS)
+
+```console
 sudo vim /etc/default/libvirtd
-libvirtd_opts="--listen"
+```
 
-# Hoặc /etc/sysconfig/libvirtd (RHEL/CentOS)
-LIBVIRTD_ARGS="--listen"
+```
+libvirtd_opts="--listen" # Debian/Ubuntu
+LIBVIRTD_ARGS="--listen" # RHEL/CentOS
+```
 
-# Khởi động lại libvirtd
+* Khởi động lại libvirtd
+
+```console
 sudo systemctl restart libvirtd
+```
 
-# Xác nhận lắng nghe
+* Xác nhận lắng nghe
+
+```console
 ss -tulpn | grep 16509
 ```
 
-**Sử dụng TLS cho libvirtd (An toàn - Môi trường sản xuất):**
+#### Sử dụng TLS cho libvirtd (An toàn - Môi trường sản xuất):
+* Tạo chứng chỉ TLS (trên cơ quan cấp chứng chỉ)
 
 ```console
-# Tạo chứng chỉ TLS (trên cơ quan cấp chứng chỉ)
 mkdir -p /etc/pki/CA
 cd /etc/pki/CA
+```
 
-# Tạo CA
+* Tạo CA
+
+```console
 certtool --generate-privkey > cakey.pem
 cat > ca.info << EOF
 cn = CA
@@ -288,8 +358,11 @@ cert_signing_key
 EOF
 certtool --generate-self-signed --load-privkey cakey.pem \
   --template ca.info --outfile cacert.pem
+```
 
-# Tạo chứng chỉ máy chủ cho từng máy chủ
+* Tạo chứng chỉ máy chủ cho từng máy chủ
+
+```console
 certtool --generate-privkey > serverkey.pem
 cat > server.info << EOF
 organization = MyOrg
@@ -301,57 +374,79 @@ EOF
 certtool --generate-certificate --load-privkey serverkey.pem \
   --load-ca-certificate cacert.pem --load-ca-privkey cakey.pem \
   --template server.info --outfile servercert.pem
+```
 
-# Cài đặt chứng chỉ trên cả hai máy chủ.
+* Cài đặt chứng chỉ trên cả hai máy chủ.
+
+```console
 sudo mkdir -p /etc/pki/libvirt/private
 sudo cp cacert.pem /etc/pki/CA/
 sudo cp servercert.pem /etc/pki/libvirt/
 sudo cp serverkey.pem /etc/pki/libvirt/private/
+```
 
-# Cấu hình libvirtd cho TLS
+* Cấu hình libvirtd cho TLS
+
+```console
 sudo vim /etc/libvirt/libvirtd.conf
 listen_tls = 1
 listen_tcp = 0
+```
 
-# Khởi động lại libvirtd
+* Khởi động lại libvirtd
+
+```console
 sudo systemctl restart libvirtd
 ```
 
-**Sử dụng SSH (Đơn giản nhất - Khuyên dùng):**
+#### Sử dụng SSH (Đơn giản nhất - Khuyên dùng):
 Không cần cấu hình libvirtd đặc biệt nào. Chỉ cần thiết lập xác thực bằng khóa SSH.
 
+* Trên máy chủ nguồn
+
 ```console
-# Trên máy chủ nguồn
 ssh-keygen -t rsa -b 4096
+```
 
-# Sao chép khóa đến máy chủ đích
+* Sao chép khóa đến máy chủ đích
+
+```console
 ssh-copy-id root@destination-host
+```
 
-# Kiểm tra kết nối
+* Kiểm tra kết nối
+
+```console
 ssh root@destination-host 'virsh version'
 ```
 
 Đây là phương pháp được khuyến nghị!
 
 ### Cấu hình tường lửa
+* Cho phép các cổng libvirt
+  - TCP: 16509 (non-TLS), 16514 (TLS)
+  - SSH: 22
+
+* Debian/Ubuntu (UFW)
 
 ```console
-# Cho phép các cổng libvirt
-# TCP: 16509 (non-TLS), 16514 (TLS)
-# SSH: 22
-
-# Debian/Ubuntu (UFW)
 ufw allow 16509/tcp
 ufw allow 16514/tcp
 ufw allow 22/tcp
+```
 
-# RHEL/CentOS (firewalld)
+* RHEL/CentOS (firewalld)
+
+```console
 firewall-cmd --permanent --add-port=16509/tcp
 firewall-cmd --permanent --add-port=16514/tcp
 firewall-cmd --permanent --add-service=ssh
 firewall-cmd --reload
+```
 
-# trực tiếp qua iptables
+* Trực tiếp qua iptables
+
+```console
 iptables -A INPUT -p tcp --dport 16509 -j ACCEPT
 iptables -A INPUT -p tcp --dport 16514 -j ACCEPT
 iptables -A INPUT -p tcp --dport 22 -j ACCEPT
@@ -359,38 +454,51 @@ iptables -A INPUT -p tcp --dport 22 -j ACCEPT
 
 ## Thực hiện di trú trực tiếp
 ### Di trú trực tiếp cơ bản
-**Sử dụng virsh (phương thức SSH - được khuyến nghị):**
+#### Sử dụng virsh (phương thức SSH - được khuyến nghị):
 Cú pháp: `virsh migrate [options] domain desturi [migrateuri] [dname]`
 
+* Di trú đơn giản sử dụng SSH
+
 ```console
-# Di trú đơn giản sử dụng SSH
 virsh migrate --live my-vm qemu+ssh://destination-host/system
+```
 
-# Với đầu ra chi tiết
+* Với đầu ra chi tiết
+
+```console
 virsh migrate --live --verbose my-vm qemu+ssh://destination-host/system
+```
 
-# Di trú liên tục (giữ lại cấu hình)
+* Di trú liên tục (giữ lại cấu hình)
+
+```console
 virsh migrate --live --persistent my-vm qemu+ssh://destination-host/system
+```
 
-# Hủy định nghĩa nguồn sau khi di trú
+* Hủy định nghĩa nguồn sau khi di trú
+
+```console
 virsh migrate --live --persistent --undefinesource my-vm \
   qemu+ssh://destination-host/system
 ```
 
-**Sử dụng kết nối TCP:**
+#### Sử dụng kết nối TCP:
+* Di trú TCP trực tiếp
 
 ```console
-# Di trú TCP trực tiếp
 virsh migrate --live my-vm qemu+tcp://destination-host/system
+```
 
-# Với cổng tùy chỉnh
+* Với cổng tùy chỉnh
+
+```console
 virsh migrate --live my-vm qemu+tcp://destination-host:16509/system
 ```
 
-**Theo dõi tiến độ di trú:**
+#### Theo dõi tiến độ di trú:
+Theo dõi trong một cửa sổ terminal riêng biệt
 
 ```console
-# Theo dõi trong một cửa sổ terminal riêng biệt
 watch -n 1 'virsh domjobinfo my-vm'
 
 # Hiển thị:
@@ -402,11 +510,15 @@ watch -n 1 'virsh domjobinfo my-vm'
 ```
 
 ### Di trú ngang hàng
-```console
-# Di trú P2P (do máy chủ đích khởi xướng)
-virsh migrate --live --p2p my-vm qemu+ssh://destination-host/system
+* Di trú P2P (do máy chủ đích khởi xướng)
 
-# P2P với di trú qua đường hầm (được mã hóa)
+```console
+virsh migrate --live --p2p my-vm qemu+ssh://destination-host/system
+```
+
+* P2P với di trú qua đường hầm (được mã hóa)
+
+```console
 virsh migrate --live --p2p --tunnelled my-vm \
   qemu+ssh://destination-host/system
 ```
@@ -418,40 +530,59 @@ virsh migrate --live --p2p --tunnelled my-vm \
 - Tự động chọn URI đích
 
 ### Di trú với các tùy chọn tùy chỉnh
+* Chỉ định URI di trú để truyền dữ liệu
+
 ```console
-# Chỉ định URI di trú để truyền dữ liệu
 virsh migrate --live --p2p --tunnelled \
   --migrateuri tcp://192.168.100.1:49152 \
   my-vm qemu+ssh://destination-host/system
+```
 
-# Thiết lập giới hạn băng thông (MB/s)
+* Thiết lập giới hạn băng thông (MB/s)
+
+```console
 virsh migrate --live --verbose --bandwidth 100 \
   my-vm qemu+ssh://destination-host/system
+```
 
-# Tạm dừng máy ảo đích sau khi di trú (để kiểm thử)
+* Tạm dừng máy ảo đích sau khi di trú (để kiểm thử)
+
+```console
 virsh migrate --live --suspend my-vm qemu+ssh://destination-host/system
+```
 
-# Thay đổi tên máy ảo tại đích
+* Thay đổi tên máy ảo tại đích
+
+```console
 virsh migrate --live my-vm qemu+ssh://destination-host/system \
   --dname my-vm-migrated
+```
 
-# Di trú dữ liệu không an toàn (bỏ qua các bước kiểm tra an toàn - hãy thận trọng khi sử dụng!)
+* Di trú dữ liệu không an toàn (bỏ qua các bước kiểm tra an toàn - hãy thận trọng khi sử dụng!)
+
+```console
 virsh migrate --live --unsafe my-vm qemu+ssh://destination-host/system
 ```
 
 ### Di trú dữ liệu lưu trữ trực tuyến
-**Di trú máy ảo sử dụng bộ lưu trữ không chia sẻ:**
+#### Di trú máy ảo sử dụng bộ lưu trữ không chia sẻ:
+* Sao chép đĩa trong quá trình di trú
 
 ```console
-# Sao chép đĩa trong quá trình di trú
 virsh migrate --live --copy-storage-all my-vm \
   qemu+ssh://destination-host/system
+```
 
-# Chỉ sao chép các thay đổi gia tăng (nếu đĩa đã tồn tại một phần)
+* Chỉ sao chép các thay đổi gia tăng (nếu đĩa đã tồn tại một phần)
+
+```console
 virsh migrate --live --copy-storage-inc my-vm \
   qemu+ssh://destination-host/system
+```
 
-# Chỉ định các đường dẫn đĩa đích
+* Chỉ định các đường dẫn đĩa đích
+
+```console
 virsh migrate --live --copy-storage-all \
   --migrate-disks vda \
   my-vm qemu+ssh://destination-host/system
@@ -460,37 +591,54 @@ virsh migrate --live --copy-storage-all \
 Quá trình này chậm hơn nhiều do phải sao chép dữ liệu trên đĩa! Hãy theo dõi bằng lệnh: `virsh domjobinfo my-vm`
 
 ### Di trú ngoại tuyến (Cold Migration)
-```console
-# Hãy tắt máy ảo trước.
-virsh shutdown my-vm
+* Tắt máy ảo trước.
 
-# Đợi tắt máy
+```console
+virsh shutdown my-vm
+```
+
+* Đợi tắt máy
+
+```console
 while [ "$(virsh domstate my-vm)" != "shut off" ]; do
     sleep 1
 done
+```
 
-# Di trú cấu hình và đĩa
+* Di trú cấu hình và đĩa
+
+```console
 virsh dumpxml my-vm > my-vm.xml
 scp my-vm.xml root@destination-host:/tmp/
 scp /var/lib/libvirt/images/my-vm.qcow2 \
     root@destination-host:/var/lib/libvirt/images/
+```
 
-# Trên máy chủ đích
+* Trên máy chủ đích
+
+```console
 virsh define /tmp/my-vm.xml
 virsh start my-vm
+```
 
-# Loại bỏ khỏi máy chủ nguồn
+* Loại bỏ khỏi máy chủ nguồn
+
+```console
 virsh undefine my-vm
 ```
 
 ## Các kịch bản di trú nâng cao
 ### Di trú nén
+* Sử dụng nén để giảm băng thông (mức sử dụng CPU cao hơn)
+
 ```console
-# Sử dụng nén để giảm băng thông (mức sử dụng CPU cao hơn)
 virsh migrate --live --compressed my-vm \
   qemu+ssh://destination-host/system
+```
 
-# Điều chỉnh mức độ nén và số luồng
+* Điều chỉnh mức độ nén và số luồng
+
+```console
 virsh migrate --live --compressed \
   --comp-methods mt \
   --comp-mt-level 9 \
@@ -499,12 +647,16 @@ virsh migrate --live --compressed \
 ```
 
 ### Di trú với cơ chế Tự động hội tụ (Auto-Converge)
+* Tự động điều tiết VM nếu quá trình di trú không hội tụ.
+
 ```console
-# Tự động điều tiết VM nếu quá trình di trú không hội tụ.
 virsh migrate --live --auto-converge my-vm \
   qemu+ssh://destination-host/system
+```
 
-# Đặt mức ga (throttle) ban đầu và tăng dần.
+* Đặt mức throttle ban đầu và tăng dần.
+
+```console
 virsh migrate --live --auto-converge \
   --auto-converge-initial 20 \
   --auto-converge-increment 10 \
@@ -514,12 +666,16 @@ virsh migrate --live --auto-converge \
 Hỗ trợ các khối lượng công việc đòi hỏi nhiều bộ nhớ.
 
 ### Di trú theo cơ chế Post-Copy
+* Khởi động máy ảo tại đích trước khi chuyển toàn bộ bộ nhớ.
+
 ```console
-# Khởi động máy ảo tại đích trước khi chuyển toàn bộ bộ nhớ.
 virsh migrate --live --postcopy my-vm \
   qemu+ssh://destination-host/system
+```
 
-# Chuyển sang chế độ post-copy trong quá trình di trú.
+* Chuyển sang chế độ post-copy trong quá trình di trú.
+
+```console
 virsh migrate-setmaxdowntime my-vm 1000
 virsh migrate-postcopy my-vm
 ```
@@ -533,16 +689,23 @@ virsh migrate-postcopy my-vm
     - Có thể gặp vấn đề về hiệu năng cho đến khi hoàn tất quá trình chuyển giao
 
 ### Di trú với cấu hình bền vững
+* Giữ lại máy ảo tại đích, xóa khỏi nguồn.
+
 ```console
-# Giữ lại máy ảo tại đích, xóa khỏi nguồn.
 virsh migrate --live --persistent --undefinesource my-vm \
   qemu+ssh://destination-host/system
+```
 
-# Duy trì định nghĩa máy ảo trên cả hai máy chủ (không độc quyền)
+* Duy trì định nghĩa máy ảo trên cả hai máy chủ (không độc quyền)
+
+```console
 virsh migrate --live --persistent my-vm \
   qemu+ssh://destination-host/system
+```
 
-# Xác minh tại đích
+* Xác minh tại đích
+
+```console
 ssh root@destination-host 'virsh list --all'
 ```
 
@@ -592,98 +755,142 @@ echo "All migrations initiated"
 
 ## Tối ưu hóa hiệu năng
 ### Quản lý băng thông
+* Thiết lập giới hạn băng thông di trú (MB/s)
+
 ```console
-# Thiết lập giới hạn băng thông di trú (MB/s)
 virsh migrate-setspeed my-vm 100
+```
 
-# Kiểm tra giới hạn băng thông hiện tại
+* Kiểm tra giới hạn băng thông hiện tại
+
+```console
 virsh migrate-getspeed my-vm
+```
 
-# Diễn ra trong thời gian di trú
+* Diễn ra trong thời gian di trú
+
+```console
 virsh migrate --live --bandwidth 200 my-vm \
   qemu+ssh://destination-host/system
+```
 
-# Điều chỉnh linh hoạt trong quá trình di trú
+* Điều chỉnh linh hoạt trong quá trình di trú
+
+```console
 virsh migrate-setspeed my-vm 150
 ```
 
 ### Quản lý thời gian ngừng hoạt động
+* Thiết lập thời gian ngừng hoạt động tối đa có thể chấp nhận được (mili giây)
 ```console
-# Thiết lập thời gian ngừng hoạt động tối đa có thể chấp nhận được (mili giây)
 virsh migrate-setmaxdowntime my-vm 500
+```
 
-# Mặc định thường là 300ms.
-# Các giá trị thấp hơn có thể khiến quá trình di trú thất bại.
-# Các giá trị cao hơn giúp giảm tổng thời gian di trú.
+Mặc định thường là 300ms. Các giá trị thấp hơn có thể khiến quá trình di trú thất bại. Các giá trị cao hơn giúp giảm tổng thời gian di trú.
 
-# Kiểm tra xem có thể đáp ứng ngưỡng thời gian ngừng hoạt động hay không.
+* Kiểm tra xem có thể đáp ứng ngưỡng thời gian ngừng hoạt động hay không.
+
+```console
 virsh domjobinfo my-vm | grep downtime
 ```
 
 ### Tinh chỉnh mạng
+* Sử dụng mạng di trú dữ liệu chuyên dụng
+
 ```console
-# Sử dụng mạng di ưu dữ liệu chuyên dụng
 virsh migrate --live --migrateuri tcp://10.0.1.1:49152 \
   my-vm qemu+ssh://destination-host/system
+```
 
-# Cấu hình virtio-net đa hàng đợi để đạt hiệu năng tốt hơn
+* Cấu hình virtio-net đa hàng đợi để đạt hiệu năng tốt hơn
+
+```console
 virsh edit my-vm
+```
 
+```xml
 <interface type='network'>
   <source network='default'/>
   <model type='virtio'/>
   <driver name='vhost' queues='4'/>
 </interface>
+```
 
-# Bật MTU lớn (jumbo frames) trên mạng di trú
+* Bật MTU lớn (jumbo frames) trên mạng di trú
+
+```console
 ip link set dev eth1 mtu 9000
 ```
 
 ### Tối ưu hóa bộ nhớ
-```console
-# Bật tính năng memory balloon để di trú tốt hơn
-virsh edit my-vm
+* Bật tính năng memory balloon để di trú tốt hơn
 
+```console
+virsh edit my-vm
+```
+
+```xml
 <memballoon model='virtio'>
   <stats period='10'/>
 </memballoon>
+```
 
-# Giảm bộ nhớ máy ảo trước khi di trú
+* Giảm bộ nhớ máy ảo trước khi di trú
+
+```console
 virsh setmem my-vm 2G
+```
 
-# Bật huge page để di trú nhanh hơn
+* Bật huge page để di trú nhanh hơn
+
+```console
 virsh edit my-vm
+```
 
+```xml
 <memoryBacking>
   <hugepages/>
 </memoryBacking>
+```
 
-# Xác minh huge page trên máy chủ
+* Xác minh huge page trên máy chủ
+
+```console
 cat /proc/meminfo | grep Huge
 ```
 
 ### Cấu hình CPU
+* Sử dụng tính năng ghim CPU để đạt hiệu năng ổn định.
+
 ```console
-# Sử dụng tính năng ghim CPU để đạt hiệu năng ổn định.
 virsh vcpupin my-vm 0 0
 virsh vcpupin my-vm 1 1
+```
 
-# Đảm bảo mẫu CPU tương thích
+* Đảm bảo mẫu CPU tương thích
+
+```console
 virsh edit my-vm
+```
 
+```xml
 <cpu mode='custom' match='exact'>
   <model>Broadwell</model>
   <feature policy='require' name='pdpe1gb'/>
 </cpu>
+```
 
-# Kiểm tra khả năng tương thích của CPU
+* Kiểm tra khả năng tương thích của CPU
+
+```console
 virsh cpu-compare cpu.xml
 ```
 
 ## Giám sát và Khắc phục sự cố
 ### Theo dõi tiến độ di trú
+* Số liệu thống kê di trú dữ liệu theo thời gian thực
+
 ```console
-# Số liệu thống kê di trú dữ liệu theo thời gian thực
 virsh domjobinfo my-vm
 
 # Kết quả đầu ra bao gồm:
@@ -694,8 +901,11 @@ virsh domjobinfo my-vm
 # Memory processed: 2.3 GiB
 # Memory remaining: 256 MiB
 # Memory bandwidth: 128 MiB/s
+```
 
-# Giám sát liên tục
+* Giám sát liên tục
+
+```console
 watch -n 1 'virsh domjobinfo my-vm'
 ```
 
@@ -711,54 +921,78 @@ done
 ```
 
 ### Nhật ký di trú dữ liệu
+* Kiểm tra nhật ký libvirt
+
 ```console
-# Kiểm tra nhật ký libvirt
 tail -f /var/log/libvirt/libvirtd.log
+```
 
-# Các bản ghi QEMU cho máy ảo cụ thể
+* Các bản ghi QEMU cho máy ảo cụ thể
+
+```console
 tail -f /var/log/libvirt/qemu/my-vm.log
+```
 
-# Nhật ký hệ thống
+* Nhật ký hệ thống
+
+```console
 journalctl -u libvirtd -f
+```
 
-# Lọc các sự kiện di trú
+* Lọc các sự kiện di trú
+
+```console
 journalctl -u libvirtd | grep -i migrate
 ```
 
 ### Các vấn đề thường gặp và giải pháp
 #### Vấn đề: Quá trình di trú bị đình trệ hoặc không bao giờ hoàn tất
+* Kiểm tra xem máy ảo có mức độ biến động bộ nhớ cao hay không.
 
 ```console
-# Kiểm tra xem máy ảo có mức độ biến động bộ nhớ cao hay không.
 virsh domjobinfo my-vm | grep "Memory bandwidth"
 ```
 
 **Giải pháp:**
 
+1. Bật chế độ tự động hội tụ
+
 ```console
-# 1. Bật chế độ tự động hội tụ
 virsh migrate --live --auto-converge my-vm qemu+ssh://dest/system
-
-# 2. Tăng băng thông
-virsh migrate-setspeed my-vm 500
-
-# 3. Sử dụng tính năng nén
-virsh migrate --live --compressed my-vm qemu+ssh://dest/system
-
-# 4. Chuyển sang chế độ post-copy
-virsh migrate-postcopy my-vm
-
-# 5. Giảm tạm thời khối lượng công việc của máy ảo
 ```
+
+2. Tăng băng thông
+
+```console
+virsh migrate-setspeed my-vm 500
+```
+
+3. Sử dụng tính năng nén
+
+```console
+virsh migrate --live --compressed my-vm qemu+ssh://dest/system
+```
+
+4. Chuyển sang chế độ post-copy
+
+```console
+virsh migrate-postcopy my-vm
+```
+
+5. Giảm tạm thời khối lượng công việc của máy ảo
 
 #### Vấn đề: Lỗi tương thích CPU
 Lỗi: "migration of domain failed: Unsafe migration..."
 
-```console
-# Kiểm tra khả năng tương thích của CPU
-virsh capabilities | grep features
+* Kiểm tra khả năng tương thích của CPU
 
-# Giải pháp: Sử dụng chế độ CPU tương thích
+```console
+virsh capabilities | grep features
+```
+
+* Giải pháp: Sử dụng chế độ CPU tương thích
+
+```console
 virsh edit my-vm
 
 # Thay đổi từ:
@@ -773,20 +1007,30 @@ virsh edit my-vm
 <cpu mode='custom' match='exact'>
   <model>Westmere</model>
 </cpu>
+```
 
-# Buộc di trú không an toàn (chỉ dành cho thử nghiệm)
+* Buộc di trú không an toàn (chỉ dành cho thử nghiệm)
+
+```console
 virsh migrate --live --unsafe my-vm qemu+ssh://dest/system
 ```
 
 #### Sự cố: Không thể kết nối mạng sau khi di trú
+* Xác minh cấu hình mạng khớp nhau
+
 ```console
-# Xác minh cấu hình mạng khớp nhau
 virsh net-list --all  # Trên cả hai máy chủ
+```
 
-# Kiểm tra cấu hình cầu nối
+* Kiểm tra cấu hình cầu nối
+
+```console
 brctl show  # Trên cả hai máy chủ
+```
 
-# Xác minh giao diện mạng của máy ảo
+* Xác minh giao diện mạng của máy ảo
+
+```console
 virsh domiflist my-vm
 ```
 
@@ -796,14 +1040,21 @@ virsh domiflist my-vm
     3. Cấu hình định tuyến phù hợp giữa các máy chủ
 
 #### Sự cố: Không thể truy cập bộ nhớ
+* Xác minh bộ lưu trữ chia sẻ đã được gắn trên cả hai máy chủ.
+
 ```console
-# Xác minh bộ lưu trữ chia sẻ đã được gắn trên cả hai máy chủ.
 df -h | grep libvirt
+```
 
-# Kiểm tra kết nối NFS
+* Kiểm tra kết nối NFS
+
+```console
 showmount -e nfs-server
+```
 
-# Xác minh quyền truy cập tệp
+* Xác minh quyền truy cập tệp
+
+```console
 ls -la /var/lib/libvirt/images/
 ```
 
@@ -813,37 +1064,57 @@ ls -la /var/lib/libvirt/images/
     3. Kiểm tra kết nối NFS/bộ lưu trữ
 
 #### Vấn đề: Quyền bị từ chối
+* Kiểm tra quyền libvirt
+
 ```console
-# Kiểm tra quyền libvirt
 ls -la /var/run/libvirt/
-
-# Xác minh tư cách thành viên nhóm
-groups $USER
-
-# Kiểm tra SELinux/AppArmor
-getenforce  # SELinux
-aa-status   # AppArmor
-
-# Giải pháp:
-# 1. Thêm người dùng vào nhóm libvirt
-usermod -aG libvirt $USER
-
-# 2. Cấu hình SELinux
-setsebool -P virt_use_nfs 1
-
-# 3. Sử dụng quyền root để kiểm thử
 ```
 
-#### Vấn đề: Hiệu suất di trú dữ liệu chậm
-```console
-# Kiểm tra băng thông mạng
-iperf3 -c destination-host
+* Xác minh tư cách thành viên nhóm
 
-# Kiểm tra mức sử dụng CPU
+```console
+groups $USER
+```
+
+* Kiểm tra SELinux/AppArmor
+
+```console
+getenforce  # SELinux
+aa-status   # AppArmor
+```
+
+* Giải pháp:
+1. Thêm người dùng vào nhóm libvirt
+
+```console
+usermod -aG libvirt $USER
+```
+
+2. Cấu hình SELinux
+
+```console
+setsebool -P virt_use_nfs 1
+```
+
+3. Sử dụng quyền root để kiểm thử
+
+#### Vấn đề: Hiệu suất di trú dữ liệu chậm
+* Kiểm tra băng thông mạng
+
+```console
+iperf3 -c destination-host
+```
+
+* Kiểm tra mức sử dụng CPU
+
+```console
 top
 htop
+```
 
-# Giám sát I/O đĩa
+* Giám sát I/O đĩa
+
+```console
 iotop
 ```
 
