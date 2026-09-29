@@ -64,42 +64,59 @@ Tỷ lệ phân bổ vượt mức: 1.25:1 (80/64)
 
 ## Kiểm tra trạng thái bộ nhớ máy chủ
 ### Xem bộ nhớ vật lý
+* Tổng bộ nhớ hệ thống
 
 ```console
-# Tổng bộ nhớ hệ thống
 free -h
+```
 
-# Kết quả đầu ra:
-#               total        used        free      shared  buff/cache   available
-# Mem:           62Gi       15Gi       30Gi       1.0Gi       16Gi        45Gi
-# Swap:          8.0Gi       0B         8.0Gi
+Kết quả đầu ra:
 
-# Thông tin chi tiết về bộ nhớ
+```
+              total        used        free      shared  buff/cache   available
+Mem:           62Gi       15Gi       30Gi       1.0Gi       16Gi        45Gi
+Swap:          8.0Gi       0B         8.0Gi
+```
+
+* Thông tin chi tiết về bộ nhớ
+```console
 cat /proc/meminfo | head -20
+```
 
-# Bộ nhớ theo node NUMA
+* Bộ nhớ theo node NUMA
+
+```console
 numactl --hardware
+```
 
-# Bộ nhớ trống trên mỗi núnodet
+* Bộ nhớ trống trên mỗi núnodet
+
+```console
 numastat -m
 ```
 
 ### Kiểm tra mức sử dụng bộ nhớ hiện tại của máy ảo
+* Liệt kê tất cả các máy ảo cùng với thông tin cấp phát bộ nhớ.
 
-```console
-# Liệt kê tất cả các máy ảo cùng với thông tin cấp phát bộ nhớ.
+```bash
 virsh list --all
 for vm in $(virsh list --name); do
     echo "VM: $vm"
     virsh dominfo $vm | grep memory
 done
+```
 
-# Tổng bộ nhớ được cấp phát
+* Tổng bộ nhớ được cấp phát
+
+```bash
 virsh list --name | while read vm; do
     virsh dominfo $vm | grep "Max memory"
 done | awk '{sum+=$3} END {print "Total allocated: " sum/1024/1024 " GB"}'
+```
 
-# Mức sử dụng bộ nhớ thực tế trên mỗi máy ảo
+* Mức sử dụng bộ nhớ thực tế trên mỗi máy ảo
+
+```bash
 virsh list --name | while read vm; do
     echo -n "$vm: "
     virsh dommemstat $vm 2>/dev/null | grep actual
@@ -117,8 +134,8 @@ HOST_MEM_GB=$(echo "scale=2; $HOST_MEM/1024/1024/1024" | bc)
 
 TOTAL_ALLOCATED=0
 for vm in $(virsh list --all --name); do
-    VM_MEM=$(virsh dominfo $vm 2>/dev/null | grep "Max memory" | awk '{print $3}')
-    TOTAL_ALLOCATED=$((TOTAL_ALLOCATED + VM_MEM))
+  VM_MEM=$(virsh dominfo $vm 2>/dev/null | grep "Max memory" | awk '{print $3}')
+  TOTAL_ALLOCATED=$((TOTAL_ALLOCATED + VM_MEM))
 done
 
 TOTAL_ALLOCATED_GB=$(echo "scale=2; $TOTAL_ALLOCATED/1024/1024" | bc)
@@ -129,7 +146,7 @@ echo "Total Allocated: ${TOTAL_ALLOCATED_GB} GB"
 echo "Overcommit Ratio: ${OVERCOMMIT}:1"
 
 if (( $(echo "$OVERCOMMIT > 1.5" | bc -l) )); then
-    echo "WARNING: High overcommit ratio!"
+  echo "WARNING: High overcommit ratio!"
 fi
 ```
 
@@ -155,89 +172,128 @@ Cơ chế ballooning bộ nhớ cho phép máy chủ thu hồi bộ nhớ từ c
 ```
 
 ### Cấu hình Ballooning bộ nhớ
-**Bật thiết bị balloon trong máy ảo:**
+#### Bật thiết bị balloon trong máy ảo:
+* Kiểm tra xem máy ảo có thiết bị balloon hay không.
 
 ```console
-# Kiểm tra xem máy ảo có thiết bị balloon hay không.
 virsh dumpxml my-vm | grep balloon
+```
 
-# Nếu chưa có thì thêm vào.
+* Nếu chưa có thì thêm vào.
+
+```console
 virsh edit my-vm
+```
 
-# Thêm vào trước </devices>:
+* Thêm vào trước `</devices>`:
+
+```xml
 <memballoon model='virtio'>
   <stats period='10'/>
   <address type='pci' domain='0x0000' bus='0x00' slot='0x08' function='0x0'/>
 </memballoon>
+```
 
-# Khởi động lại máy ảo
+* Khởi động lại máy ảo
+
+```console
 virsh shutdown my-vm
 virsh start my-vm
+```
 
-# Xác minh thiết bị balloon
+* Xác minh thiết bị balloon
+
+```console
 virsh dumpxml my-vm | grep balloon
 ```
 
-**Bên trong máy ảo khách (xác minh trình điều khiển):**
+#### Bên trong máy ảo khách (xác minh trình điều khiển):
+* Kiểm tra xem balloon driver đã được nạp chưa
 
 ```console
-# Kiểm tra xem balloon driver đã được nạp chưa
 lsmod | grep virtio_balloon
+```
 
-# Nếu chưa được tải
+* Nếu chưa được tải
+
+```console
 modprobe virtio_balloon
+```
 
-# Làm cho bền vững
+* Làm cho bền vững
+
+```console
 echo "virtio_balloon" >> /etc/modules
 ```
 
 ### Sử dụng Memory Ballooning
+* Xem các cài đặt bộ nhớ hiện tại
+
 ```console
-# Xem các cài đặt bộ nhớ hiện tại
 virsh dominfo my-vm | grep memory
+```
 
-# Kết quả đầu ra:
-# Max memory:     4194304 KiB (4 GB)
-# Used memory:    4194304 KiB (4 GB)
+> Kết quả đầu ra:
+> - Max memory:     4194304 KiB (4 GB)
+> - Used memory:    4194304 KiB (4 GB)
 
-# Thiết lập bộ nhớ tối đa (yêu cầu khởi động lại máy ảo)
+* Thiết lập bộ nhớ tối đa (yêu cầu khởi động lại máy ảo)
+
+```console
 virsh setmaxmem my-vm 4G --config
+```
 
-# Thiết lập bộ nhớ hiện tại (đang hoạt động, sử dụng cơ chế balloon)
+* Thiết lập bộ nhớ hiện tại (đang hoạt động, sử dụng cơ chế balloon)
+
+```console
 virsh setmem my-vm 2G --live
+```
 
-# Máy ảo hiện thực tế có 2GB, máy chủ đã thu hồi lại 2GB.
+Máy ảo hiện thực tế có 2GB, máy chủ đã thu hồi lại 2GB.
 
-# Xem số liệu thống kê bộ nhớ
+* Xem số liệu thống kê bộ nhớ
+
+```console
 virsh dommemstat my-vm
+```
 
-# Kết quả đầu ra:
-# actual 2097152  (current allocation)
-# swap_in 0
-# swap_out 0
-# major_fault 2234
-# minor_fault 89563
-# unused 1572864  (unused by guest)
-# available 2097152
-# usable 1835008  (guest can use)
-# rss 2359296     (host RSS)
+Kết quả đầu ra:
+
+```
+actual 2097152  (current allocation)
+swap_in 0
+swap_out 0
+major_fault 2234
+minor_fault 89563
+unused 1572864  (unused by guest)
+available 2097152
+usable 1835008  (guest can use)
+rss 2359296     (host RSS)
 ```
 
 ### Tự động Ballooning
-**Sử dụng numad để quản lý NUMA và bộ nhớ tự động:**
+#### Sử dụng numad để quản lý NUMA và bộ nhớ tự động:
+* Cài đặt numad
 
 ```console
-# Cài đặt numad
 apt install numad  # Debian/Ubuntu
 dnf install numad  # RHEL/CentOS
+```
 
-# Khởi động numad
+* Khởi động numad
+
+```console
 systemctl start numad
 systemctl enable numad
+```
 
-# Cấu hình máy ảo để quản lý tự động
+* Cấu hình máy ảo để quản lý tự động
+
+```console
 virsh edit my-vm
+```
 
+```xml
 <vcpu placement='auto'>4</vcpu>
 <numatune>
   <memory mode='strict' placement='auto'/>
@@ -270,30 +326,45 @@ Tổng cộng: 1 trang (giải phóng 2 trang)
 ```
 
 ### Bật KSM
+* Kiểm tra trạng thái KSM
 
 ```console
-# Kiểm tra trạng thái KSM
 cat /sys/kernel/mm/ksm/run
-# 0 = disabled, 1 = enabled
+```
 
-# Bật KSM
+0 = disabled, 1 = enabled
+
+* Bật KSM
+
+```console
 echo 1 | sudo tee /sys/kernel/mm/ksm/run
+```
 
-# Cấu hình các tham số KSM
-# Số trang cần quét mỗi lần chạy
+* Cấu hình các tham số KSM. Số trang cần quét mỗi lần chạy
+
+```console
 echo 100 | sudo tee /sys/kernel/mm/ksm/pages_to_scan
+```
 
-# Thời gian nghỉ giữa các lần quét (mili giây)
+* Thời gian nghỉ giữa các lần quét (mili giây)
+
+```console
 echo 20 | sudo tee /sys/kernel/mm/ksm/sleep_millisecs
+```
 
-# Làm cho bền vững
+* Làm cho bền vững
+
+```console
 cat > /etc/tmpfiles.d/ksm.conf << 'EOF'
 w /sys/kernel/mm/ksm/run - - - - 1
 w /sys/kernel/mm/ksm/pages_to_scan - - - - 100
 w /sys/kernel/mm/ksm/sleep_millisecs - - - - 20
 EOF
+```
 
-# Hoặc tạo dịch vụ systemd
+* Hoặc tạo dịch vụ systemd
+
+```console
 cat > /etc/systemd/system/ksm.service << 'EOF'
 [Unit]
 Description=Enable Kernel Same-page Merging
@@ -307,31 +378,42 @@ ExecStart=/bin/bash -c 'echo 20 > /sys/kernel/mm/ksm/sleep_millisecs'
 [Install]
 WantedBy=multi-user.target
 EOF
+```
 
+```console
 systemctl enable ksm
 systemctl start ksm
 ```
 
 ### Theo dõi hiệu suất KSM
+* Số liệu thống kê KSM
 
 ```console
-# Số liệu thống kê KSM
 cat /sys/kernel/mm/ksm/pages_sharing
 cat /sys/kernel/mm/ksm/pages_shared
 cat /sys/kernel/mm/ksm/pages_unshared
 cat /sys/kernel/mm/ksm/pages_volatile
+```
 
-# Tính toán dung lượng bộ nhớ tiết kiệm được
+* Tính toán dung lượng bộ nhớ tiết kiệm được
+
+```console
 SHARING=$(cat /sys/kernel/mm/ksm/pages_sharing)
 SHARED=$(cat /sys/kernel/mm/ksm/pages_shared)
 SAVED=$((SHARING - SHARED))
 SAVED_MB=$((SAVED * 4 / 1024))
 echo "Memory saved by KSM: ${SAVED_MB} MB"
+```
 
-# Thông tin chi tiết về KSM
+* Thông tin chi tiết về KSM
+
+```console
 grep -H '' /sys/kernel/mm/ksm/*
+```
 
-# Theo dõi KSM theo thời gian
+* Theo dõi KSM theo thời gian
+
+```console
 watch -n 5 'echo "Pages sharing: $(cat /sys/kernel/mm/ksm/pages_sharing)"; \
             echo "Pages shared: $(cat /sys/kernel/mm/ksm/pages_shared)"; \
             echo "Saved: $(( ($(cat /sys/kernel/mm/ksm/pages_sharing) - \
@@ -339,15 +421,15 @@ watch -n 5 'echo "Pages sharing: $(cat /sys/kernel/mm/ksm/pages_sharing)"; \
 ```
 
 ### Cấu hình các máy ảo cho KSM
+Bật tính năng gộp bộ nhớ trong máy ảo
 
 ```console
-# Bật tính năng gộp bộ nhớ trong máy ảo
 virsh edit my-vm
 ```
 
 ```xml
 <memoryBacking>
-  <nosharepages/>  <!-- Disable KSM for this VM (if needed) -->
+  <nosharepages/>  <!-- Vô hiệu hóa KSM cho máy ảo này (nếu cần) -->
 </memoryBacking>
 ```
 
@@ -359,24 +441,34 @@ Hoặc kích hoạt một cách tường minh (hành vi mặc định). Chỉ c�
     - Có cấu hình tương đồng
 
 ### Tinh chỉnh hiệu suất KSM
+* Quét tích cực (tốn nhiều CPU hơn, hợp nhất tốt hơn)
 
 ```console
-# Quét tích cực (tốn nhiều CPU hơn, hợp nhất tốt hơn)
 echo 500 | sudo tee /sys/kernel/mm/ksm/pages_to_scan
 echo 10 | sudo tee /sys/kernel/mm/ksm/sleep_millisecs
+```
 
-# Quét thận trọng (ít sử dụng CPU hơn, ít thực hiện gộp hơn)
+* Quét thận trọng (ít sử dụng CPU hơn, ít thực hiện gộp hơn)
+
+```console
 echo 50 | sudo tee /sys/kernel/mm/ksm/pages_to_scan
 echo 100 | sudo tee /sys/kernel/mm/ksm/sleep_millisecs
+```
 
-# Cân bằng (khuyên dùng)
+* Cân bằng (khuyên dùng)
+
+```console
 echo 100 | sudo tee /sys/kernel/mm/ksm/pages_to_scan
 echo 20 | sudo tee /sys/kernel/mm/ksm/sleep_millisecs
-
-# Theo dõi mức độ ảnh hưởng đến CPU
-top -d 1
-# Tìm kiếm tiến trình [ksmd]
 ```
+
+* Theo dõi mức độ ảnh hưởng đến CPU
+
+```console
+top -d 1
+```
+
+Tìm kiếm tiến trình [ksmd]
 
 ## Transparent Huge Pages (THP)
 ### Tìm hiểu về THP
@@ -389,19 +481,29 @@ Trang thông thường: 4KB Trang dung lượng lớn: 2MB (lớn hơn 512 lần
 * Hiệu năng bộ nhớ tốt hơn
 
 ### Bật THP cho các máy ảo
+* Kiểm tra trạng thái THP
+
 ```console
-# Kiểm tra trạng thái THP
 cat /sys/kernel/mm/transparent_hugepage/enabled
 # [always] madvise never
+```
 
-# Bật THP
+* Bật THP
+
+```console
 echo always | sudo tee /sys/kernel/mm/transparent_hugepage/enabled
+```
 
-# Cấu hình chống phân mảnh (nén dữ liệu)
+* Cấu hình chống phân mảnh (nén dữ liệu)
+
+```console
 echo defer | sudo tee /sys/kernel/mm/transparent_hugepage/defrag
 # Tùy chọn: always defer defer+madvise madvise never
+```
 
-# Làm cho bền vững
+* Làm cho bền vững
+
+```console
 cat >> /etc/rc.local << 'EOF'
 echo always > /sys/kernel/mm/transparent_hugepage/enabled
 echo defer > /sys/kernel/mm/transparent_hugepage/defrag
@@ -413,16 +515,23 @@ chmod +x /etc/rc.local
 ### Cấu hình các máy ảo cho THP
 Các máy ảo tự động sử dụng THP nếu tính năng này được bật trên máy chủ vật lý (host).
 
+* Kiểm tra bên trong máy ảo khách
+
 ```console
-# Kiểm tra bên trong máy ảo khách
 cat /proc/meminfo | grep Huge
+```
 
-# AnonHugePages: 2097152 kB (2GB dưới dạng huge page)
+AnonHugePages: 2097152 kB (2GB dưới dạng huge page)
 
-# Xác minh việc phân bổ THP
+* Xác minh việc phân bổ THP
+
+```console
 cat /sys/kernel/mm/transparent_hugepage/khugepaged/pages_collapsed
+```
 
-# Theo dõi hiệu quả của THP
+* Theo dõi hiệu quả của THP
+
+```console
 watch -n 1 'cat /proc/meminfo | grep Huge'
 ```
 
@@ -438,8 +547,8 @@ watch -n 1 'cat /proc/meminfo | grep Huge'
     - Đảm bảo khả năng sẵn sàng
     - Không tốn chi phí xử lý cho việc nén/gom vùng nhớ
 
+* Cấu hình huge page thông thường cho máy ảo
 ```console
-# Cấu hình huge page thông thường cho máy ảo
 virsh edit my-vm
 ```
 
@@ -452,11 +561,13 @@ virsh edit my-vm
 </memoryBacking>
 ```
 
+* Phân bổ trước các trang bộ nhớ lớn trên máy chủ.
+
 ```console
-# Phân bổ trước các trang bộ nhớ lớn trên máy chủ.
 echo 4096 > /proc/sys/vm/nr_hugepages
-# 4096 trang * 2MB = 8GB
 ```
+
+4096 trang * 2MB = 8GB
 
 ## Hoán đổi bộ nhớ và zswap
 ### Tìm hiểu về VM Swapping
@@ -469,155 +580,193 @@ echo 4096 > /proc/sys/vm/nr_hugepages
 
 
 ### Cấu hình Swap cho Host
+* Kiểm tra swap hiện tại
 
 ```console
-# Kiểm tra swap hiện tại
 free -h
 swapon --show
+```
 
-# Tạo tệp hoán đổi nếu cần
+* Tạo tệp hoán đổi nếu cần
+
+```console
 sudo fallocate -l 8G /swapfile
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
 sudo swapon /swapfile
+```
 
-# Làm cho bền vững
+* Làm cho bền vững
+
+```console
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
 
-# Cấu hình swappiness (mức độ tích cực thực hiện swap)
-# Mặc định: 60, Phạm vi: 0-100
-# Thấp hơn = ít hoán đổi hơn
+* Cấu hình swappiness (mức độ tích cực thực hiện swap). Mặc định: 60, Phạm vi: 0-100. Thấp hơn = ít hoán đổi hơn
 
+```console
 sudo sysctl vm.swappiness=10
 echo "vm.swappiness=10" | sudo tee -a /etc/sysctl.conf
 ```
 
 ### Bật zswap (Bộ nhớ đệm RAM nén)
+zswap nén các trang dữ liệu trước khi ghi vào vùng swap. Nhanh hơn nhiều so với hoán đổi dữ liệu trên đĩa.
+
+* Bật zswap
 
 ```console
-# zswap nén các trang dữ liệu trước khi ghi vào vùng swap.
-# Nhanh hơn nhiều so với hoán đổi dữ liệu trên đĩa.
-
-# Bật zswap
 echo 1 | sudo tee /sys/module/zswap/parameters/enabled
+```
 
-# Cấu hình zswap
+* Cấu hình zswap
+
+```console
 echo 20 | sudo tee /sys/module/zswap/parameters/max_pool_percent
 echo lz4 | sudo tee /sys/module/zswap/parameters/compressor
 echo z3fold | sudo tee /sys/module/zswap/parameters/zpool
+```
 
-# Thiết lập vĩnh viễn (thêm vào tham số kernel)
+* Thiết lập vĩnh viễn (thêm vào tham số kernel)
+
+```console
 sudo vim /etc/default/grub
-GRUB_CMDLINE_LINUX="zswap.enabled=1 zswap.compressor=lz4 zswap.max_pool_percent=20"
+````
 
+```
+GRUB_CMDLINE_LINUX="zswap.enabled=1 zswap.compressor=lz4 zswap.max_pool_percent=20"
+```
+
+```console
 sudo update-grub
 sudo reboot
+```
 
-# Kiểm tra số liệu thống kê zswap
+* Kiểm tra số liệu thống kê zswap
+```console
 cat /sys/kernel/debug/zswap/*
 ```
 
 ### Giải pháp thay thế: zram (Thiết bị khối nén)
 zram tạo ra một thiết bị khối được nén trong RAM. Nó hoạt động hiệu quả hơn zswap đối với một số loại tác vụ.
 
+* Cài đặt các công cụ zram
+
 ```console
-# Cài đặt các công cụ zram
 apt install zram-config  # Debian/Ubuntu
 dnf install zram  # RHEL/CentOS
+```
 
-# Cấu hình thủ công
+* Cấu hình thủ công
+
+```console
 modprobe zram
 echo lz4 > /sys/block/zram0/comp_algorithm
 echo 4G > /sys/block/zram0/disksize
 mkswap /dev/zram0
 swapon /dev/zram0 -p 10  # độ ưu tiên 10
+```
 
-# Xác minh
+* Xác minh
+
+```console
 zramctl
 swapon --show
+```
 
-# Theo dõi tỷ số nén
+* Theo dõi tỷ số nén
+
+```console
 cat /sys/block/zram0/mm_stat
 ```
 
 ## Theo dõi mức sử dụng bộ nhớ
 ### Giám sát bộ nhớ theo thời gian thực
+* Giám sát bộ nhớ trên toàn hệ thống
 
 ```console
-# Giám sát bộ nhớ trên toàn hệ thống
 free -h -s 1  # Cập nhật mỗi giây
+```
 
-# Mức sử dụng bộ nhớ trên mỗi máy ảo
+* Mức sử dụng bộ nhớ trên mỗi máy ảo
+
+```bash
 virsh list --name | while read vm; do
     echo "=== $vm ==="
     virsh dommemstat $vm 2>/dev/null
 done
-
-# Theo dõi áp lực bộ nhớ
-watch -n 1 'free -h; echo ""; virsh list --name | while read vm; do \
-    echo "$vm:"; virsh dommemstat $vm 2>/dev/null | grep -E "actual|rss|usable"; done'
-
-# Giám sát bằng virt-top
-virt-top
-# Nhấn phím 2 để xem bộ nhớ
 ```
 
+* Theo dõi áp lực bộ nhớ
+
+```console
+watch -n 1 'free -h; echo ""; virsh list --name | while read vm; do \
+    echo "$vm:"; virsh dommemstat $vm 2>/dev/null | grep -E "actual|rss|usable"; done'
+```
+
+* Giám sát bằng virt-top
+
+```console
+virt-top
+```
+
+Nhấn phím 2 để xem bộ nhớ
+
 ### Giám sát bộ nhớ nâng cao
+* memory-monitor.sh - Giám sát bộ nhớ toàn diện
 
 ```bash
 #!/bin/bash
-# memory-monitor.sh - Giám sát bộ nhớ toàn diện
 
 LOG="/var/log/vm-memory.log"
 
 while true; do
-    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+  timestamp=$(date '+%Y-%m-%d %H:%M:%S')
 
-    # Host memory
-    host_total=$(free -b | awk 'NR==2 {print $2}')
-    host_used=$(free -b | awk 'NR==2 {print $3}')
-    host_free=$(free -b | awk 'NR==2 {print $4}')
-    host_available=$(free -b | awk 'NR==2 {print $7}')
+  # Bộ nhớ máy chủ
+  host_total=$(free -b | awk 'NR==2 {print $2}')
+  host_used=$(free -b | awk 'NR==2 {print $3}')
+  host_free=$(free -b | awk 'NR==2 {print $4}')
+  host_available=$(free -b | awk 'NR==2 {print $7}')
 
-    # KSM stats
-    ksm_sharing=$(cat /sys/kernel/mm/ksm/pages_sharing 2>/dev/null || echo 0)
-    ksm_shared=$(cat /sys/kernel/mm/ksm/pages_shared 2>/dev/null || echo 0)
-    ksm_saved=$(( (ksm_sharing - ksm_shared) * 4096 ))
+  # Số liệu thống kê KSM
+  ksm_sharing=$(cat /sys/kernel/mm/ksm/pages_sharing 2>/dev/null || echo 0)
+  ksm_shared=$(cat /sys/kernel/mm/ksm/pages_shared 2>/dev/null || echo 0)
+  ksm_saved=$(( (ksm_sharing - ksm_shared) * 4096 ))
 
-    echo "$timestamp | Host: Used=$host_used Free=$host_free Available=$host_available | KSM_Saved=$ksm_saved" >> $LOG
+  echo "$timestamp | Host: Used=$host_used Free=$host_free Available=$host_available | KSM_Saved=$ksm_saved" >> $LOG
 
-    # Per-VM stats
-    for vm in $(virsh list --name); do
-        vm_mem=$(virsh dommemstat $vm 2>/dev/null | grep "actual" | awk '{print $2}')
-        vm_rss=$(virsh dommemstat $vm 2>/dev/null | grep "rss" | awk '{print $2}')
-        vm_usable=$(virsh dommemstat $vm 2>/dev/null | grep "usable" | awk '{print $2}')
+  # Số liệu thống kê theo từng máy ảo
+  for vm in $(virsh list --name); do
+    vm_mem=$(virsh dommemstat $vm 2>/dev/null | grep "actual" | awk '{print $2}')
+    vm_rss=$(virsh dommemstat $vm 2>/dev/null | grep "rss" | awk '{print $2}')
+    vm_usable=$(virsh dommemstat $vm 2>/dev/null | grep "usable" | awk '{print $2}')
 
-        echo "$timestamp | VM: $vm | Allocated=$vm_mem RSS=$vm_rss Usable=$vm_usable" >> $LOG
-    done
+    echo "$timestamp | VM: $vm | Allocated=$vm_mem RSS=$vm_rss Usable=$vm_usable" >> $LOG
+  done
 
-    sleep 60
+  sleep 60
 done
 ```
 
 ### Thiết lập cảnh báo
+* memory-alert.sh - Cảnh báo về áp lực bộ nhớ
 
 ```bash
 #!/bin/bash
-# memory-alert.sh - Cảnh báo về áp lực bộ nhớ
 
 THRESHOLD=90  # Cảnh báo nếu mức sử dụng bộ nhớ > 90%
 EMAIL="admin@example.com"
 
 check_memory() {
-    used=$(free | awk 'NR==2 {print $3}')
-    total=$(free | awk 'NR==2 {print $2}')
-    percent=$(( used * 100 / total ))
+  used=$(free | awk 'NR==2 {print $3}')
+  total=$(free | awk 'NR==2 {print $2}')
+  percent=$(( used * 100 / total ))
 
-    if [ $percent -gt $THRESHOLD ]; then
-        message="WARNING: Memory usage at ${percent}%"
-        echo "$message" | mail -s "Memory Alert" $EMAIL
-        logger "$message"
-    fi
+  if [ $percent -gt $THRESHOLD ]; then
+    message="WARNING: Memory usage at ${percent}%"
+    echo "$message" | mail -s "Memory Alert" $EMAIL
+    logger "$message"
+  fi
 }
 
 # Chạy 5 phút một lần
@@ -672,17 +821,16 @@ done
 
 ### Các phương pháp tốt nhất
 1. **Hiểu rõ khối lượng công việc của bạn:**
+* Theo dõi mức sử dụng bộ nhớ của máy ảo theo thời gian
 
-```console
-# Theo dõi mức sử dụng bộ nhớ của máy ảo theo thời gian
+```bash
 for vm in $(virsh list --name); do
-    echo "$vm memory usage:"
-    virsh dommemstat $vm | grep -E "actual|rss|usable"
+  echo "$vm memory usage:"
+  virsh dommemstat $vm | grep -E "actual|rss|usable"
 done
-
-# Nhiều máy ảo sử dụng dưới 50% bộ nhớ được cấp phát.
-# Đây là lúc việc cam kết vượt mức phát huy tác dụng.
 ```
+
+Nhiều máy ảo sử dụng dưới 50% bộ nhớ được cấp phát. Đây là lúc việc cam kết vượt mức phát huy tác dụng.
 
 2. **Bắt đầu một cách thận trọng:**
     * Bắt đầu với tỷ lệ vượt mức phân bổ (overcommit) là 1,2:1
@@ -691,18 +839,26 @@ done
     * Tuyệt đối không vượt quá tỷ lệ 2:1 đối với môi trường sản xuất (production)
 
 3. **Bật tất cả các công nghệ:**
+* KSM
 
 ```console
-# KSM
 echo 1 > /sys/kernel/mm/ksm/run
+```
 
-# THP
+* THP
+
+```console
 echo always > /sys/kernel/mm/transparent_hugepage/enabled
+```
 
-# Ballooning (trong cấu hình máy ảo)
+* Ballooning (trong cấu hình máy ảo)
+
+```console
 virsh edit vm-name  # Thêm thiết bị balloon
+```
 
-# zswap
+* zswap
+```console
 echo 1 > /sys/module/zswap/parameters/enabled
 ```
 
@@ -731,43 +887,65 @@ Quy tắc: Không bao giờ cấp phát vượt quá 90% dung lượng, ngay c�
 
 ## Khắc phục sự cố bộ nhớ
 ### Xác định áp lực bộ nhớ
-```console
-# Kiểm tra các dấu hiệu áp lực bộ nhớ
-free -h  # Bộ nhớ khả dụng thấp
+* Kiểm tra các dấu hiệu áp lực bộ nhớ
 
-# Kiểm tra mức sử dụng swap
+```console
+free -h  # Bộ nhớ khả dụng thấp
+```
+
+* Kiểm tra mức sử dụng swap
+
+```console
 swapon --show
 vmstat 1 10  # Theo dõi các cột si/so (hoán đổi vào/ra)
+```
 
-# Các sự kiện OOM
+* Các sự kiện OOM
+
+```console
 dmesg | grep -i oom
 journalctl | grep -i "out of memory"
+```
 
-# Các lỗi trang nghiêm trọng trên mỗi máy ảo (cho biết có hiện tượng hoán đổi/swapping)
+* Các lỗi trang nghiêm trọng trên mỗi máy ảo (cho biết có hiện tượng hoán đổi/swapping)
+
+```console
 virsh dommemstat my-vm | grep major_fault
+```
 
-# Áp suất hệ thống
+* Áp suất hệ thống
+
+```console
 cat /proc/pressure/memory
 ```
 
 ### Giảm áp lực bộ nhớ
-**Các hành động khẩn cấp:**
+#### Các hành động khẩn cấp:
+1. Tăng mức độ balloon (cấp ít bộ nhớ hơn cho các máy ảo)
+
+```bash
+for vm in $(virsh list --name); do
+  current=$(virsh dominfo $vm | grep "Used memory" | awk '{print $3}')
+  reduced=$(( current * 80 / 100 ))  # Giảm xuống còn 80%
+  virsh setmem $vm ${reduced}K --live
+done
+```
+
+* 2. Di trú các máy ảo sang các máy chủ khác
 
 ```console
-# 1. Tăng mức độ balloon (cấp ít bộ nhớ hơn cho các máy ảo)
-for vm in $(virsh list --name); do
-    current=$(virsh dominfo $vm | grep "Used memory" | awk '{print $3}')
-    reduced=$(( current * 80 / 100 ))  # Reduce to 80%
-    virsh setmem $vm ${reduced}K --live
-done
-
-# 2. Di trú các máy ảo sang các máy chủ khác
 virsh migrate --live vm-name qemu+ssh://other-host/system
+```
 
-# 3. Tắt các máy ảo không quan trọng
+3. Tắt các máy ảo không quan trọng
+
+```console
 virsh shutdown dev-vm
+```
 
-# 4. Xóa bộ nhớ đệm (giải pháp tạm thời)
+4. Xóa bộ nhớ đệm (giải pháp tạm thời)
+
+```console
 sync; echo 3 > /proc/sys/vm/drop_caches
 ```
 
@@ -790,33 +968,41 @@ echo 4096 > /proc/sys/vm/nr_hugepages
 ```
 
 ### Xử lý các tình huống OOM (Hết bộ nhớ)
+* Kiểm tra nhật ký OOM killer
 
 ```console
-# Kiểm tra nhật ký OOM killer
 dmesg | grep -i "killed process"
 journalctl -k | grep -i oom
+```
 
-# Xác định các tiến trình bị chấm dứt do OOM
+* Xác định các tiến trình bị chấm dứt do OOM
+
+```console
 grep -i "killed process" /var/log/kern.log
+```
 
-# Cấu hình độ ưu tiên OOM (cho mỗi máy ảo)
-# Điểm số càng thấp = nguy cơ bị giết càng thấp.
+* Cấu hình độ ưu tiên OOM (cho mỗi máy ảo). Điểm số càng thấp = nguy cơ bị giết càng thấp.
 
+```console
 ps aux | grep qemu | grep vm-name
 # Lấy PID
 
 echo -17 > /proc/<PID>/oom_score_adj
 # Phạm vi: -1000 (không bao giờ giết) đến 1000 (giết trước)
+```
 
 # Thiết lập tính bền vững thông qua XML của máy ảo
+```console
 virsh edit my-vm
+```
 
-# Việc này đòi hỏi các tập lệnh khởi động tùy chỉnh.
-# Tạo tệp /etc/libvirt/hooks/qemu:
+* Việc này đòi hỏi các tập lệnh khởi động tùy chỉnh. Tạo tệp /etc/libvirt/hooks/qemu:
+
+```bash
 #!/bin/bash
 if [ "$1" = "my-vm" ] && [ "$2" = "started" ]; then
-    pid=$(pgrep -f "qemu.*my-vm")
-    echo -500 > /proc/$pid/oom_score_adj
+  pid=$(pgrep -f "qemu.*my-vm")
+  echo -500 > /proc/$pid/oom_score_adj
 fi
 ```
 
@@ -827,21 +1013,31 @@ fi
     - Ứng dụng bị quá thời gian chờ (timeout)
     - Thời gian phản hồi không ổn định
 
+#### Chẩn đoán:
+1. Kiểm tra mức sử dụng swap
+
 ```console
-# Chẩn đoán:
-# 1. Kiểm tra mức sử dụng swap
 free -h
 vmstat 1 10
+```
 
-# 2. Kiểm tra các lỗi nghiêm trọng
+2. Kiểm tra các lỗi nghiêm trọng
+
+```console
 virsh dommemstat vm-name | grep major_fault
 # Cao và đang tăng = hoán đổi
+```
 
-# 3. Kiểm tra tác động của KSM
+3. Kiểm tra tác động của KSM
+
+```console
 top | grep ksmd
 # Mức sử dụng CPU cao có thể cho thấy KSM đang hoạt động quá mức.
+```
 
-# 4. Kiểm tra tình trạng tắc nghẽn do áp lực bộ nhớ
+4. Kiểm tra tình trạng tắc nghẽn do áp lực bộ nhớ
+
+```console
 cat /proc/pressure/memory
 ```
 
@@ -858,53 +1054,53 @@ cat /proc/pressure/memory
 # vm-memory-dashboard.sh
 
 while true; do
-    clear
-    echo "================================"
-    echo "   VM Memory Dashboard"
-    echo "   $(date)"
-    echo "================================"
-    echo ""
+  clear
+  echo "================================"
+  echo "   VM Memory Dashboard"
+  echo "   $(date)"
+  echo "================================"
+  echo ""
 
-    # Host memory
-    echo "HOST MEMORY:"
-    free -h | grep -E "Mem|Swap"
-    echo ""
+  # Bộ nhớ máy chủ
+  echo "HOST MEMORY:"
+  free -h | grep -E "Mem|Swap"
+  echo ""
 
-    # KSM stats
-    if [ -f /sys/kernel/mm/ksm/pages_sharing ]; then
-        sharing=$(cat /sys/kernel/mm/ksm/pages_sharing)
-        shared=$(cat /sys/kernel/mm/ksm/pages_shared)
-        saved=$(( (sharing - shared) * 4 / 1024 ))
-        echo "KSM: Saved ${saved} MB"
-        echo ""
+  # Số liệu thống kê KSM
+  if [ -f /sys/kernel/mm/ksm/pages_sharing ]; then
+    sharing=$(cat /sys/kernel/mm/ksm/pages_sharing)
+    shared=$(cat /sys/kernel/mm/ksm/pages_shared)
+    saved=$(( (sharing - shared) * 4 / 1024 ))
+    echo "KSM: Saved ${saved} MB"
+    echo ""
+  fi
+
+  # Tỷ lệ vượt mức cam kết
+  host_mem=$(free -b | awk 'NR==2 {print $2}')
+  total_alloc=0
+  echo "VMs:"
+  echo "Name                  Allocated    RSS         Usage%"
+  echo "--------------------------------------------------------"
+
+  for vm in $(virsh list --name); do
+    alloc=$(virsh dominfo $vm 2>/dev/null | grep "Max memory" | awk '{print $3}')
+    rss=$(virsh dommemstat $vm 2>/dev/null | grep "rss" | awk '{print $2}')
+
+    if [ -n "$alloc" ] && [ -n "$rss" ]; then
+      alloc_mb=$(( alloc / 1024 ))
+      rss_mb=$(( rss / 1024 ))
+      usage=$(( rss * 100 / alloc ))
+      printf "%-20s %7d MB   %7d MB   %3d%%\n" "$vm" "$alloc_mb" "$rss_mb" "$usage"
+      total_alloc=$(( total_alloc + alloc ))
     fi
+  done
 
-    # Overcommit ratio
-    host_mem=$(free -b | awk 'NR==2 {print $2}')
-    total_alloc=0
-    echo "VMs:"
-    echo "Name                  Allocated    RSS         Usage%"
-    echo "--------------------------------------------------------"
+  echo ""
+  overcommit=$(echo "scale=2; $total_alloc / $host_mem" | bc)
+  echo "Total Allocated: $(( total_alloc / 1024 / 1024 )) GB"
+  echo "Overcommit Ratio: ${overcommit}:1"
 
-    for vm in $(virsh list --name); do
-        alloc=$(virsh dominfo $vm 2>/dev/null | grep "Max memory" | awk '{print $3}')
-        rss=$(virsh dommemstat $vm 2>/dev/null | grep "rss" | awk '{print $2}')
-
-        if [ -n "$alloc" ] && [ -n "$rss" ]; then
-            alloc_mb=$(( alloc / 1024 ))
-            rss_mb=$(( rss / 1024 ))
-            usage=$(( rss * 100 / alloc ))
-            printf "%-20s %7d MB   %7d MB   %3d%%\n" "$vm" "$alloc_mb" "$rss_mb" "$usage"
-            total_alloc=$(( total_alloc + alloc ))
-        fi
-    done
-
-    echo ""
-    overcommit=$(echo "scale=2; $total_alloc / $host_mem" | bc)
-    echo "Total Allocated: $(( total_alloc / 1024 / 1024 )) GB"
-    echo "Overcommit Ratio: ${overcommit}:1"
-
-    sleep 5
+  sleep 5
 done
 ```
 
