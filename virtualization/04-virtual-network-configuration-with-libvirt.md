@@ -178,16 +178,22 @@ virsh net-autostart routed-network
 ```
 
 #### Cấu hình định tuyến máy chủ:
+* Bật chuyển tiếp IP
 
 ```console
-# Bật chuyển tiếp IP
 echo 1 > /proc/sys/net/ipv4/ip_forward
+```
 
-# Thiết lập vĩnh viễn
+* Thiết lập vĩnh viễn
+
+```console
 echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
 sysctl -p
+```
 
-# Thêm quy tắc tường lửa
+* Thêm quy tắc tường lửa
+
+```console
 iptables -A FORWARD -i virbr-route -j ACCEPT
 iptables -A FORWARD -o virbr-route -j ACCEPT
 ```
@@ -202,24 +208,30 @@ Chế độ Bridge kết nối trực tiếp các máy ảo với mạng vật l
 * Hiệu suất tối ưu
 
 #### Điều kiện tiên quyết:  
+* Cài đặt các tiện ích cầu nối
 
 ```console
-# Cài đặt các tiện ích cầu nối
 apt install bridge-utils  # Debian/Ubuntu
 dnf install bridge-utils  # RHEL/CentOS
+```
 
-# Kiểm tra các cầu nối hiện có
+* Kiểm tra các cầu nối hiện có
+
+```console
 brctl show
 ip link show type bridge
 ```
 
 #### Tạo Host Bridge (Netplan - Ubuntu/Debian):
+* Sao lưu cấu hình hiện tại
 
 ```console
-# Backup existing configuration
 cp /etc/netplan/01-netcfg.yaml /etc/netplan/01-netcfg.yaml.bak
+```
 
-# Tạo cấu hình cầu nối
+* Tạo cấu hình cầu nối
+
+```console
 cat > /etc/netplan/01-netcfg.yaml << 'EOF'
 network:
   version: 2
@@ -235,31 +247,49 @@ network:
         stp: true
         forward-delay: 4
 EOF
+```
 
-# Áp dụng cấu hình
+* Áp dụng cấu hình
+
+```console
 netplan apply
+```
 
-# Xác minh cầu nối
+* Xác minh cầu nối
+
+```console
 ip addr show br0
 brctl show br0
 ```
 
 #### Tạo Host Bridge (NetworkManager - RHEL/CentOS):
+* Tạo cầu nối
 
 ```console
-# Tạo cầu nối
 nmcli connection add type bridge ifname br0 con-name br0
+```
 
-# Thêm giao diện vật lý vào cầu nối
+* Thêm giao diện vật lý vào cầu nối
+
+```console
 nmcli connection add type bridge-slave ifname ens18 master br0
+```
 
-# Cấu hình IP cho cầu nối (DHCP hoặc tĩnh)
+* Cấu hình IP cho cầu nối (DHCP hoặc tĩnh)
+
+```console
 nmcli connection modify br0 ipv4.method auto
+```
 
-# Kích hoạt cầu nối
+* Kích hoạt cầu nối
+
+```console
 nmcli connection up br0
+```
 
-# Xác minh
+* Xác minh
+
+```console
 nmcli connection show
 bridge link show
 ```
@@ -285,12 +315,15 @@ virsh net-autostart bridge-network
 ```
 
 #### Gắn VM vào Bridge:
+* Gắn vào máy ảo hiện có
 
 ```console
-# Gắn vào máy ảo hiện có
 virsh attach-interface my-vm bridge br0 --model virtio --config --live
+```
 
-# Hoặc tạo máy ảo với chế độ cầu nối.
+* Hoặc tạo máy ảo với chế độ cầu nối.
+
+```console
 virt-install \
   --name ubuntu-bridge \
   --memory 2048 \
@@ -333,8 +366,11 @@ vi isolated-network.xml
 virsh net-define isolated-network.xml
 virsh net-start isolated
 virsh net-autostart isolated
+```
 
-# Xác minh rằng không có tính năng chuyển tiếp nào được cấu hình.
+Xác minh rằng không có tính năng chuyển tiếp nào được cấu hình.
+
+```console
 virsh net-dumpxml isolated | grep forward
 # Không có thành phần chuyển tiếp.
 ```
@@ -405,24 +441,34 @@ done < dhcp-hosts.xml
 ```
 
 ### Chuyển tiếp cổng trong mạng NAT
+* Chuyển tiếp cổng máy chủ sang máy ảo
+
 ```console
-# Chuyển tiếp cổng máy chủ sang máy ảo
 virsh net-update default add-last ip-forward \
   "<forward proto='tcp' address='0.0.0.0' port='8080' dev='virbr0'> \
    <interface dev='eth0'/> \
    <backend dev='eth0'/> \
    </forward>" \
   --live --config
+```
 
-# Sử dụng trực tiếp iptables để kiểm soát tốt hơn
-# Chuyển tiếp cổng 80 của máy chủ sang cổng 80 của máy ảo.
+* Sử dụng trực tiếp iptables để kiểm soát tốt hơn
+* Chuyển tiếp cổng 80 của máy chủ sang cổng 80 của máy ảo.
+
+```console
 iptables -t nat -A PREROUTING -p tcp --dport 8080 \
   -j DNAT --to-destination 192.168.122.100:80
+```
 
-# Cho phép chuyển tiếp
+* Cho phép chuyển tiếp
+
+```console
 iptables -A FORWARD -d 192.168.122.100 -p tcp --dport 80 -j ACCEPT
+```
 
-# Thiết lập vĩnh viễn (Ubuntu/Debian)
+* Thiết lập vĩnh viễn (Ubuntu/Debian)
+
+```console
 apt install iptables-persistent
 iptables-save > /etc/iptables/rules.v4
 ```
@@ -481,8 +527,11 @@ vi ipv6-network.xml
 ```console
 virsh net-define ipv6-network.xml
 virsh net-start ipv6-network
+```
 
-# Bật tính năng chuyển tiếp IPv6 trên máy chủ
+* Bật tính năng chuyển tiếp IPv6 trên máy chủ
+
+```console
 echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
 echo "net.ipv6.conf.all.forwarding = 1" >> /etc/sysctl.conf
 sysctl -p
@@ -577,8 +626,11 @@ vi sriov-network.xml
 ```console
 virsh net-define sriov-network.xml
 virsh net-start sriov-network
+```
 
-# Gắn giao diện SR-IOV vào máy ảo
+* Gắn giao diện SR-IOV vào máy ảo
+
+```console
 virsh edit my-vm
 
 <interface type='network'>
@@ -588,41 +640,60 @@ virsh edit my-vm
 
 ## Tối ưu hóa hiệu năng mạng
 ### Multi-queue virtio-net
+* Bật tính năng đa hàng đợi trong cấu hình máy ảo
 
 ```console
-# Bật tính năng đa hàng đợi trong cấu hình máy ảo
 virsh edit my-vm
+```
 
+```xml
 <interface type='network'>
   <source network='default'/>
   <model type='virtio'/>
   <driver name='vhost' queues='4'/>
 </interface>
+```
 
-# Khởi động lại máy ảo
+* Khởi động lại máy ảo
+
+```console
 virsh shutdown my-vm
 virsh start my-vm
+```
 
-# Bên trong máy ảo khách, hãy bật tính năng đa hàng đợi (multi-queue).
+* Bên trong máy ảo khách, hãy bật tính năng đa hàng đợi (multi-queue).
+
+```console
 ethtool -L eth0 combined 4
+```
 
-# Xác minh
+* Xác minh
+
+```console
 ethtool -l eth0
 ```
 
 ### Tối ưu hóa vhost-net
+* Đảm bảo mô-đun vhost-net đã được nạp.
 
 ```console
-# Đảm bảo mô-đun vhost-net đã được nạp.
 lsmod | grep vhost
 modprobe vhost_net
+```
 
-# Thiết lập vĩnh viễn
+* Thiết lập vĩnh viễn
+
+```console
 echo "vhost_net" >> /etc/modules
+```
 
-# Sử dụng vhost trong cấu hình mạng
+* Sử dụng vhost trong cấu hình mạng
+
+```console
 virsh edit my-vm
+```
 
+```xml
 <interface type='network'>
   <source network='default'/>
   <model type='virtio'/>
@@ -651,21 +722,29 @@ ethtool -k eth0 | grep offload
 ```
 
 ### Giới hạn băng thông
+* Giới hạn băng thông cho giao diện máy ảo
 
 ```console
-# Giới hạn băng thông cho giao diện máy ảo
 virsh domiftune my-vm vnet0 \
   --inbound 100000,150000,200000 \
   --outbound 80000,120000,160000
+```
 
-# Các tham số: trung bình, đỉnh, bùng phát (tính bằng KiB/s)
+Các tham số: trung bình, đỉnh, bùng phát (tính bằng KiB/s)
 
-# Xác minh
+* Xác minh
+
+```console
 virsh domiftune my-vm vnet0
+```
 
-# Thiết lập vĩnh viễn
+* Thiết lập vĩnh viễn
+
+```console
 virsh edit my-vm
+```
 
+```xml
 <interface type='network'>
   <source network='default'/>
   <bandwidth>
@@ -677,19 +756,25 @@ virsh edit my-vm
 
 ## Cấu hình DNS
 ### Các mục DNS tùy chỉnh
+* Thêm các mục DNS tùy chỉnh vào mạng
 
 ```console
-# Thêm các mục DNS tùy chỉnh vào mạng
 virsh net-update default add dns-host \
   "<host ip='192.168.122.100'><hostname>web.local</hostname></host>" \
   --live --config
+```
 
-# Thêm nhiều tên máy chủ vào cùng một địa chỉ IP
+* Thêm nhiều tên máy chủ vào cùng một địa chỉ IP
+
+```console
 virsh net-update default add dns-host \
   "<host ip='192.168.122.100'><hostname>web.local</hostname><hostname>www.local</hostname></host>" \
   --live --config
+```
 
-# Thêm bộ chuyển tiếp DNS
+* Thêm bộ chuyển tiếp DNS
+
+```console
 virsh net-update default add dns-forwarder \
   "<forwarder addr='8.8.8.8'/>" \
   --live --config
@@ -771,8 +856,11 @@ iptables -I FORWARD -i virbr-sec -o virbr-sec -p tcp --dport 22 -j ACCEPT
 iptables -I FORWARD -i virbr-sec -o virbr-sec -p tcp --dport 80 -j ACCEPT
 iptables -I FORWARD -i virbr-sec -o virbr-sec -p tcp --dport 443 -j ACCEPT
 iptables -I FORWARD -i virbr-sec -o virbr-sec -j DROP
+```
 
-# Lưu quy tắc
+* Lưu quy tắc
+
+```console
 iptables-save > /etc/iptables/rules.v4
 ```
 
@@ -936,135 +1024,210 @@ ip addr add 172.16.0.2/30 dev gre1
 
 ## Khắc phục sự cố mạng
 ### Các lệnh chẩn đoán
+* Liệt kê tất cả các mạng
 
 ```console
-# Liệt kê tất cả các mạng
 virsh net-list --all
+```
 
-# Kiểm tra trạng thái mạng
+* Kiểm tra trạng thái mạng
+
+```console
 virsh net-info default
+```
 
-# Xem XML mạng
+* Xem XML mạng
+
+```console
 virsh net-dumpxml default
+```
 
-# Hiển thị các bản ghi cấp phát DHCP
+* Hiển thị các bản ghi cấp phát DHCP
+
+```console
 virsh net-dhcp-leases default
+```
 
-# Kiểm tra trạng thái cầu nối
+* Kiểm tra trạng thái cầu nối
+
+```console
 brctl show
 bridge link show
+```
 
-# Xem cơ sở dữ liệu chuyển tiếp của cầu nối
+* Xem cơ sở dữ liệu chuyển tiếp của cầu nối
+
+```console
 bridge fdb show br virbr0
+```
 
-# Kiểm tra cấu hình dnsmasq
+* Kiểm tra cấu hình dnsmasq
+
+```console
 ps aux | grep dnsmasq
 cat /var/lib/libvirt/dnsmasq/default.conf
+```
 
-# Xem các bản ghi cấp phát IP của dnsmasq
+* Xem các bản ghi cấp phát IP của dnsmasq
+
+```console
 cat /var/lib/libvirt/dnsmasq/default.leases
+```
 
-# Kiểm tra các quy tắc iptables
+* Kiểm tra các quy tắc iptables
+
+```console
 iptables -t nat -L -n -v
 iptables -L FORWARD -n -v
+```
 
-# Giám sát lưu lượng mạng
+* Giám sát lưu lượng mạng
+
+```console
 tcpdump -i virbr0 -n
 ```
 
 ### Các vấn đề thường gặp và giải pháp
-**Vấn đề: Mạng không khởi động được**
+#### Vấn đề: Mạng không khởi động được
+* Kiểm tra lỗi
 
 ```console
-# Kiểm tra lỗi
 virsh net-start default
 # Xem chi tiết lỗi
+```
 
-# Kiểm tra xem cầu nối có tồn tại hay không
+* Kiểm tra xem cầu nối có tồn tại hay không
+
+```console
 ip link show virbr0
+```
 
-# Xác minh rằng dnsmasq không đang chạy ở nơi khác.
+* Xác minh rằng dnsmasq không đang chạy ở nơi khác.
+
+```console
 ps aux | grep dnsmasq
+```
 
-# Kiểm tra xung đột cổng
+* Kiểm tra xung đột cổng
+
+```console
 ss -tulpn | grep :53
+```
 
-# Khởi động lại libvirtd
+* Khởi động lại libvirtd
+
+```console
 systemctl restart libvirtd
 virsh net-start default
 ```
 
-**Sự cố: Các máy ảo không nhận được địa chỉ IP.**
+#### Sự cố: Các máy ảo không nhận được địa chỉ IP.
+* Kiểm tra dải DHCP
 
 ```console
-# Kiểm tra dải DHCP
 virsh net-dumpxml default | grep range
+```
 
-# Xác minh rằng dnsmasq đang chạy
+* Xác minh rằng dnsmasq đang chạy
+
+```console
 ps aux | grep dnsmasq
+```
 
-# Kiểm tra xem tường lửa có cho phép DHCP hay không.
+* Kiểm tra xem tường lửa có cho phép DHCP hay không.
+
+```console
 iptables -L INPUT -n | grep 67
+```
 
-# Khởi động lại mạng
+* Khởi động lại mạng
+
+```console
 virsh net-destroy default
 virsh net-start default
+```
 
-# Bên trong máy ảo, gửi yêu cầu DHCP
+* Bên trong máy ảo, gửi yêu cầu DHCP
+
+```console
 dhclient -v eth0  # hoặc
 dhcpcd eth0
 ```
 
-### Vấn đề: Các máy ảo không thể truy cập Internet (NAT)
+#### Vấn đề: Các máy ảo không thể truy cập Internet (NAT)
+* Kiểm tra chuyển tiếp IP
 
 ```console
-# Kiểm tra chuyển tiếp IP
 cat /proc/sys/net/ipv4/ip_forward
 # Nên là 1
+```
 
-# Bật nếu cần
+* Bật nếu cần
+
+```console
 echo 1 > /proc/sys/net/ipv4/ip_forward
+```
 
-# Kiểm tra các quy tắc NAT
+* Kiểm tra các quy tắc NAT
+
+```console
 iptables -t nat -L POSTROUTING -n -v
+```
 
-# Kiểm tra các quy tắc chuyển tiếp
+* Kiểm tra các quy tắc chuyển tiếp
+
+```console
 iptables -L FORWARD -n -v
+```
 
-# Kiểm tra định tuyến mặc định trên máy ảo
+* Kiểm tra định tuyến mặc định trên máy ảo
+
+```console
 ip route show
 ```
 
-**Vấn đề: Mạng cầu nối (bridged network) không hoạt động**
+#### Vấn đề: Mạng cầu nối (bridged network) không hoạt động
+* Kiểm tra xem giao diện vật lý có đang ở chế độ bridge hay không.
 
 ```console
-# Kiểm tra xem giao diện vật lý có đang ở chế độ bridge hay không.
 brctl show br0
+```
 
-# Xác minh giao diện vật lý không có địa chỉ IP.
+* Xác minh giao diện vật lý không có địa chỉ IP.
+
+```console
 ip addr show ens18
 # Không được hiển thị địa chỉ mạng (inet address)
+```
 
-# Kiểm tra xem cầu nối có địa chỉ IP hay không.
+* Kiểm tra xem cầu nối có địa chỉ IP hay không.
+
+```console
 ip addr show br0
 # Cần có địa chỉ IP
+```
 
-# Kiểm tra kết nối
+* Kiểm tra kết nối
+
+```console
 ping -c 4 <gateway-ip>
+```
 
-# Kiểm tra việc chuyển tiếp của cầu nối
+* Kiểm tra việc chuyển tiếp của cầu nối
+
+```console
 cat /sys/class/net/br0/bridge/stp_state
 ```
 
 ## Giám sát và Thống kê Mạng
 ### Giám sát thời gian thực
-Theo dõi số liệu thống kê giao diện
+* Theo dõi số liệu thống kê giao diện
 
 ```console
 watch -n 1 'virsh domifstat my-vm vnet0'
 ```
 
-Giám sát tất cả các máy ảo
+* Giám sát tất cả các máy ảo
 
 ```bash
 #!/bin/bash
@@ -1084,13 +1247,13 @@ while true; do
 done
 ```
 
-Sử dụng iftop để giám sát băng thông.
+* Sử dụng iftop để giám sát băng thông.
 
 ```console
 iftop -i virbr0
 ```
 
-Sử dụng nethogs để giám sát theo từng tiến trình.
+* Sử dụng nethogs để giám sát theo từng tiến trình.
 
 ```console
 nethogs virbr0
@@ -1124,25 +1287,33 @@ done
 ## Các phương pháp tốt nhất
 ### Các nguyên tắc thiết kế mạng
 * Phân tách các mạng theo chức năng:
+- Mạng quản lý
 
 ```console
-# Management network
 virsh net-define mgmt-network.xml
+```
 
-# Application network
+- Mạng ứng dụng
+
+```console
 virsh net-define app-network.xml
+```
 
-# Database network (isolated)
+- Mạng cơ sở dữ liệu (cô lập)
+
+```console
 virsh net-define db-network.xml
+```
 
-# DMZ network
+- Mạng DMZ
+
+```console
 virsh net-define dmz-network.xml
 ```
 
-* Sử dụng DHCP tĩnh cho các máy chủ:
+- Sử dụng DHCP tĩnh cho các máy chủ: Gán địa chỉ IP cố định cho các máy ảo máy chủ.
 
 ```console
-# Assign consistent IPs to server VMs
 virsh net-update default add ip-dhcp-host \
   "<host mac='52:54:00:aa:bb:cc' name='web-server' ip='192.168.122.10'/>"
 ```
@@ -1152,19 +1323,19 @@ virsh net-update default add ip-dhcp-host \
     * Sử dụng các mạng riêng biệt cho môi trường vận hành thực tế (production)
     * Thiết lập các quy tắc tường lửa giữa các mạng
 
-* Ghi lại cấu trúc liên kết mạng:
+* Ghi lại cấu trúc liên kết mạng: Tạo tài liệu mạng
 
 ```console
-# Tạo tài liệu mạng
 virsh net-list --all > /docs/networks.txt
 for net in $(virsh net-list --name); do
   virsh net-dumpxml "$net" > "/docs/network-${net}.xml"
 done
 ```
 
-### Tăng cường bảo mật (Security Hardening)
+### Tăng cường bảo mật (Security Hardening):
+* Vô hiệu hóa các mạng không sử dụng
+
 ```console
-# Vô hiệu hóa các mạng không sử dụng
 virsh net-destroy unused-network
 virsh net-autostart unused-network --disable
 ```
