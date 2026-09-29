@@ -45,24 +45,24 @@ Di trú trực tiếp (hay còn gọi là di trú nóng) là quá trình chuyể
 
 ### Các loại hình di trú
 1. Di trú trực tiếp (Di trú nóng)
-* Máy ảo vẫn đang chạy trong suốt quá trình
-* Bộ nhớ và trạng thái được sao chép trong khi máy ảo đang thực thi
-* Tạm dừng ngắn trong quá trình chuyển đổi cuối cùng
-* Không có thời gian ngừng hoạt động rõ rệt
+    * Máy ảo vẫn đang chạy trong suốt quá trình
+    * Bộ nhớ và trạng thái được sao chép trong khi máy ảo đang thực thi
+    * Tạm dừng ngắn trong quá trình chuyển đổi cuối cùng
+    * Không có thời gian ngừng hoạt động rõ rệt
 2. Di trú ngoại tuyến (Di trú nguội)
-* Máy ảo đã dừng trước khi di trú
-* Truyền tải nhanh hơn (không theo dõi trang bẩn)
-* Có thời gian ngừng hoạt động trong toàn bộ quá trình
-* Đơn giản hơn, đáng tin cậy hơn
+    * Máy ảo đã dừng trước khi di trú
+    * Truyền tải nhanh hơn (không theo dõi trang bẩn)
+    * Có thời gian ngừng hoạt động trong toàn bộ quá trình
+    * Đơn giản hơn, đáng tin cậy hơn
 3. Di trú lưu trữ trực tiếp
-* Di trú ảnh đĩa máy ảo trong khi đang chạy
-* Có thể kết hợp với di trú trực tiếp
-* Hữu ích cho việc bảo trì lưu trữ
+    * Di trú ảnh đĩa máy ảo trong khi đang chạy
+    * Có thể kết hợp với di trú trực tiếp
+    * Hữu ích cho việc bảo trì lưu trữ
 4. Di trú sau sao chép
-* Khởi động máy ảo trên đích ngay lập tức
-* Lấy các trang bộ nhớ theo yêu cầu
-* Giảm tổng thời gian di trú
-* Rủi ro nếu mạng gặp sự cố
+    * Khởi động máy ảo trên đích ngay lập tức
+    * Lấy các trang bộ nhớ theo yêu cầu
+    * Giảm tổng thời gian di trú
+    * Rủi ro nếu mạng gặp sự cố
 
 ## Các điều kiện tiên quyết và yêu cầu
 ### Yêu cầu cấu hình máy chủ
@@ -91,6 +91,7 @@ ping destination-host
 ```
 
 ### Yêu cầu về mạng
+
 ```console
 # Mạng có độ trễ thấp (ưu tiên mạng chuyên dụng)
 ping -c 100 destination-host | tail -n 1
@@ -101,7 +102,8 @@ iperf3 -s  # Trên máy chủ đích
 iperf3 -c destination-host -t 30  # Trên máy chủ nguồn
 ```
 
-**Mở các cổng cần thiết**  
+**Mở các cổng cần thiết**
+
 * libvirt mặc định: 16509 (TLS) hoặc 16514 (TCP)
 * qemu+ssh: 22 (SSH)
 
@@ -127,6 +129,7 @@ echo "nfs-server:/exports/vms /var/lib/libvirt/images nfs defaults 0 0" >> /etc/
 * Mất nhiều thời gian hơn so với di trú sử dụng bộ lưu trữ chia sẻ
 
 ### Khả năng tương thích với CPU
+
 ```console
 # Kiểm tra các cờ CPU trên cả hai máy chủ.
 virsh capabilities | grep features
@@ -211,24 +214,32 @@ df -h | grep vms
 ```
 
 ### Cấu hình Pool lưu trữ
+* Tạo pool lưu trữ trên bộ lưu trữ chia sẻ
 
 ```console
-# Tạo pool lưu trữ trên bộ lưu trữ chia sẻ
-cat > nfs-pool.xml << 'EOF'
+vi nfs-pool.xml
+```
+
+```xml
 <pool type='dir'>
   <name>nfs-pool</name>
   <target>
     <path>/var/lib/libvirt/images</path>
   </target>
 </pool>
-EOF
+```
 
-# Định nghĩa pool trên cả hai máy chủ.
+* Định nghĩa pool trên cả hai máy chủ.
+
+```console
 virsh pool-define nfs-pool.xml
 virsh pool-start nfs-pool
 virsh pool-autostart nfs-pool
+```
 
-# Xác minh
+* Xác minh
+
+```console
 virsh pool-list
 virsh pool-info nfs-pool
 ```
@@ -544,16 +555,16 @@ VMS=("web1" "web2" "web3")
 DEST="qemu+ssh://destination-host/system"
 
 for vm in "${VMS[@]}"; do
-    echo "Migrating $vm..."
-    virsh migrate --live --verbose --persistent --undefinesource \
-        "$vm" "$DEST"
+  echo "Migrating $vm..."
+  virsh migrate --live --verbose --persistent --undefinesource \
+       "$vm" "$DEST"
 
-    if [ $? -eq 0 ]; then
-        echo "$vm migrated successfully"
-    else
-        echo "ERROR: Failed to migrate $vm"
-        exit 1
-    fi
+  if [ $? -eq 0 ]; then
+    echo "$vm migrated successfully"
+  else
+    echo "ERROR: Failed to migrate $vm"
+    exit 1
+  fi
 done
 
 echo "All VMs migrated successfully"
@@ -693,9 +704,9 @@ Script giám sát chi tiết
 ```bash
 #!/bin/bash
 while true; do
-    clear
-    virsh domjobinfo my-vm
-    sleep 1
+  clear
+  virsh domjobinfo my-vm
+  sleep 1
 done
 ```
 
@@ -854,8 +865,8 @@ VM=$1
 DEST_HOST=$2
 
 if [ -z "$VM" ] || [ -z "$DEST_HOST" ]; then
-    echo "Usage: $0 <vm-name> <destination-host>"
-    exit 1
+  echo "Usage: $0 <vm-name> <destination-host>"
+  exit 1
 fi
 
 echo "Pre-migration checks for $VM to $DEST_HOST"
@@ -863,29 +874,29 @@ echo "============================================"
 
 # Check VM exists and is running
 if ! virsh domstate "$VM" | grep -q "running"; then
-    echo "ERROR: VM $VM is not running"
-    exit 1
+  echo "ERROR: VM $VM is not running"
+  exit 1
 fi
 echo "✓ VM is running"
 
 # Check destination host reachable
 if ! ping -c 1 "$DEST_HOST" &>/dev/null; then
-    echo "ERROR: Cannot reach destination host"
-    exit 1
+  echo "ERROR: Cannot reach destination host"
+  exit 1
 fi
 echo "✓ Destination host reachable"
 
 # Check SSH connectivity
 if ! ssh root@"$DEST_HOST" 'exit' &>/dev/null; then
-    echo "ERROR: Cannot SSH to destination"
-    exit 1
+  echo "ERROR: Cannot SSH to destination"
+  exit 1
 fi
 echo "✓ SSH connectivity OK"
 
 # Check destination has KVM
 if ! ssh root@"$DEST_HOST" 'virsh version' &>/dev/null; then
-    echo "ERROR: KVM not available on destination"
-    exit 1
+  echo "ERROR: KVM not available on destination"
+  exit 1
 fi
 echo "✓ KVM available on destination"
 
@@ -904,9 +915,9 @@ echo "✓ Memory check complete"
 # Check shared storage
 VM_DISK=$(virsh domblklist "$VM" | awk 'NR>2 {print $2}' | head -n 1)
 if ! ssh root@"$DEST_HOST" "ls $VM_DISK" &>/dev/null; then
-    echo "ERROR: Disk not accessible on destination"
-    echo "  Consider using --copy-storage-all"
-    exit 1
+  echo "ERROR: Disk not accessible on destination"
+  echo "  Consider using --copy-storage-all"
+  exit 1
 fi
 echo "✓ Shared storage accessible"
 
@@ -928,8 +939,8 @@ DEST=$2
 BANDWIDTH=500  # MB/s
 
 if [ -z "$VM" ] || [ -z "$DEST" ]; then
-    echo "Usage: $0 <vm-name> <destination-host>"
-    exit 1
+  echo "Usage: $0 <vm-name> <destination-host>"
+  exit 1
 fi
 
 DEST_URI="qemu+ssh://${DEST}/system"
@@ -940,8 +951,8 @@ echo "===================================="
 # Pre-migration checks
 echo "Running pre-migration checks..."
 if ! bash pre-migration-check.sh "$VM" "$DEST"; then
-    echo "Pre-migration checks failed!"
-    exit 1
+  echo "Pre-migration checks failed!"
+  exit 1
 fi
 
 # Create snapshot before migration (safety)
@@ -957,20 +968,20 @@ virsh migrate --live --verbose --persistent --undefinesource \
     "$VM" "$DEST_URI" 2>&1 | tee migration-${VM}.log
 
 if [ ${PIPESTATUS[0]} -eq 0 ]; then
-    echo "Migration completed successfully!"
+  echo "Migration completed successfully!"
 
-    # Verify VM is running on destination
-    if ssh root@"$DEST" "virsh domstate $VM" | grep -q "running"; then
-        echo "VM verified running on destination"
-        # Delete safety snapshot
-        virsh snapshot-delete "$VM" "$SNAPSHOT" 2>/dev/null || true
-    else
-        echo "WARNING: VM may not be running on destination"
-    fi
+  # Verify VM is running on destination
+  if ssh root@"$DEST" "virsh domstate $VM" | grep -q "running"; then
+    echo "VM verified running on destination"
+    # Delete safety snapshot
+    virsh snapshot-delete "$VM" "$SNAPSHOT" 2>/dev/null || true
+  else
+    echo "WARNING: VM may not be running on destination"
+  fi
 else
-    echo "Migration failed!"
-    echo "Check migration-${VM}.log for details"
-    exit 1
+  echo "Migration failed!"
+  echo "Check migration-${VM}.log for details"
+  exit 1
 fi
 ```
 
@@ -985,30 +996,30 @@ HOSTS=("host1" "host2" "host3")
 THRESHOLD=70  # CPU usage threshold
 
 for host in "${HOSTS[@]}"; do
-    CPU_USAGE=$(ssh root@"$host" "top -bn1 | grep 'Cpu(s)' | awk '{print \$2}' | cut -d'%' -f1")
+  CPU_USAGE=$(ssh root@"$host" "top -bn1 | grep 'Cpu(s)' | awk '{print \$2}' | cut -d'%' -f1")
 
-    if (( $(echo "$CPU_USAGE > $THRESHOLD" | bc -l) )); then
-        echo "Host $host overloaded (${CPU_USAGE}%)"
+  if (( $(echo "$CPU_USAGE > $THRESHOLD" | bc -l) )); then
+    echo "Host $host overloaded (${CPU_USAGE}%)"
 
-        # Find least loaded host
-        MIN_HOST=""
-        MIN_LOAD=100
+    # Find least loaded host
+    MIN_HOST=""
+    MIN_LOAD=100
 
-        for target in "${HOSTS[@]}"; do
-            if [ "$target" != "$host" ]; then
-                LOAD=$(ssh root@"$target" "top -bn1 | grep 'Cpu(s)' | awk '{print \$2}' | cut -d'%' -f1")
-                if (( $(echo "$LOAD < $MIN_LOAD" | bc -l) )); then
-                    MIN_LOAD=$LOAD
-                    MIN_HOST=$target
-                fi
-            fi
-        done
+    for target in "${HOSTS[@]}"; do
+      if [ "$target" != "$host" ]; then
+        LOAD=$(ssh root@"$target" "top -bn1 | grep 'Cpu(s)' | awk '{print \$2}' | cut -d'%' -f1")
+        if (( $(echo "$LOAD < $MIN_LOAD" | bc -l) )); then
+          MIN_LOAD=$LOAD
+          MIN_HOST=$target
+        fi
+      fi
+    done
 
-        # Migrate least critical VM
-        VM=$(ssh root@"$host" "virsh list --name | head -n 1")
-        echo "Migrating $VM from $host to $MIN_HOST"
-        ssh root@"$host" "virsh migrate --live $VM qemu+ssh://${MIN_HOST}/system"
-    fi
+    # Migrate least critical VM
+    VM=$(ssh root@"$host" "virsh list --name | head -n 1")
+    echo "Migrating $VM from $host to $MIN_HOST"
+    ssh root@"$host" "virsh migrate --live $VM qemu+ssh://${MIN_HOST}/system"
+  fi
 done
 ```
 

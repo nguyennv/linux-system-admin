@@ -86,7 +86,10 @@ Chế độ NAT (Network Address Translation) cung cấp khả năng kết nối
 Tạo cấu hình mạng NAT
 
 ```console
-cat > nat-network.xml << 'EOF'
+vi nat-network.xml
+```
+
+```xml
 <network>
   <name>nat-network</name>
   <forward mode='nat'>
@@ -103,7 +106,6 @@ cat > nat-network.xml << 'EOF'
     </dhcp>
   </ip>
 </network>
-EOF
 ```
 
 Định nghĩa và khởi động mạng
@@ -144,17 +146,19 @@ siptables-save | grep virbr1
 ### 2. Chế độ định tuyến
 Chế độ định tuyến (Routed mode) kết nối các máy ảo với mạng vật lý thông qua định tuyến thay vì bắc cầu (bridging), qua đó duy trì các mạng con riêng biệt.
 
-**Đặc trưng**:
-
+#### Đặc trưng:
 * Các máy ảo sử dụng địa chỉ IP có thể định tuyến
 * Không thực hiện chuyển đổi NAT
 * Yêu cầu cấu hình định tuyến tĩnh trên mạng vật lý
 * Kết nối ở Lớp 3 (Layer 3)
 
-**Tạo mạng định tuyến:**
+#### Tạo mạng định tuyến:
 
 ```console
-cat > routed-network.xml << 'EOF'
+vi routed-network.xml
+```
+
+```xml
 <network>
   <name>routed-network</name>
   <forward mode='route' dev='eth0'/>
@@ -165,13 +169,16 @@ cat > routed-network.xml << 'EOF'
     </dhcp>
   </ip>
 </network>
-EOF
+```
+
+```console
 virsh net-define routed-network.xml
 virsh net-start routed-network
 virsh net-autostart routed-network
 ```
 
-**Cấu hình định tuyến máy chủ:**
+#### Cấu hình định tuyến máy chủ:
+
 ```console
 # Bật chuyển tiếp IP
 echo 1 > /proc/sys/net/ipv4/ip_forward
@@ -188,14 +195,13 @@ iptables -A FORWARD -o virbr-route -j ACCEPT
 ### 3. Chế độ Bridge
 Chế độ Bridge kết nối trực tiếp các máy ảo với mạng vật lý, khiến chúng xuất hiện như các máy chủ vật lý trên cùng một mạng.
 
-**Đặc trưng:**
-
+#### Đặc trưng:
 * Các máy ảo nhận địa chỉ IP từ DHCP của mạng vật lý
 * Kết nối trực tiếp ở lớp 2 (Layer 2)
 * Các máy ảo hiển thị trên mạng vật lý
 * Hiệu suất tối ưu
 
-**Điều kiện tiên quyết:**  
+#### Điều kiện tiên quyết:  
 
 ```console
 # Cài đặt các tiện ích cầu nối
@@ -207,7 +213,7 @@ brctl show
 ip link show type bridge
 ```
 
-**Tạo Host Bridge (Netplan - Ubuntu/Debian):**  
+#### Tạo Host Bridge (Netplan - Ubuntu/Debian):
 
 ```console
 # Backup existing configuration
@@ -238,7 +244,7 @@ ip addr show br0
 brctl show br0
 ```
 
-**Tạo Host Bridge (NetworkManager - RHEL/CentOS):**
+#### Tạo Host Bridge (NetworkManager - RHEL/CentOS):
 
 ```console
 # Tạo cầu nối
@@ -258,27 +264,31 @@ nmcli connection show
 bridge link show
 ```
 
-**Tạo mạng Bridge cho Libvirt:**
+#### Tạo mạng Bridge cho Libvirt:
 
 ```console
-cat > bridge-network.xml << 'EOF'
+vi bridge-network.xml
+```
+
+```xml
 <network>
   <name>bridge-network</name>
   <forward mode='bridge'/>
   <bridge name='br0'/>
 </network>
-EOF
+```
 
+```console
 virsh net-define bridge-network.xml
 virsh net-start bridge-network
 virsh net-autostart bridge-network
 ```
 
-**Gắn VM vào Bridge:**
+#### Gắn VM vào Bridge:
 
 ```console
 # Gắn vào máy ảo hiện có
-virsh attach-interface ubuntu-vm bridge br0 --model virtio --config --live
+virsh attach-interface my-vm bridge br0 --model virtio --config --live
 
 # Hoặc tạo máy ảo với chế độ cầu nối.
 virt-install \
@@ -294,17 +304,19 @@ virt-install \
 ### 4. Chế độ Cô lập
 Chế độ cô lập (Isolated mode) tạo ra một mạng lưới nơi các máy ảo có thể giao tiếp với nhau nhưng không có kết nối với máy chủ vật lý (host) hoặc các mạng bên ngoài.
 
-**Đặc trưng:**
-
+#### Đặc trưng:
 * Cách ly mạng hoàn toàn
 * Các máy ảo chỉ có thể giao tiếp với nhau
 * Không thể truy cập Internet hoặc máy chủ vật lý (host)
 * Hữu ích cho việc kiểm thử bảo mật
 
-**Tạo mạng cô lập:**
+#### Tạo mạng cô lập:
 
 ```console
-cat > isolated-network.xml << 'EOF'
+vi isolated-network.xml
+```
+
+```xml
 <network>
   <name>isolated</name>
   <bridge name='virbr-iso' stp='on' delay='0'/>
@@ -315,8 +327,9 @@ cat > isolated-network.xml << 'EOF'
     </dhcp>
   </ip>
 </network>
-EOF
+```
 
+```console
 virsh net-define isolated-network.xml
 virsh net-start isolated
 virsh net-autostart isolated
@@ -330,7 +343,10 @@ virsh net-dumpxml isolated | grep forward
 Chế độ Mở chuyển tiếp toàn bộ lưu lượng mà không áp dụng các hạn chế về NAT hay định tuyến.
 
 ```console
-cat > open-network.xml << 'EOF'
+vi open-network.xml
+```
+
+```xml
 <network>
   <name>open-network</name>
   <forward mode='open'/>
@@ -341,39 +357,51 @@ cat > open-network.xml << 'EOF'
     </dhcp>
   </ip>
 </network>
-EOF
+```
 
+```console
 virsh net-define open-network.xml
 virsh net-start open-network
 ```
 
 ## Cấu hình mạng nâng cao
 ### Gán IP tĩnh qua DHCP
-```console
-# Lấy địa chỉ MAC của máy ảo
-virsh dumpxml ubuntu-vm | grep "mac address"
-# Output: <mac address='52:54:00:xx:xx:xx'/>
+* Lấy địa chỉ MAC của máy ảo
 
-# Cập nhật mạng với mục nhập DHCP tĩnh
+```console
+virsh dumpxml my-vm | grep "mac address"
+```
+Kết quả đầu ra: <mac address='52:54:00:xx:xx:xx'/>
+
+* Cập nhật mạng với mục nhập DHCP tĩnh
+
+```console
 virsh net-update default add ip-dhcp-host \
-  "<host mac='52:54:00:xx:xx:xx' name='ubuntu-vm' ip='192.168.122.100'/>" \
+  "<host mac='52:54:00:xx:xx:xx' name='my-vm' ip='192.168.122.100'/>" \
   --live --config
 
 # Xác minh
 virsh net-dhcp-leases default
+```
 
-# Thêm nhiều gán tĩnh
-cat > dhcp-hosts.xml << 'EOF'
+* Thêm nhiều gán tĩnh
+
+```console
+vi dhcp-hosts.xml
+```
+
+```xml
 <host mac='52:54:00:11:11:11' name='web1' ip='192.168.122.11'/>
 <host mac='52:54:00:22:22:22' name='web2' ip='192.168.122.12'/>
 <host mac='52:54:00:33:33:33' name='db1' ip='192.168.122.20'/>
-EOF
+```
 
-# Thêm từng máy chủ
+* Thêm từng máy chủ
+
+```console
 while IFS= read -r line; do
     virsh net-update default add ip-dhcp-host "$line" --live --config
 done < dhcp-hosts.xml
-
 ```
 
 ### Chuyển tiếp cổng trong mạng NAT
@@ -401,7 +429,10 @@ iptables-save > /etc/iptables/rules.v4
 
 ### Nhiều dải IP trên cùng một mạng
 ```console
-cat > multi-ip-network.xml << 'EOF'
+vi multi-ip-network.xml
+```
+
+```xml
 <network>
   <name>multi-ip</name>
   <forward mode='nat'/>
@@ -417,15 +448,19 @@ cat > multi-ip-network.xml << 'EOF'
     </dhcp>
   </ip>
 </network>
-EOF
+```
 
+```console
 virsh net-define multi-ip-network.xml
 virsh net-start multi-ip
 ```
 
 ### Cấu hình IPv6
 ```console
-cat > ipv6-network.xml << 'EOF'
+vi ipv6-network.xml
+```
+
+```xml
 <network>
   <name>ipv6-network</name>
   <forward mode='nat'/>
@@ -441,8 +476,9 @@ cat > ipv6-network.xml << 'EOF'
     </dhcp>
   </ip>
 </network>
-EOF
+```
 
+```console
 virsh net-define ipv6-network.xml
 virsh net-start ipv6-network
 
@@ -453,9 +489,13 @@ sysctl -p
 ```
 
 ### Cấu hình VLAN
+* Tạo mạng có gắn thẻ VLAN
+
 ```console
-# Tạo mạng có gắn thẻ VLAN
-cat > vlan-network.xml << 'EOF'
+vi vlan-network.xml
+```
+
+```xml
 <network>
   <name>vlan100</name>
   <forward mode='bridge'/>
@@ -464,15 +504,22 @@ cat > vlan-network.xml << 'EOF'
     <tag id='100'/>
   </vlan>
 </network>
-EOF
+```
 
+```console
 virsh net-define vlan-network.xml
 virsh net-start vlan100
+```
 
-# Cấu hình máy ảo với VLAN
-virsh edit ubuntu-vm
+* Cấu hình máy ảo với VLAN
 
-# Thêm VLAN vào giao diện:
+```console
+virsh edit my-vm
+```
+
+Thêm VLAN vào giao diện:
+
+```xml
 <interface type='network'>
   <source network='vlan100'/>
   <vlan>
@@ -484,38 +531,55 @@ virsh edit ubuntu-vm
 ### Cấu hình SR-IOV
 SR-IOV (Single Root I/O Virtualization) mang lại hiệu năng mạng gần như tương đương với hiệu năng gốc bằng cách cho phép các máy ảo truy cập trực tiếp vào các giao diện mạng vật lý.
 
+* Kiểm tra xem NIC có hỗ trợ SR-IOV hay không.
+
 ```console
-# Kiểm tra xem NIC có hỗ trợ SR-IOV hay không.
 lspci | grep Ethernet
 lspci -v -s <device-id> | grep SR-IOV
+```
 
-# Bật SR-IOV trên NIC
+* Bật SR-IOV trên NIC
+
+```console
 echo 4 > /sys/class/net/ens1f0/device/sriov_numvfs
+```
 
-# Thiết lập vĩnh viễn (thêm vào /etc/rc.local hoặc quy tắc udev)
+* Thiết lập vĩnh viễn (thêm vào /etc/rc.local hoặc quy tắc udev)
+
+```console
 cat > /etc/udev/rules.d/sriov.rules << 'EOF'
 ACTION=="add", SUBSYSTEM=="net", ENV{ID_NET_NAME}=="ens1f0", \
 RUN+="/bin/bash -c 'echo 4 > /sys/class/net/ens1f0/device/sriov_numvfs'"
 EOF
+```
 
-# Liệt kê các hàm ảo
+* Liệt kê các hàm ảo
+
+```console
 lspci | grep Virtual
+```
 
-# Tạo nhóm mạng cho các VF
-cat > sriov-network.xml << 'EOF'
+* Tạo nhóm mạng cho các VF
+
+```console
+vi sriov-network.xml
+```
+
+```xml
 <network>
   <name>sriov-network</name>
   <forward mode='hostdev' managed='yes'>
     <pf dev='ens1f0'/>
   </forward>
 </network>
-EOF
+```
 
+```console
 virsh net-define sriov-network.xml
 virsh net-start sriov-network
 
 # Gắn giao diện SR-IOV vào máy ảo
-virsh edit ubuntu-vm
+virsh edit my-vm
 
 <interface type='network'>
   <source network='sriov-network'/>
@@ -527,7 +591,7 @@ virsh edit ubuntu-vm
 
 ```console
 # Bật tính năng đa hàng đợi trong cấu hình máy ảo
-virsh edit ubuntu-vm
+virsh edit my-vm
 
 <interface type='network'>
   <source network='default'/>
@@ -536,8 +600,8 @@ virsh edit ubuntu-vm
 </interface>
 
 # Khởi động lại máy ảo
-virsh shutdown ubuntu-vm
-virsh start ubuntu-vm
+virsh shutdown my-vm
+virsh start my-vm
 
 # Bên trong máy ảo khách, hãy bật tính năng đa hàng đợi (multi-queue).
 ethtool -L eth0 combined 4
@@ -557,7 +621,7 @@ modprobe vhost_net
 echo "vhost_net" >> /etc/modules
 
 # Sử dụng vhost trong cấu hình mạng
-virsh edit ubuntu-vm
+virsh edit my-vm
 
 <interface type='network'>
   <source network='default'/>
@@ -567,9 +631,9 @@ virsh edit ubuntu-vm
 ```
 
 ### Giảm tải mạng
+* Cấu hình tính năng giảm tải trong tệp XML của máy ảo
 
-```console
-# Cấu hình tính năng giảm tải trong tệp XML của máy ảo
+```xml
 <interface type='network'>
   <source network='default'/>
   <model type='virtio'/>
@@ -578,8 +642,11 @@ virsh edit ubuntu-vm
     <guest csum='on' tso4='on' tso6='on' ecn='on' ufo='on'/>
   </driver>
 </interface>
+```
 
-# Bên trong máy ảo, xác minh tính năng giảm tải.
+* Bên trong máy ảo, xác minh tính năng giảm tải.
+
+```console
 ethtool -k eth0 | grep offload
 ```
 
@@ -587,17 +654,17 @@ ethtool -k eth0 | grep offload
 
 ```console
 # Giới hạn băng thông cho giao diện máy ảo
-virsh domiftune ubuntu-vm vnet0 \
+virsh domiftune my-vm vnet0 \
   --inbound 100000,150000,200000 \
   --outbound 80000,120000,160000
 
 # Các tham số: trung bình, đỉnh, bùng phát (tính bằng KiB/s)
 
 # Xác minh
-virsh domiftune ubuntu-vm vnet0
+virsh domiftune my-vm vnet0
 
 # Thiết lập vĩnh viễn
-virsh edit ubuntu-vm
+virsh edit my-vm
 
 <interface type='network'>
   <source network='default'/>
@@ -635,7 +702,10 @@ virsh net-update default add dns-forwarder \
 ### Cấu hình DNS trong XML
 
 ```console
-cat > dns-network.xml << 'EOF'
+vi dns-network.xml
+```
+
+```xml
 <network>
   <name>dns-network</name>
   <forward mode='nat'/>
@@ -661,18 +731,22 @@ cat > dns-network.xml << 'EOF'
     </dhcp>
   </ip>
 </network>
-EOF
+```
 
+```console
 virsh net-define dns-network.xml
 virsh net-start dns-network
 ```
 
 ## Tường lửa và Bảo mật
 ### Các quy tắc tường lửa tùy chỉnh
+* Thêm các quy tắc tùy chỉnh vào mạng
 
 ```console
-# Thêm các quy tắc tùy chỉnh vào mạng
-cat > secure-network.xml << 'EOF'
+vi secure-network.xml
+```
+
+```xml
 <network>
   <name>secure-network</name>
   <forward mode='nat'/>
@@ -683,12 +757,16 @@ cat > secure-network.xml << 'EOF'
     </dhcp>
   </ip>
 </network>
-EOF
+```
 
+```console
 virsh net-define secure-network.xml
 virsh net-start secure-network
+```
 
-# Thêm các quy tắc iptables tùy chỉnh
+* Thêm các quy tắc iptables tùy chỉnh
+
+```console
 iptables -I FORWARD -i virbr-sec -o virbr-sec -p tcp --dport 22 -j ACCEPT
 iptables -I FORWARD -i virbr-sec -o virbr-sec -p tcp --dport 80 -j ACCEPT
 iptables -I FORWARD -i virbr-sec -o virbr-sec -p tcp --dport 443 -j ACCEPT
@@ -699,16 +777,25 @@ iptables-save > /etc/iptables/rules.v4
 ```
 
 ### Lọc mạng (nwfilter)
+* Liệt kê các bộ lọc khả dụng
 
 ```console
-# Liệt kê các bộ lọc khả dụng
 virsh nwfilter-list
+```
 
-# Xem định nghĩa bộ lọc
+* Xem định nghĩa bộ lọc
+
+```console
 virsh nwfilter-dumpxml clean-traffic
+```
 
-# Tạo bộ lọc tùy chỉnh
-cat > custom-filter.xml << 'EOF'
+* Tạo bộ lọc tùy chỉnh
+
+```console
+vi custom-filter.xml
+```
+
+```xml
 <filter name='custom-filter' chain='root'>
   <uuid>12345678-1234-1234-1234-123456789abc</uuid>
   <!-- Allow ARP -->
@@ -731,12 +818,16 @@ cat > custom-filter.xml << 'EOF'
     <all/>
   </rule>
 </filter>
-EOF
+```
 
+```console
 virsh nwfilter-define custom-filter.xml
+```
 
-# Áp dụng bộ lọc cho giao diện máy ảo
-virsh edit ubuntu-vm
+* Áp dụng bộ lọc cho giao diện máy ảo
+
+```console
+virsh edit my-vm
 
 <interface type='network'>
   <source network='default'/>
@@ -745,10 +836,13 @@ virsh edit ubuntu-vm
 ```
 
 ### Giới hạn tốc độ và QoS
+* Tạo mạng hỗ trợ QoS
 
 ```console
-# Tạo mạng hỗ trợ QoS
-cat > qos-network.xml << 'EOF'
+vi qos-network.xml
+```
+
+```xml
 <network>
   <name>qos-network</name>
   <forward mode='nat'/>
@@ -763,18 +857,19 @@ cat > qos-network.xml << 'EOF'
     </dhcp>
   </ip>
 </network>
-EOF
+```
 
+```console
 virsh net-define qos-network.xml
 virsh net-start qos-network
 ```
 
 ## Mạng đa máy chủ (Multi-Host Networking)
 ### Kết nối các máy ảo giữa các máy chủ vật lý
-**Sử dụng VXLAN:**
+#### Sử dụng VXLAN:
+* Máy chủ 1
 
 ```console
-# Host 1
 ip link add vxlan100 type vxlan id 100 \
   local 10.0.0.1 \
   remote 10.0.0.2 \
@@ -785,20 +880,30 @@ ip link set vxlan100 up
 brctl addbr br-vxlan
 brctl addif br-vxlan vxlan100
 ip link set br-vxlan up
+```
 
-# Tạo mạng libvirt
-cat > vxlan-network.xml << 'EOF'
+- Tạo mạng libvirt
+
+```console
+vi vxlan-network.xml
+```
+
+```xml
 <network>
   <name>vxlan-network</name>
   <forward mode='bridge'/>
   <bridge name='br-vxlan'/>
 </network>
-EOF
+```
 
+```console
 virsh net-define vxlan-network.xml
 virsh net-start vxlan-network
+```
 
-# Host 2 (đảo ngược địa chỉ IP cục bộ/từ xa)
+* Máy chủ 2 (đảo ngược địa chỉ IP cục bộ/từ xa)
+
+```console
 ip link add vxlan100 type vxlan id 100 \
   local 10.0.0.2 \
   remote 10.0.0.1 \
@@ -807,10 +912,10 @@ ip link add vxlan100 type vxlan id 100 \
 # ... lặp lại cấu hình cầu nối
 ```
 
-**Sử dụng đường hầm GRE:**
+#### Sử dụng đường hầm GRE:
+* Máy chủ 1
 
 ```console
-# Host 1
 ip tunnel add gre1 mode gre remote 10.0.0.2 local 10.0.0.1 ttl 255
 ip link set gre1 up
 ip addr add 172.16.0.1/30 dev gre1
@@ -818,8 +923,11 @@ ip addr add 172.16.0.1/30 dev gre1
 brctl addbr br-gre
 brctl addif br-gre gre1
 ip link set br-gre up
+```
 
-# Host 2
+* Máy chủ 2
+
+```console
 ip tunnel add gre1 mode gre remote 10.0.0.1 local 10.0.0.2 ttl 255
 ip link set gre1 up
 ip addr add 172.16.0.2/30 dev gre1
@@ -953,7 +1061,7 @@ cat /sys/class/net/br0/bridge/stp_state
 Theo dõi số liệu thống kê giao diện
 
 ```console
-watch -n 1 'virsh domifstat ubuntu-vm vnet0'
+watch -n 1 'virsh domifstat my-vm vnet0'
 ```
 
 Giám sát tất cả các máy ảo
@@ -961,18 +1069,18 @@ Giám sát tất cả các máy ảo
 ```bash
 #!/bin/bash
 while true; do
-    clear
-    echo "Network Statistics - $(date)"
-    echo "================================"
-    for vm in $(virsh list --name); do
-        echo "VM: $vm"
-        virsh domiflist "$vm"
-        for iface in $(virsh domiflist "$vm" | awk 'NR>2 {print $1}'); do
-            virsh domifstat "$vm" "$iface"
-        done
-        echo ""
+  clear
+  echo "Network Statistics - $(date)"
+  echo "================================"
+  for vm in $(virsh list --name); do
+    echo "VM: $vm"
+    virsh domiflist "$vm"
+    for iface in $(virsh domiflist "$vm" | awk 'NR>2 {print $1}'); do
+      virsh domifstat "$vm" "$iface"
     done
-    sleep 5
+    echo ""
+  done
+  sleep 5
 done
 ```
 
@@ -996,20 +1104,20 @@ nethogs virbr0
 LOG_FILE="/var/log/vm-network-stats.log"
 
 collect_stats() {
-    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+  timestamp=$(date '+%Y-%m-%d %H:%M:%S')
 
-    for vm in $(virsh list --name); do
-        for iface in $(virsh domiflist "$vm" | awk 'NR>2 {print $1}'); do
-            stats=$(virsh domifstat "$vm" "$iface" | grep -E 'rx_bytes|tx_bytes')
-            echo "$timestamp | $vm | $iface | $stats" >> "$LOG_FILE"
-        done
+  for vm in $(virsh list --name); do
+    for iface in $(virsh domiflist "$vm" | awk 'NR>2 {print $1}'); do
+      stats=$(virsh domifstat "$vm" "$iface" | grep -E 'rx_bytes|tx_bytes')
+      echo "$timestamp | $vm | $iface | $stats" >> "$LOG_FILE"
     done
+  done
 }
 
 # Run every 60 seconds
 while true; do
-    collect_stats
-    sleep 60
+  collect_stats
+  sleep 60
 done
 ```
 
@@ -1050,7 +1158,7 @@ virsh net-update default add ip-dhcp-host \
 # Tạo tài liệu mạng
 virsh net-list --all > /docs/networks.txt
 for net in $(virsh net-list --name); do
-    virsh net-dumpxml "$net" > "/docs/network-${net}.xml"
+  virsh net-dumpxml "$net" > "/docs/network-${net}.xml"
 done
 ```
 
@@ -1062,7 +1170,7 @@ virsh net-autostart unused-network --disable
 ```
 
 * Thiết lập các quy tắc tường lửa nghiêm ngặt
-*  Sử dụng nwfilter để lọc ở cấp độ máy ảo (VM)
+* Sử dụng nwfilter để lọc ở cấp độ máy ảo (VM)
 * Bật STP trên các bridge
 * Sử dụng VLAN để phân tách mạng
 * Triển khai lọc địa chỉ MAC

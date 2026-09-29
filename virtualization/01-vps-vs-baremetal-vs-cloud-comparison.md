@@ -18,15 +18,19 @@ VPS hosting tận dụng công nghệ ảo hóa phần cứng để tạo ra cá
 
 ```console
 egrep -c '(vmx|svm)' /proc/cpuinfo
-# Nếu kết quả đầu ra > 0, tính năng ảo hóa được hỗ trợ.
 ```
+
+Nếu kết quả đầu ra > 0, tính năng ảo hóa được hỗ trợ.
+
 
 * Xác minh các mô-đun KVM đã được nạp.
 
 ```console
 lsmod | grep kvm
-# Kết quả hiển thị cần là: kvm_intel hoặc kvm_amd
 ```
+
+Kết quả hiển thị cần là: kvm_intel hoặc kvm_amd
+
 
 Mỗi VPS hoạt động với:
 
@@ -39,21 +43,27 @@ Mỗi VPS hoạt động với:
 ### Mô hình phân bổ tài nguyên VPS
 Các nhà cung cấp VPS sử dụng các chiến lược phân bổ khác nhau:
 
-**Nguồn lực được đảm bảo:**
+#### Nguồn lực được đảm bảo:
+* Kiểm tra dung lượng RAM được đảm bảo trên VPS của bạn.
 
 ```console
-# Kiểm tra dung lượng RAM được đảm bảo trên VPS của bạn.
 free -h
+```
 
-# Xem phân bổ CPU
+* Xem phân bổ CPU
+
+```console
 nproc
 lscpu
+```
 
-# Kiểm tra việc phân bổ đĩa
+* Kiểm tra việc phân bổ đĩa
+
+```console
 df -h
 ```
 
-**Cân nhắc về việc phân bổ quá mức:** Một số nhà cung cấp phân bổ quá mức CPU và RAM, nghĩa là tổng tài nguyên được phân bổ vượt quá dung lượng vật lý. Điều này hoạt động được vì không phải tất cả các máy ảo đều đạt đỉnh điểm cùng một lúc.
+> **Cân nhắc về việc phân bổ quá mức:** Một số nhà cung cấp phân bổ quá mức CPU và RAM, nghĩa là tổng tài nguyên được phân bổ vượt quá dung lượng vật lý. Điều này hoạt động được vì không phải tất cả các máy ảo đều đạt đỉnh điểm cùng một lúc.
 
 ### Ưu điểm của VPS
 1. Khả năng mở rộng với chi phí hiệu quả
@@ -61,24 +71,29 @@ df -h
     * Dễ dàng nâng cấp tài nguyên mà không cần chuyển đổi hệ thống
     * Chỉ trả phí cho những tài nguyên bạn thực sự cần
 2. Quyền truy cập Root và toàn quyền kiểm soát
+- Quyền truy cập root đầy đủ cho phép tùy biến hoàn toàn.
 
 ```console
-# Quyền truy cập root đầy đủ cho phép tùy biến hoàn toàn.
 sudo su -
+```
 
-# Cài đặt bất kỳ phần mềm hoặc dịch vụ nào
+- Cài đặt bất kỳ phần mềm hoặc dịch vụ nào
+
+```console
 dnf -y install docker
 systemctl enable docker
 ```
 
 3. Sự cô lập và bảo mật: Mỗi VPS được cô lập thông qua công nghệ ảo hóa:
+- VPS sử dụng cơ chế cách ly không gian tên. Mỗi tiến trình có các không gian tên riêng.
 
 ```console
-# VPS sử dụng cơ chế cách ly không gian tên.
 ls /proc/*/ns/
-# Mỗi tiến trình có các không gian tên riêng.
+```
 
-# cgroups kiểm soát việc sử dụng tài nguyên.
+- cgroups kiểm soát việc sử dụng tài nguyên.
+
+```console
 cat /proc/cgroups
 ```
 
@@ -90,9 +105,9 @@ cat /proc/cgroups
     * Lưu lượng mạng trong thời gian sử dụng cao điểm
     * Khả năng sử dụng CPU nếu nhà cung cấp vượt quá tải
 2. Sự biến động về hiệu suất
+- Kiểm tra sự biến thiên hiệu năng I/O
 
 ```console
-# Kiểm tra sự biến thiên hiệu năng I/O
 fio --name=random-write --ioengine=libaio --rw=randwrite \
     --bs=4k --size=1G --numjobs=1 --iodepth=16 \
     --runtime=60 --time_based --end_fsync=1
@@ -106,33 +121,35 @@ fio --name=random-write --ioengine=libaio --rw=randwrite \
 
 ### Các trường hợp sử dụng VPS lý tưởng
 **Dịch vụ lưu trữ web và các ứng dụng:**
+- Hoàn hảo cho các stack LAMP/LEMP.
 
 ```console
-# Hoàn hảo cho các stack LAMP/LEMP.
 dnf -y install nginx mysql-server php-fpm
 systemctl enable nginx mysql
-
 ```
 
 **Môi trường Phát triển và Kiểm thử:**
 
+- Triển khai nhanh môi trường
+
 ```console
-# Triển khai nhanh môi trường
 docker run -d --name dev-env alpine:latest
 ```
 
 **Cơ sở dữ liệu quy mô nhỏ đến trung bình:**
 
+- MySQL/PostgreSQL với mức tải trung bình
+
 ```console
-# MySQL/PostgreSQL với mức tải trung bình
 dnf -y install postgresql-14
 systemctl enable postgresql
 ```
 
 **Microservices và các ứng dụng được đóng gói trong container:**
 
+- Docker và điều phối container
+
 ```console
-# Docker và điều phối container
 dnf -y install docker docker-compose
 ```
 
@@ -143,13 +160,17 @@ Máy chủ Bare-metal là máy chủ vật lý chuyên dụng được cấp ph�
 ### Kiến trúc Bare-metal
 **Truy cập phần cứng trực tiếp:**
 
+- Xem phần cứng thực tế
+
 ```console
-# Xem phần cứng thực tế
 lscpu | grep "Model name"
 dmidecode -t processor
 dmidecode -t memory
+```
 
-# Kiểm tra các ổ đĩa vật lý
+- Kiểm tra các ổ đĩa vật lý
+
+```console
 lsblk -d
 smartctl -a /dev/sda
 ```
@@ -165,28 +186,42 @@ smartctl -a /dev/sda
 ### Đặc tính hiệu suất
 **Hiệu suất ổn định:**
 
+- Đo hiệu năng CPU
+
 ```console
-# Đo hiệu năng CPU
 sysbench cpu --cpu-max-prime=20000 run
+```
 
-# Kiểm tra băng thông bộ nhớ
+- Kiểm tra băng thông bộ nhớ
+
+```console
 sysbench memory --memory-total-size=10G run
+```
 
-# Đo hiệu năng I/O của ổ đĩa
+- Đo hiệu năng I/O của ổ đĩa
+
+```console
 hdparm -Tt /dev/nvme0n1
 ```
 
-**Không xảy ra hiệu ứng "hàng xóm ồn ào" (Noisy Neighbor):** Hiệu năng vẫn ổn định do không có người dùng nào khác chia sẻ tài nguyên.
+**Không xảy ra hiệu ứng "hàng xóm ồn ào" (Noisy Neighbor):**
+
+- Hiệu năng vẫn ổn định do không có người dùng nào khác chia sẻ tài nguyên.
 
 **Tùy biến phần cứng:**
 
+- Cấu hình các mảng RAID
+
 ```console
-# Cấu hình các mảng RAID
 mdadm --create /dev/md0 --level=10 --raid-devices=4 \
       /dev/sda /dev/sdb /dev/sdc /dev/sdd
+```
 
-# Tối ưu hóa kernel cho phần cứng cụ thể
-echo "performance" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+- Tối ưu hóa kernel cho phần cứng cụ thể
+
+```console
+echo "performance" | tee \
+/sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 ```
 
 ### Ưu điểm của Bare-metal
@@ -196,11 +231,11 @@ echo "performance" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
     * I/O phần cứng trực tiếp
     * Độ trễ thấp nhất có thể
 2. Điều khiển phần cứng
+- Thiết lập BIOS/UEFI tùy chỉnh
+- Tùy chọn cấu hình RAID
+- Giám sát phần cứng trực tiếp
 
 ```console
-# Thiết lập BIOS/UEFI tùy chỉnh
-# Tùy chọn cấu hình RAID
-# Giám sát phần cứng trực tiếp
 ipmitool sensor list
 ```
 
@@ -209,9 +244,9 @@ ipmitool sensor list
     * Không có lỗ hổng bảo mật ở tầng hypervisor
     * Toàn quyền kiểm soát hệ thống bảo mật
 4. Hiệu năng ổn định, có thể dự đoán được
+- Kết quả kiểm chuẩn nhất quán
 
 ```console
-# Kết quả kiểm chuẩn nhất quán
 for i in {1..10}; do
     sysbench cpu --cpu-max-prime=20000 run | grep "events per second"
 done
@@ -271,9 +306,9 @@ Hạ tầng đám mây cung cấp các tài nguyên điện toán theo nhu cầu
 ### Các mô hình dịch vụ đám mây
 **Cơ sở hạ tầng như một dịch vụ (IaaS):**
 
+- AWS EC2, Google Compute Engine, Azure VMs. Ví dụ: Khởi chạy instance EC2 thông qua CLI
+
 ```console
-# AWS EC2, Google Compute Engine, Azure VMs
-# Ví dụ: Khởi chạy instance EC2 thông qua CLI
 aws ec2 run-instances \
     --image-id ami-0c55b159cbfafe1f0 \
     --instance-type t3.medium \
@@ -292,9 +327,9 @@ aws ec2 run-instances \
 
 ### Các đặc điểm của kiến trúc đám mây
 1. Tính linh hoạt và Tự động mở rộng:
+- Ví dụ về tự động mở rộng AWS
 
 ```console
-# Ví dụ về tự động mở rộng AWS
 aws autoscaling create-auto-scaling-group \
     --auto-scaling-group-name my-asg \
     --min-size 2 \
@@ -303,22 +338,20 @@ aws autoscaling create-auto-scaling-group \
 ```
 
 2. Phân bố địa lý:
+- Triển khai trên nhiều khu vực. Chọn các khu vực dựa trên khoảng cách đến người dùng
 
 ```console
-# Triển khai trên nhiều khu vực
 aws ec2 describe-regions --output table
-# Chọn các khu vực dựa trên khoảng cách đến người dùng
 ```
-
 3. Dịch vụ Quản lý:
     * Cơ sở dữ liệu được quản lý (RDS, Cloud SQL)
     * Kubernetes được quản lý (EKS, GKE, AKS)
     * Lưu trữ đối tượng được quản lý (S3, GCS)
 
 4. Cơ sở hạ tầng dựa trên API:
+- Cơ sở hạ tầng dưới dạng mã với OpenTofu
 
 ```console
-# Cơ sở hạ tầng dưới dạng mã với OpenTofu
 tofu init
 tofu plan
 tofu apply
@@ -351,9 +384,9 @@ tofu apply
 
 ### Nhược điểm của cơ sở hạ tầng đám mây
 1. Khó lường về chi phí
+- Theo dõi chi tiêu cho dịch vụ đám mây
 
 ```console
-# Theo dõi chi tiêu cho dịch vụ đám mây
 aws ce get-cost-and-usage \
     --time-period Start=2024-01-01,End=2024-01-31 \
     --granularity MONTHLY
@@ -462,13 +495,17 @@ aws ce get-cost-and-usage \
 
 **Mở rộng quy mô đám mây:**  
 
+Mở rộng theo chiều dọc
+
 ```console
-# Mở rộng theo chiều dọc
 aws ec2 modify-instance-attribute \
     --instance-id i-1234567890abcdef0 \
     --instance-type t3.large
+```
 
-# Tự động mở rộng theo chiều ngang
+Tự động mở rộng theo chiều ngang
+
+```console
 aws autoscaling put-scaling-policy \
     --auto-scaling-group-name my-asg \
     --policy-name scale-up \
@@ -481,12 +518,15 @@ aws autoscaling put-scaling-policy \
 * Hệ điều hành và ứng dụng do người dùng tự quản lý
 * Sao lưu tự động (thường được bao gồm)
 * Bảng điều khiển (đôi khi có)
+* Cập nhật hệ thống
 
 ```console
-# Cập nhật hệ thống
 dnf upgrade -y
+```
 
-# Giám sát
+* Giám sát
+
+```console
 systemctl status
 htop
 ```
@@ -499,12 +539,16 @@ htop
     - Cập nhật bản vá bảo mật
     - Triển khai sao lưu
 
+Giám sát phần cứng bằng IPMI
+
 ```console
-# Giám sát phần cứng bằng IPMI
 ipmitool sensor list
 ipmitool sel list
+```
 
-# Giải pháp sao lưu tùy chỉnh
+Giải pháp sao lưu tùy chỉnh
+
+```console
 rsync -avz /data/ backup-server:/backups/
 ```
 
@@ -514,12 +558,16 @@ rsync -avz /data/ backup-server:/backups/
 * Các tùy chọn tự động hóa đa dạng
 * Tích hợp dịch vụ được quản lý
 
+Cơ sở hạ tầng dưới dạng mã
+
 ```console
-# Cơ sở hạ tầng dưới dạng mã
 terraform apply
 ansible-playbook deploy.yml
+```
 
-# Sao lưu tự động
+Sao lưu tự động
+
+```console
 aws backup create-backup-plan --backup-plan file://plan.json
 ```
 
@@ -603,8 +651,9 @@ aws backup create-backup-plan --backup-plan file://plan.json
     - Môi trường phát triển
     - Hệ thống phân tích dữ liệu (Analytics pipeline)
 
+Kết nối qua VPN
+
 ```console
-# Kết nối qua VPN
 strongswan configuration
 ipsec tunnel between Baremetal <-> Cloud
 ```
@@ -616,8 +665,9 @@ ipsec tunnel between Baremetal <-> Cloud
     - Tối ưu hóa chi phí
     - Dự phòng
 
+Terraform đa đám mây
+
 ```console
-# Terraform đa đám mây
 provider "aws" { ... }
 provider "gcp" { ... }
 provider "azure" { ... }
@@ -625,11 +675,15 @@ provider "azure" { ... }
 
 ## Kiểm thử hiệu năng và Đo hiệu năng (Benchmarking)
 ### Đo hiệu năng CPU
-```console
-# Cài đặt sysbench
-dnf -y install sysbench
+Cài đặt sysbench
 
-# Kiểm tra hiệu năng CPU
+```console
+dnf -y install sysbench
+```
+
+Kiểm tra hiệu năng CPU
+
+```console
 sysbench cpu --cpu-max-prime=20000 --threads=4 run
 ```
 
@@ -639,39 +693,57 @@ sysbench cpu --cpu-max-prime=20000 --threads=4 run
     * Cloud: ~2000-8000 sự kiện/giây (có sự thay đổi)
 
 ### Đo hiệu năng bộ nhớ
-```console
-# Kiểm tra thông lượng bộ nhớ
-sysbench memory --memory-total-size=10G --threads=4 run
+* Kiểm tra thông lượng bộ nhớ
 
-# Kiểm tra độ trễ bộ nhớ
+```console
+sysbench memory --memory-total-size=10G --threads=4 run
+```
+
+* Kiểm tra độ trễ bộ nhớ
+
+```console
 lat_mem_rd -P 4 -N 10 1024
 ```
 
 ### Đo hiệu năng I/O đĩa
-```console
-# Cài đặt fio
-dnf -y install fio
+* Cài đặt fio
 
-# Kiểm tra đọc/ghi ngẫu nhiên
+```console
+dnf -y install fio
+```
+
+* Kiểm tra đọc/ghi ngẫu nhiên
+
+```console
 fio --name=randwrite --ioengine=libaio --rw=randrw \
     --bs=4k --size=4G --numjobs=4 --iodepth=32 \
     --runtime=60 --time_based --group_reporting
+```
 
-# Đọc/ghi tuần tự
+* Đọc/ghi tuần tự
+
+```console
 fio --name=seqwrite --ioengine=libaio --rw=write \
     --bs=1M --size=4G --numjobs=1 --iodepth=16 \
     --runtime=60 --time_based
 ```
 
 ### Đánh giá hiệu năng mạng
+* Cài đặt iperf3
+
 ```console
-# Cài đặt iperf3
 dnf -y install iperf3
+```
 
-# Phía máy chủ
+* Phía máy chủ
+
+```console
 iperf3 -s
+```
 
-# Phía máy khách
+* Phía máy khách
+
+```console
 iperf3 -c server-ip -t 60 -P 4
 ```
 
@@ -684,8 +756,9 @@ iperf3 -c server-ip -t 60 -P 4
 ### Tối ưu hóa chi phí VPS
 1. Điều chỉnh quy mô instance cho phù hợp
 
+- Theo dõi mức sử dụng thực tế
+
 ```console
-# Theo dõi mức sử dụng thực tế
 htop
 free -h
 df -h
@@ -700,17 +773,15 @@ dnf -y install redis-server memcached
 ```
 
 ### Tối ưu hóa chi phí máy chủ vật lý
-1. Tối đa hóa hiệu suất sử dụng
+1. Tối đa hóa hiệu suất sử dụng: Chạy nhiều dịch vụ trên một máy chủ
 
 ```console
-# Chạy nhiều dịch vụ trên một máy chủ
 docker-compose up -d
 ```
 
-2. Triển khai ảo hóa nếu cần thiết
+2. Triển khai ảo hóa nếu cần thiết: Sử dụng KVM để tạo các máy ảo trên máy chủ vật lý (bare-metal).
 
 ```console
-# Sử dụng KVM để tạo các máy ảo trên máy chủ vật lý (bare-metal).
 dnf -y install qemu-kvm libvirt virt-install 
 ```
 
@@ -807,23 +878,31 @@ docker push registry.cloud.com/app:latest
 
 ## Các vấn đề cần cân nhắc về bảo mật
 ### Bảo mật VPS
+1. Cập nhật thường xuyên
 
 ```console
-# 1. Cập nhật thường xuyên
 dnf -y upgrade
+```
 
-# 2. Cấu hình tường lửa
+2. Cấu hình tường lửa
+
+```console
 firewall-cmd --permanent --add-port=22/tcp
 firewall-cmd --permanent --add-port=80/tcp
 firewall-cmd --permanent --add-port=443/tcp
 firewall-cmd --reload
+```
 
-# 3. Fail2ban
+3. Fail2ban
+
+```console
 dnf -y install fail2ban
 systemctl enable fail2ban
+```
 
-# 4. Tăng cường bảo mật SSH
-# Chỉnh sửa /etc/ssh/sshd_config
+4. Tăng cường bảo mật SSH. Chỉnh sửa /etc/ssh/sshd_config
+
+```console
 PermitRootLogin no
 PasswordAuthentication no
 ```
@@ -868,35 +947,48 @@ aws config start-configuration-recorder
 
 ## Giám sát và Khả năng quan sát
 ### Giám sát VPS
+* Giám sát cơ bản
+
 ```console
-# Giám sát cơ bản
 htop
 iotop
 nethogs
+```
 
-# Giám sát nâng cao
+* Giám sát nâng cao
+
+```console
 dnf -y install prometheus node-exporter
 systemctl enable node-exporter
+```
 
-# Tổng hợp nhật ký
+* Tổng hợp nhật ký. Cấu hình ghi nhật ký từ xa
+
+```console
 dnf -y install rsyslog
-# Cấu hình ghi nhật ký từ xa
 ```
 
 ### Giám sát Bare-metal
 Tất cả các dịch vụ giám sát VPS, cộng thêm:
 
+* Giám sát phần cứng
+
 ```console
-# Giám sát phần cứng
 dnf -y install lm-sensors
 sensors-detect
 sensors
+```
 
-# Giám sát RAID
+* Giám sát RAID
+
+```console
 cat /proc/mdstat
 mdadm --detail /dev/md0
+```
 
-# Giám sát thông minh
+* Giám sát thông minh
+
+```console
 dnf -y install smartmontools
 smartctl -a /dev/sda
 ```
@@ -904,14 +996,21 @@ smartctl -a /dev/sda
 ### Giám sát đám mây
 Giám sát đám mây tích hợp sẵn
 
+* AWS CloudWatch
+
 ```console
-# AWS CloudWatch
 aws cloudwatch put-metric-alarm
+```
 
-# Azure Monitor
+* Azure Monitor
+
+```console
 az monitor metrics alert create
+```
 
-# GCP Cloud Monitoring
+* GCP Cloud Monitoring
+
+```console
 gcloud monitoring dashboards create
 ```
 
@@ -921,56 +1020,84 @@ gcloud monitoring dashboards create
 ## Khắc phục các sự cố thường gặp
 ### Khắc phục sự cố VPS
 
+* Tải trọng cao
+
 ```console
-# Tải trọng cao
 top
 ps aux --sort=-%cpu | head
+```
 
-# Đĩa đầy
+* Đĩa đầy
+
+```console
 df -h
 du -sh /* | sort -rh | head
+```
 
-# Sự cố mạng
+* Sự cố mạng
+
+```console
 netstat -tulpn
 ss -tulpn
+```
 
-# Rò rỉ bộ nhớ
+* Rò rỉ bộ nhớ
+
+```console
 ps aux --sort=-%mem | head
 free -h
 ```
 
 ### Khắc phục sự cố Bare-metal
+* Lỗi phần cứng
 
 ```console
-# Lỗi phần cứng
 dmesg | grep -i error
 journalctl -p err -b
+```
 
-# Suy giảm hiệu năng RAID
+* Suy giảm hiệu năng RAID
+
+```console
 cat /proc/mdstat
 mdadm --detail /dev/md0
+```
 
-# Các vấn đề về nhiệt độ
+* Các vấn đề về nhiệt độ
+
+```console
 sensors
 ipmitool sensor list | grep Temp
+```
 
-# Các vấn đề về gộp kết nối mạng
+* Các vấn đề về gộp kết nối mạng
+
+```console
 cat /proc/net/bonding/bond0
 ```
 
 ### Khắc phục sự cố đám mây
+* Khả năng kết nối với instance
 
 ```console
-# Khả năng kết nối với instance
 aws ec2 describe-instances --instance-ids i-xxx
+```
 
-# Các vấn đề về nhóm bảo mật
+* Các vấn đề về nhóm bảo mật
+
+```console
 aws ec2 describe-security-groups
+```
 
-# Các vấn đề về tự động mở rộng quy mô
+* Các vấn đề về tự động mở rộng quy mô
+
+```console
 aws autoscaling describe-auto-scaling-groups
+```
 
-# Nhật ký CloudWatch
+* Nhật ký CloudWatch
+
+```console
 aws logs tail /aws/ec2/instance-id --follow
 ```
 

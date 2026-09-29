@@ -27,6 +27,7 @@ Ví dụ về cấu trúc tô-pô (topology):
 * Tổng cộng: 32 CPU logic (luồng)
 
 ### Kiểm tra cấu trúc tô-pô CPU của máy chủ
+
 ```console
 # Xem cấu trúc tô-pô CPU
 lscpu
@@ -160,6 +161,7 @@ watch -n 1 'numastat -c qemu-system-x86'
 
 ## Triển khai ghim CPU (CPU Pinning)
 ### Kiểm tra cấu hình CPU của máy ảo
+
 ```console
 # Xem thông tin CPU hiện tại của máy ảo
 virsh vcpuinfo my-vm
@@ -272,15 +274,15 @@ Chỉ ghim vào các nhân vật lý (tránh các nhân "anh em" - siblings). N�
 
 ```console
 virsh edit my-vm
+```
 
+```xml
 <cputune>
   <vcpupin vcpu='0' cpuset='0'/>
   <vcpupin vcpu='1' cpuset='1'/>
   <vcpupin vcpu='2' cpuset='2'/>
   <vcpupin vcpu='3' cpuset='3'/>
 </cputune>
-
-# This avoids siblings if using lower half
 ```
 
 ### Ghim luồng trình giả lập
@@ -517,6 +519,7 @@ virsh edit my-vm
 Cải thiện hiệu năng đối với các khối lượng công việc nhạy cảm với bộ nhớ đệm.
 
 ### Lập lịch CPU
+
 ```console
 # Thiết lập các tham số bộ lập lịch CPU
 virsh schedinfo my-vm --set cpu_shares=2048

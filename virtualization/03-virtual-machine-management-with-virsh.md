@@ -228,10 +228,13 @@ virsh undefine my-vn \
 
 ## Tạo và định nghĩa máy ảo
 ### Tạo máy ảo từ XML
+Tạo tệp XML cấu hình máy ảo
 
 ```console
-# Tạo tệp XML cấu hình máy ảo
-cat > my-vn.xml << 'EOF'
+vi my-vn.xml
+```
+
+```xml
 <domain type='kvm'>
   <name>my-vn</name>
   <memory unit='GiB'>4</memory>
@@ -254,8 +257,9 @@ cat > my-vn.xml << 'EOF'
     <console type='pty'/>
   </devices>
 </domain>
-EOF
+```
 
+```console
 # Định nghĩa máy ảo từ XML
 virsh define my-vn.xml
 
@@ -568,10 +572,13 @@ virsh net-list --inactive
 ```
 
 ### Tạo mạng ảo
+#### Tạo mạng NAT
 
 ```console
-# Tạo mạng NAT
-cat > nat-network.xml << 'EOF'
+vi nat-network.xml
+```
+
+```xml
 <network>
   <name>nat-network</name>
   <forward mode='nat'>
@@ -586,14 +593,21 @@ cat > nat-network.xml << 'EOF'
     </dhcp>
   </ip>
 </network>
-EOF
+```
 
+```console
 virsh net-define nat-network.xml
 virsh net-start nat-network
 virsh net-autostart nat-network
+```
 
-# Tạo mạng cô lập
-cat > isolated-network.xml << 'EOF'
+#### Tạo mạng cô lập
+
+```console
+vi isolated-network.xml
+```
+
+```xml
 <network>
   <name>isolated-network</name>
   <bridge name='virbr-iso' stp='on' delay='0'/>
@@ -603,21 +617,29 @@ cat > isolated-network.xml << 'EOF'
     </dhcp>
   </ip>
 </network>
-EOF
+```
 
+```console
 virsh net-define isolated-network.xml
 virsh net-start isolated-network
 virsh net-autostart isolated-network
+```
 
-# Tạo mạng cầu nối (cho cầu nối hiện có)
-cat > bridge-network.xml << 'EOF'
+#### Tạo mạng cầu nối (cho cầu nối hiện có)
+
+```console
+vi bridge-network.xml
+```
+
+```xml
 <network>
   <name>bridge-network</name>
   <forward mode='bridge'/>
   <bridge name='br0'/>
 </network>
-EOF
+```
 
+```console
 virsh net-define bridge-network.xml
 virsh net-start bridge-network
 ```
@@ -984,16 +1006,20 @@ Thêm các nhãn bảo mật (ví dụ: SELinux)
 ```
 
 ### Quản lý thông tin bí mật
+Xác định bí mật (cho các ổ đĩa được mã hóa, v.v.)
 
 ```console
-# Xác định bí mật (cho các ổ đĩa được mã hóa, v.v.)
-cat > secret.xml << 'EOF'
+vi secret.xml
+```
+
+```xml
 <secret ephemeral='no' private='yes'>
   <description>LUKS encryption key</description>
   <uuid>12345678-1234-1234-1234-123456789abc</uuid>
 </secret>
-EOF
+```
 
+```console
 virsh secret-define secret.xml
 
 # Thiết lập giá trị bí mật
@@ -1124,21 +1150,21 @@ virsh net-dhcp-leases default
 #!/bin/bash
 # Khởi động tất cả các máy ảo
 for vm in $(virsh list --name --inactive); do
-    echo "Starting $vm..."
-    virsh start "$vm"
+  echo "Starting $vm..."
+  virsh start "$vm"
 done
 
 # Dừng tất cả các máy ảo đang chạy một cách an toàn
 for vm in $(virsh list --name); do
-    echo "Shutting down $vm..."
-    virsh shutdown "$vm"
+  echo "Shutting down $vm..."
+  virsh shutdown "$vm"
 done
 
 # Tạo bản sao nhanh (snapshot) cho tất cả các máy ảo.
 for vm in $(virsh list --name --all); do
-    snapshot_name="snapshot-$(date +%Y%m%d-%H%M%S)"
-    echo "Creating snapshot $snapshot_name for $vm"
-    virsh snapshot-create-as "$vm" "$snapshot_name" "Automated snapshot"
+  snapshot_name="snapshot-$(date +%Y%m%d-%H%M%S)"
+  echo "Creating snapshot $snapshot_name for $vm"
+  virsh snapshot-create-as "$vm" "$snapshot_name" "Automated snapshot"
 done
 ```
 
@@ -1149,27 +1175,27 @@ done
 # Giám sát tài nguyên máy ảo
 
 while true; do
-    clear
-    echo "=== VM Resource Usage ==="
+  clear
+  echo "=== VM Resource Usage ==="
+  echo ""
+
+  for vm in $(virsh list --name); do
+    echo "VM: $vm"
+
+    # Mức sử dụng CPU
+    time=$(virsh cpu-stats "$vm" --total | grep "cpu_time" | awk '{print $3}')
+    echo "  CPU Time: $time seconds"
+
+    # Mức sử dụng bộ nhớ
+    virsh dommemstat "$vm" | head -n 4
+
+    # Mức sử dụng ổ đĩa
+    virsh domblkstat "$vm" vda | head -n 2
+
     echo ""
+  done
 
-    for vm in $(virsh list --name); do
-        echo "VM: $vm"
-
-        # Mức sử dụng CPU
-        cpu_time=$(virsh cpu-stats "$vm" --total | grep "cpu_time" | awk '{print $3}')
-        echo "  CPU Time: $cpu_time seconds"
-
-        # Mức sử dụng bộ nhớ
-        virsh dommemstat "$vm" | head -n 4
-
-        # Mức sử dụng ổ đĩa
-        virsh domblkstat "$vm" vda | head -n 2
-
-        echo ""
-    done
-
-    sleep 5
+  sleep 5
 done
 ```
 
@@ -1185,21 +1211,21 @@ DATE=$(date +%Y%m%d)
 mkdir -p "$BACKUP_DIR"
 
 for vm in $(virsh list --name --all); do
-    echo "Backing up $vm..."
+  echo "Backing up $vm..."
 
-    # Sao lưu cấu hình
-    virsh dumpxml "$vm" > "$BACKUP_DIR/${vm}-${DATE}.xml"
+  # Sao lưu cấu hình
+  virsh dumpxml "$vm" > "$BACKUP_DIR/${vm}-${DATE}.xml"
 
-    # Tạo bản chụp nhanh
-    virsh snapshot-create-as "$vm" "backup-$DATE"
+  # Tạo bản chụp nhanh
+  virsh snapshot-create-as "$vm" "backup-$DATE"
 
-    # Sao lưu đĩa (nếu máy ảo đã tắt)
-    if [ "$(virsh domstate $vm)" = "shut off" ]; then
-        disk=$(virsh domblklist "$vm" | grep vda | awk '{print $2}')
-        if [ -n "$disk" ]; then
-            cp "$disk" "$BACKUP_DIR/${vm}-${DATE}.qcow2"
-        fi
+  # Sao lưu đĩa (nếu máy ảo đã tắt)
+  if [ "$(virsh domstate $vm)" = "shut off" ]; then
+    disk=$(virsh domblklist "$vm" | grep vda | awk '{print $2}')
+    if [ -n "$disk" ]; then
+      cp "$disk" "$BACKUP_DIR/${vm}-${DATE}.qcow2"
     fi
+  fi
 done
 
 echo "Backup completed"
