@@ -1,5 +1,5 @@
 Quản trị Red Hat OpenShift
-----------------------------------------------------------
+--------------------------
 
 # Quản trị Red Hat OpenShift I: Vận hành Cụm Môi trường Sản xuất
 1. [Chương 1. Giới thiệu về Kubernetes và OpenShift](do180/ch01.md)  
@@ -17,4 +17,4 @@ Cấu hình các ứng dụng để hoạt động với Kubernetes nhằm đả
 7. [Chương 7, Quản lý cập nhật ứng dụng](do180/ch07.md)  
 Quản lý việc cập nhật và hoàn tác (rollback) mã nguồn cũng như cấu hình ứng dụng theo quy trình có thể tái lập.
 
-# Quản trị Red Hat OpenShift I: Vận hành Cụm Môi trường Sản xuất
+# Quản trị Red Hat OpenShift II: Cấu hình Cụm Môi trường Sản xuất
