@@ -1,5 +1,5 @@
-Quản trị viên Hệ thống được Chứng nhận bởi Red Hat (RHCSA)
-----------------------------------------------------------
+Quản trị Hệ thống Red Hat (RHSA)
+--------------------------------
 
 # Quản trị Hệ thống Red Hat I
 1. [Chương 1, Giới thiệu về Red Hat Enterprise Linux](rh124.v10/ch01.md)  
