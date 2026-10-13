@@ -6,5 +6,5 @@ Công nghệ ảo hóa - Virtualization
 3. [Chương 3. Quản lý máy ảo bằng virsh: Hướng dẫn toàn tập](03-virtual-machine-management-with-virsh.md)
 4. [Chương 4. Cấu hình mạng ảo với Libvirt: Hướng dẫn toàn tập](04-virtual-network-configuration-with-libvirt.md)
 5. [Chương 5. Di trú máy ảo trực tiếp: Hướng dẫn toàn tập](05-live-vm-migration.md)
-6. [Chương 6. Ghim CPU và Cấu hình NUMA: Hướng dẫn Toàn tập](Ghim CPU và Cấu hình NUMA: Hướng dẫn Toàn tập)
+6. [Chương 6. Ghim CPU và Cấu hình NUMA: Hướng dẫn Toàn tập](06-cpu-pinning-and-numa-configuration.md)
 7. [Chương7. Cấp phát bộ nhớ vượt mức trong ảo hóa: Hướng dẫn toàn diện](07-memory-overcommit-in-virtualization.md)
