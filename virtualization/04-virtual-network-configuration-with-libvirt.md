@@ -41,46 +41,36 @@ Sau khi hoàn thành hướng dẫn này, bạn sẽ nắm vững kỹ năng c�
 ```
 
 ### Các thành phần mạng
-**Giao diện mạng ảo (vnet):**
-
-* Thiết bị TAP được kết nối với máy ảo khách
-* Hiển thị như một card mạng (NIC) thông thường bên trong máy ảo khách
-* Được libvirt tự động quản lý
-
-**Cầu nối ảo (virbr):**
-
-* Bộ chuyển mạch phần mềm kết nối các máy ảo
-* Kết nối các thiết bị TAP với nhau
-* Cung cấp khả năng kết nối ở Lớp 2 (Layer 2)
-
-**dnsmasq:**
-
-* Cung cấp dịch vụ DHCP
-* Chuyển tiếp và lưu đệm DNS
-* Được quản lý bởi libvirt
-
+* **Giao diện mạng ảo (vnet):**
+  * Thiết bị TAP được kết nối với máy ảo khách
+  * Hiển thị như một card mạng (NIC) thông thường bên trong máy ảo khách
+  * Được libvirt tự động quản lý
+* **Cầu nối ảo (virbr):**
+  * Bộ chuyển mạch phần mềm kết nối các máy ảo
+  * Kết nối các thiết bị TAP với nhau
+  * Cung cấp khả năng kết nối ở Lớp 2 (Layer 2)
+* **dnsmasq:**
+  * Cung cấp dịch vụ DHCP
+  * Chuyển tiếp và lưu đệm DNS
+  * Được quản lý bởi libvirt
 **iptables:**
-
-* NAT và các quy tắc chuyển tiếp
-* Tường lửa và lọc dữ liệu
-* Định tuyến giữa các mạng
+  * NAT và các quy tắc chuyển tiếp
+  * Tường lửa và lọc dữ liệu
+  * Định tuyến giữa các mạng
 
 ## Các chế độ mạng trong Libvirt
 ### 1. Chế độ NAT (Mặc định)
 Chế độ NAT (Network Address Translation) cung cấp khả năng kết nối Internet cho các máy ảo (VM) trong khi vẫn giữ chúng tách biệt khỏi mạng bên ngoài.
 
-**Đặc trưng:**
-
-* Các máy ảo được cấp địa chỉ IP riêng (mặc định là 192.168.122.0/24)
-* Các máy ảo có thể truy cập mạng bên ngoài
-* Mạng bên ngoài không thể truy cập trực tiếp vào các máy ảo
-* Máy chủ đóng vai trò là bộ định tuyến (router) có sử dụng NAT
-
-**Các trường hợp sử dụng:**
-
-* Môi trường phát triển
-* Máy ảo kiểm thử
-* Máy ảo cần kết nối Internet nhưng không cần truy cập từ bên ngoài
+* **Đặc trưng:**
+  * Các máy ảo được cấp địa chỉ IP riêng (mặc định là 192.168.122.0/24)
+  * Các máy ảo có thể truy cập mạng bên ngoài
+  * Mạng bên ngoài không thể truy cập trực tiếp vào các máy ảo
+  * Máy chủ đóng vai trò là bộ định tuyến (router) có sử dụng NAT
+* **Các trường hợp sử dụng:**
+  * Môi trường phát triển
+  * Máy ảo kiểm thử
+  * Máy ảo cần kết nối Internet nhưng không cần truy cập từ bên ngoài
 
 #### Tạo mạng NAT:
 Tạo cấu hình mạng NAT
