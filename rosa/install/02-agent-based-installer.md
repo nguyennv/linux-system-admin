@@ -2506,3 +2506,141 @@ ssh core@<node-ip> agent-gather -O >agent-gather.tar.xz
 
 5. Hãy đính kèm thư mục cài đặt được sử dụng trong quá trình triển khai (ngoại trừ thư mục con /auth) vào yêu cầu hỗ trợ của bạn trên Cổng thông tin khách hàng Red Hat (Red Hat Customer Portal).
 6. Đồng thời, hãy đính kèm tất cả dữ liệu khác thu thập được từ quy trình này vào yêu cầu hỗ trợ đó.
+
+## V. Cài đặt cụm mà không cần registry bên ngoài
+Bạn có thể triển khai một cụm OpenShift Container Platform mà không cần đến registry chứa image bên ngoài, bất kể là trong môi trường có kết nối hay không có kết nối mạng. Phương pháp cài đặt này sử dụng giao diện người dùng được đơn giản hóa cùng với các phương tiện lưu trữ tích hợp sẵn (self-contained media) để hỗ trợ quá trình cài đặt.
+
+Mặc dù phương pháp này hỗ trợ các cụm thông thường, nhưng các phương tiện lưu trữ được tải xuống lại chứa một gói Operator (Operator bundle) được thiết kế riêng cho Red Hat OpenShift Virtualization Engine. Điều này có nghĩa là nếu bạn cần các Operator khác cho những mục đích sử dụng khác, bạn sẽ phải tải chúng về một cách riêng biệt.
+
+### V.1. Ưu điểm của phương pháp cài đặt
+Phương pháp này mang lại một số lợi ích cho người dùng muốn thiết lập một cụm (cluster) chủ yếu để chạy các khối lượng công việc (workload) ảo hóa thông qua OpenShift Virtualization.
+
+**Giao diện web đơn giản hóa**  
+Việc cài đặt cụm được thực hiện thông qua giao diện người dùng đồ họa. Ngoài việc cung cấp các cấu hình mặc định hợp lý, giao diện này còn hướng dẫn bạn trong suốt quá trình cài đặt bằng cách đưa ra các gợi ý và cảnh báo về việc cấu hình cụm, mà không hạn chế các tùy chọn cấu hình khả dụng tại thời điểm cài đặt. Điều này giúp giảm bớt yêu cầu về kiến thức chuyên sâu đối với OpenShift Container Platform, đồng thời vẫn cho phép thực hiện các cấu hình phức tạp.
+
+**Không cần registry bên ngoài**  
+Nếu bạn cài đặt cụm trong môi trường không kết nối internet (disconnected environment), bạn không cần phải thiết lập một registry chứa image (image registry) bên ngoài. Tất cả các phương pháp cài đặt khác trong môi trường không kết nối internet đều yêu cầu thiết lập bổ sung này.
+
+**Gói Operator đi kèm**  
+Bạn có thể cài đặt gói Virtualization — bao gồm tất cả các Operator thuộc Operator Lifecycle Manager (OLM) cần thiết để chạy máy ảo trên cụm của mình — ngay cùng lúc với quá trình cài đặt cụm.
+
+> Lưu ý: Phương pháp cài đặt này không bao gồm bất kỳ Operator lưu trữ (storage Operator) nào trong gói Operator đi kèm. Bạn phải tự cấu hình giải pháp lưu trữ riêng của mình.
+
+### V.2. Tải xuống tệp ISO cài đặt
+Trước tiên, bạn cần tải xuống tệp ảnh ISO sẽ được sử dụng để thực hiện cài đặt trên các máy vật lý (bare-metal) của mình. Tệp ảnh này bao gồm tất cả các tệp ảnh phát hành (release images) cần thiết của OpenShift Container Platform, cũng như các Operator thuộc Operator Lifecycle Manager (OLM) cần thiết để cài đặt tính năng ảo hóa (Virtualization) trên cụm (cluster).
+
+> **Lưu ý:** Kích thước của tệp ảnh ISO có thể thay đổi tùy thuộc vào phiên bản mà bạn chọn.
+
+**Quy trình**
+
+1. Đăng nhập vào [Red Hat Hybrid Cloud Console](https://console.redhat.com/). 
+2. Tại ô **Red Hat OpenShift**, nhấp vào **OpenShift**. 
+3. Tại ô **Red Hat OpenShift Container Platform**, nhấp vào **Create cluster**. 
+4. Nhấp vào tab **Datacenter**. 
+5. Trong mục **Assisted Installer**, nhấp vào **Create cluster**. 
+6. Trên trang **Cluster details**, hãy bật tùy chọn "I’m installing on a disconnected/air-gapped/secured environment". 
+7. Chọn một phiên bản từ menu thả xuống **OpenShift version**. 
+8. Nhấp vào **Next**. 
+9. Tùy chọn: Cấu hình trước tệp ISO trên trang **Optional configurations**:
+    * Nhập địa chỉ IP Rendezvous vào trường **Rendezvous IP**. 
+    * Tải lên khóa công khai SSH vào trường **SSH public key**. 
+    * Nhấp vào Replace default NTP sources (Thay thế các nguồn NTP mặc định) và thêm các nhóm (pool) hoặc máy chủ NTP vào trường NTP sources (Các nguồn NTP). 
+10. Nhấp vào **Next**. 
+11. Nhấp vào **Download ISO**.
+
+### V.3. Gắn tệp ISO và khởi động nút rendezvous (nút điều phối)
+Để bắt đầu quá trình cài đặt cụm (cluster), hãy gắn tệp ISO đã tải xuống vào máy tính đóng vai trò là nút rendezvous (rendezvous host) và khởi động máy tính đó từ tệp ISO này.
+
+Trong quá trình cài đặt, nút rendezvous đóng vai trò là máy chủ khởi động (bootstrap host), nơi lưu trữ bảng điều khiển cấu hình trên nền tảng web và chạy Dịch vụ Hỗ trợ (Assisted Service) để tạo điều kiện cho việc triển khai cụm.
+
+**Điều kiện tiên quyết**
+
+Bạn đã tải xuống tệp ISO cài đặt.
+
+**Quy trình**
+
+1. Trên máy tính được chọn làm nút rendezvous, hãy gắn tệp ảnh ISO vào máy và khởi động máy từ tệp này. Bạn cũng có thể khởi động từ ổ đĩa USB có chứa tệp ảnh ISO đó. **Lưu ý:** Nếu bạn gắn tệp ISO thông qua ổ đĩa ảo, quá trình cài đặt cụm có thể mất vài giờ để hoàn tất. Hãy gắn tệp ISO bằng phương tiện vật lý (chẳng hạn như ổ đĩa USB) để rút ngắn tổng thời gian cài đặt. 
+2. Đợi máy tính khởi động từ tệp ảnh và hiển thị menu **Rendezvous node setup**. 
+3. Trong menu thiết lập nút rendezvous, hãy chọn tùy chọn "This is the rendezvous node" (Đây là nút rendezvous). **Quan trọng:** Bạn chỉ được chọn một máy tính duy nhất để làm nút rendezvous. Hệ thống không hỗ trợ việc chọn hai máy tính trở lên làm nút rendezvous. 
+4. Trong menu **Rendezvous node IP selection**, hãy chọn một địa chỉ IP từ danh sách để sử dụng làm địa chỉ IP cho nút rendezvous, sau đó chọn **Continue**. Hãy ghi lại địa chỉ này để sử dụng sau. 
+5. Đợi nút rendezvous cung cấp một đường dẫn URL để hoàn tất quá trình cài đặt, sau đó lưu lại URL này để sử dụng sau, như minh họa trong hình dưới đây.
+
+![Hình 5.1](img/installing-ove-console.png)
+
+### V.4. Định cấu hình thông tin chi tiết về cụm và chọn các Operator để cài đặt
+Sau khi nút rendezvous (nút kết nối ban đầu) đã được khởi động từ tệp ảnh ISO, hãy định cấu hình các thông tin chi tiết về cụm của bạn và chọn các Operator ảo hóa (Virtualization Operators) để cài đặt thông qua bảng điều khiển web.
+
+**Điều kiện tiên quyết**
+
+Bạn đã có URL của bảng điều khiển web cài đặt do nút rendezvous cung cấp.
+
+**Quy trình**
+
+1. Trong trình duyệt web, hãy truy cập URL do nút rendezvous cung cấp. 
+2. Định cấu hình cụm của bạn trên trang **Cluster details**:
+    * Nhập tên cho cụm (cluster) vào trường **Cluster name**.
+    * Nhập tên miền cơ sở (base domain) cho cụm vào trường **Base domain**. Tất cả các tên miền phụ (subdomain) của cụm sẽ sử dụng tên miền cơ sở này. **Lưu ý:** Tên miền cơ sở phải là một tên miền DNS hợp lệ. Bạn không được thiết lập tên miền đại diện (wildcard domain) cho tên miền cơ sở này.
+    * Nhập "pull secret" (bí mật kéo ảnh container) của bạn vào trường **Pull secret**. Bạn có thể lấy bản sao của "pull secret" từ [Red Hat Hybrid Cloud Console](https://console.redhat.com/openshift/install/pull-secret).
+    * Tùy chọn: Tại trường **Number of control plane nodes**, hãy chọn số lượng nút điều khiển (control plane nodes) cho quá trình cài đặt từ menu thả xuống. Giá trị mặc định là 3.
+    * Tùy chọn: Chọn hộp kiểm **Include custom manifests** nếu bạn muốn tải lên các tệp cấu hình tùy chỉnh để định cấu hình thêm cho cụm của mình. Tùy chọn này sẽ thêm một trang riêng để bạn tải lên các tệp cấu hình tùy chỉnh trong các bước tiếp theo của quy trình thiết lập. **Quan trọng:** Nếu bạn đã thêm các tệp cấu hình tùy chỉnh, việc bỏ chọn hộp kiểm **Include custom manifests** sẽ tự động xóa tất cả các tệp đó. Bạn sẽ cần xác nhận việc xóa này.
+    * Tùy chọn: Trong phần **Encryption of installation disks**, hãy bật công tắc (toggle switch) cho mỗi ổ đĩa mà bạn muốn mã hóa.
+    * Nếu thực hiện mã hóa ổ đĩa, hãy chọn phương thức mã hóa là **TPM v2** hoặc **Tang**.
+    * Nếu sử dụng máy chủ Tang để mã hóa ổ đĩa, hãy nhập **Server URL** và **Server Thumbprint** vào mục **Tang servers** trên trang này. Bạn có thể chọn **Add another Tang server** để định cấu hình thông tin cho các máy chủ Tang bổ sung.
+    * Nhấp vào **Next** để tiếp tục. Sau khi chuyển sang trang tiếp theo, bạn sẽ không thể quay lại để thay đổi bất kỳ thông tin chi tiết nào về cụm này nữa.
+3. Chọn các Operator bổ sung để cài đặt trên trang Operators:
+    * Nếu bạn muốn cài đặt tất cả các Operator được khuyến nghị để chạy tính năng ảo hóa (Virtualization) trên cụm (cluster) của mình, hãy chọn **Virtualization** trong phần **Bundles**. 
+    * Nếu bạn chỉ muốn cài đặt một số Operator nhất định, hãy chọn từng Operator cụ thể từ phần Single Operators. **Lưu ý:** Một số Operator trong danh sách chỉ khả dụng khi nằm trong gói (bundle) Virtualization Operator. 
+    * Nhấp vào **Next** để tiếp tục.
+
+### V.5. Khởi động các máy chủ còn lại trong cụm
+Sau khi đã định cấu hình các thông tin ban đầu cho cụm trong bảng điều khiển cài đặt trên nền tảng web và xác định cấu trúc liên kết (topology) của cụm, bạn cần khởi động các máy còn lại — những máy sẽ tạo nên cụm của bạn — từ tệp ảnh ISO.
+
+> **Lưu ý:** Bạn có thể khởi động các máy không đóng vai trò là "nút hội tụ" (rendezvous node) ngay từ giai đoạn đầu của quá trình cài đặt, thậm chí trước cả khi chỉ định một máy cụ thể làm nút hội tụ. Tuy nhiên, bạn phải biết trước địa chỉ IP hợp lệ mà bạn dự định gán cho nút hội tụ đó.  
+> Khi khởi động các máy không phải là nút hội tụ, hệ thống sẽ kiểm tra xem "Dịch vụ hỗ trợ" (Assisted Service) có đang chạy tại địa chỉ IP của nút hội tụ đã chỉ định hay không. Nếu dịch vụ này chưa hoạt động, một cảnh báo sẽ xuất hiện để xác nhận xem bạn có muốn tiếp tục khởi động máy từ tệp ảnh ISO hay không.
+
+**Điều kiện tiên quyết**
+
+Bạn đã tải xuống tệp ảnh ISO cài đặt.
+
+**Quy trình**
+
+1. Gắn tệp ảnh ISO vào máy và khởi động máy từ tệp ảnh này. Bạn cũng có thể khởi động từ ổ đĩa USB chứa tệp ảnh ISO đó. 
+2. Đợi máy khởi động từ tệp ảnh và hiển thị menu **Rendezvous node setup**. 
+3. Nhập địa chỉ IP của nút hội tụ vào menu **Rendezvous node setup**, sau đó chọn **Save rendezvous IP**. 
+4. Chọn **Save and Continue**. 
+5. Lặp lại quy trình này cho từng máy còn lại sẽ tham gia vào cụm của bạn.
+
+### V.6. Hoàn tất cấu hình cụm và bắt đầu quá trình cài đặt
+Trước khi có thể chính thức bắt đầu cài đặt cụm, bạn cần xác minh thông tin chi tiết về các máy chủ (host), cấu hình các thông số mạng cho cụm và tải xuống thông tin xác thực mặc định của cụm.
+
+**Điều kiện tiên quyết**
+
+Bạn đã khởi động tất cả các máy chủ sẽ tạo thành cụm của mình và cấu hình chúng với địa chỉ IP chính xác của nút kết nối (rendezvous node). 
+
+> **Quan trọng:** Bạn có thể thêm bao nhiêu máy chủ tùy thích vào cụm của mình. Tuy nhiên, tại bước này, bạn phải đảm bảo có đủ số lượng máy chủ khả dụng, ít nhất phải bằng với giá trị mà bạn đã chỉ định trong trường **Number of control plane nodes** trên trang **Cluster details** của bảng điều khiển cài đặt.
+
+**Quy trình**
+
+1. Trên bảng điều khiển cài đặt (được lưu trữ tại nút kết nối - rendezvous node), hãy cấu hình các máy chủ tại trang "Khám phá máy chủ" (Host discovery):
+    * Hãy xác minh rằng tất cả các máy bạn đã khởi động từ tệp ảnh ISO đều xuất hiện trong phần **Host Inventory** và có giá trị **Status** là **Ready**.
+    * Đối với mỗi máy chủ, hãy nhấp vào biểu tượng mở rộng và kiểm tra để đảm bảo rằng tất cả các trường thông số kỹ thuật đều chính xác.
+    * Tùy chọn: Đối với mỗi máy chủ (ngoại trừ nút kết nối trung gian - rendezvous node), hãy định cấu hình vai trò bằng cách chọn một tùy chọn từ menu thả xuống trong cột **Role**. Giá trị mặc định cho mọi máy chủ (ngoại trừ nút kết nối trung gian) là Tự động gán (Auto-assign).
+    * Nhấp vào **Next** để tiếp tục.
+2. Trên trang **Storage**, hãy nhấp vào biểu tượng mở rộng cho từng máy chủ (host) và xác minh rằng tất cả các trường thông số kỹ thuật đều chính xác.
+3. Nhấp vào **Next** để tiếp tục.
+4. Nếu bạn muốn tự quản lý hệ thống mạng của mình, hãy chọn tùy chọn **User-Managed Networking** trên trang **Networking**.
+5. Nếu bạn muốn cụm (cluster) quản lý hệ thống mạng, hãy chọn tùy chọn **Cluster-Managed Networking** trên trang **Networking** và định cấu hình hệ thống mạng cho cụm:
+    * Chọn một **Networking stack type**.
+    * Tùy chọn: Chọn một mạng máy (machine network) từ menu thả xuống tại trường **Machine network**. Nếu không chọn, hệ thống sẽ sử dụng giá trị mặc định.
+    * Nhập địa chỉ IP vào trường **API IP**. Địa chỉ API IP đóng vai trò là điểm cuối (endpoint) để người dùng tương tác với nền tảng và thực hiện các thao tác cấu hình.
+    * Nhập địa chỉ IP vào trường **Ingress IP**. Địa chỉ Ingress IP đóng vai trò là điểm cuối (endpoint) cho lưu lượng truy cập ứng dụng từ bên ngoài cụm (cluster) đi vào.
+6. Tùy chọn: Chọn hộp kiểm **Use advanced networking** và định cấu hình các tham số khác như **Cluster network CIDR**, **Cluster network host prefix** hoặc **Service network CIDR**. Tùy chọn này khả dụng cho cả cấu hình mạng do cụm quản lý và cấu hình mạng do người dùng quản lý.
+7. Tùy chọn: Nhập khóa vào trường **Host SSH Public Key for troubleshooting after installation**. Khóa này cho phép bạn kết nối với các máy chủ thông qua khóa công khai SSH để thực hiện khắc phục sự cố sau khi cài đặt hoàn tất. Tùy chọn này khả dụng cho cả cấu hình mạng do cụm quản lý và cấu hình mạng do người dùng quản lý.
+8. Nhấp vào **(Next)** để tiếp tục.
+9. Trên trang **Download credentials**, hãy chọn hộp kiểm để xác nhận rằng bạn hiểu mình cần tải xuống các tệp thông tin xác thực trước khi tiến hành cài đặt cụm.
+10. Nhấp vào **Download credentials** và lưu tệp thông tin xác thực của cụm tại một vị trí an toàn. **Quan trọng:** Bạn bắt buộc phải tải xuống các thông tin xác thực ở bước này. Sau khi bắt đầu cài đặt cụm, nút kết nối (rendezvous node) sẽ khởi động lại và bạn sẽ không thể truy xuất các thông tin xác thực đó được nữa.
+11. Trên trang **Review and create**, hãy kiểm tra lại tất cả thông tin chi tiết về cụm, sau đó nhấp vào **Install cluster** để bắt đầu quá trình cài đặt.
+
+Trong quá trình cài đặt, nút kết nối (rendezvous node) sẽ khởi động lại và bảng điều khiển (console) mà bạn đã sử dụng để cấu hình cài đặt sẽ không còn truy cập được nữa. Tại thời điểm đó, URL của bảng điều khiển web cho cụm đã triển khai sẽ được cung cấp; tuy nhiên, bảng điều khiển này sẽ chỉ có thể truy cập được sau khi quá trình cài đặt cụm hoàn tất.
+
+Sau khi cụm đã được cài đặt, bạn có thể truy cập URL này và đăng nhập vào bảng điều khiển web bằng các thông tin xác thực đã tải xuống trước đó.
