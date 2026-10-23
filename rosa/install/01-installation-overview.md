@@ -142,7 +142,7 @@ Chương trình cài đặt chạy thành công trong cửa sổ dòng lệnh (t
 ##### Quy trình
 1. Hiển thị trạng thái của tất cả các nút worker:
 
-```console
+```bash
 oc get nodes
 ```
 
@@ -160,7 +160,7 @@ example-control3.example.com   Ready    master   55m   v1.21.6+bb8d50a
 
 2. Hiển thị trạng thái của tất cả các nút máy worker:
 
-```console
+```bash
 oc get machines -A
 ```
 
@@ -492,14 +492,14 @@ Trình điều khiển Ingress cấu hình và quản lý bộ định tuyến c
     * Tên phiên bản: mặc định
     * Lệnh xem:
 
-```console
+```bash
 oc get clusteringresses.ingress.openshift.io -n openshift-ingress-operator default -o yaml
 ```
 
 **Ghi chú**  
 Ingress Operator thiết lập bộ định tuyến (router) trong dự án openshift-ingress và tạo deployment cho bộ định tuyến đó:
 
-```console
+```bash
 oc get deployment -n openshift-ingress
 ```
 
@@ -507,7 +507,7 @@ Ingress Operator sử dụng thông tin `clusterNetwork[].cidr` từ trạng th�
 
 Trong ví dụ dưới đây, các Ingress Controller do Ingress Operator quản lý sẽ chạy ở chế độ chỉ hỗ trợ IPv4, vì chỉ có một mạng cụm (cluster network) tồn tại và mạng đó là một CIDR IPv4:
 
-```console
+```bash
 oc get network/cluster -o jsonpath='{.status.clusterNetwork[*]}'
 ```
 
@@ -610,7 +610,7 @@ Bạn đã cài đặt giao diện dòng lệnh OpenShift (oc).
 **Quy trình**  
 Để xem trạng thái các khả năng của cụm, hãy chạy lệnh sau:
 
-```console
+```bash
 oc get clusterversion version -o \
 jsonpath='{.spec.capabilities}{"\n"}{.status.capabilities}{"\n"}'
 ```
@@ -631,7 +631,7 @@ Bạn đã cài đặt giao diện dòng lệnh OpenShift (oc).
 **Quy trình**  
 Để thiết lập tham số cấu hình `baselineCapabilitySet`, hãy chạy lệnh sau:
 
-```console
+```bash
 oc patch clusterversion version --type merge -p \
 '{"spec":{"capabilities":{"baselineCapabilitySet":"vCurrent"}}}'
 ```
@@ -647,7 +647,7 @@ Bạn đã cài đặt giao diện dòng lệnh OpenShift (CLI - `oc`).
 **Quy trình**  
 1. Xem các tính năng bổ sung đã được kích hoạt bằng cách chạy lệnh sau:
 
-```console
+```bash
 oc get clusterversion version -o jsonpath='{.spec.capabilities.additionalEnabledCapabilities}{"\n"}'
 ```
 
@@ -659,7 +659,7 @@ Ví dụ đầu ra
 
 2. Để thiết lập tham số cấu hình additionalEnabledCapabilities, hãy chạy lệnh sau:
 
-```console
+```bash
 oc patch clusterversion/version --type merge -p \
 '{"spec":{"capabilities":{"additionalEnabledCapabilities":["openshift-samples", "marketplace"]}}}'
 ```
@@ -668,7 +668,7 @@ oc patch clusterversion/version --type merge -p \
 
 Nếu bạn cố gắng vô hiệu hóa một tính năng, CVO sẽ hiển thị thông số kỹ thuật khác biệt (divergent spec):
 
-```console
+```bash
 oc get clusterversion version -o \
 jsonpath='{.status.conditions[?(@.type=="ImplicitlyEnabledCapabilities")]}{"\n"}'
 ```
@@ -707,7 +707,7 @@ Bạn đã cài đặt giao diện dòng lệnh OpenShift (oc) phiên bản 4.16
 **Quy trình**  
 1. Trích xuất tệp nhị phân hỗ trợ FIPS từ chương trình cài đặt bằng cách chạy lệnh sau:
 
-```console
+```bash
 oc adm release extract --registry-config "${pullsecret_file}" \
 --command=openshift-install-fips --to "${extract_dir}" ${RELEASE_IMAGE}
 ```
@@ -733,7 +733,7 @@ Bạn có quyền truy cập internet.
 1. Tải xuống chương trình cài đặt từ địa chỉ https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-4.18/openshift-install-rhel9-amd64.tar.gz. 
 2. Giải nén chương trình cài đặt. Ví dụ: trên máy tính sử dụng hệ điều hành Linux, hãy chạy lệnh sau:
 
-```console
+```bash
 tar -xvf openshift-install-rhel9-amd64.tar.gz
 ```
 
@@ -774,4 +774,4 @@ Mặc dù bản thân cụm OpenShift Container Platform sử dụng các mô-đ
 
 > **Lưu ý:** Nếu bạn đang sử dụng Azure File storage, bạn không thể bật chế độ FIPS.
 
-Để áp dụng mã hóa AES CBC cho kho dữ liệu etcd của bạn, hãy thực hiện theo quy trình "Mã hóa dữ liệu etcd" sau khi đã cài đặt cụm (cluster) của mình.
+Để áp dụng mã hóa `AES CBC` cho kho dữ liệu etcd của bạn, hãy thực hiện theo quy trình "Mã hóa dữ liệu etcd" sau khi đã cài đặt cụm (cluster) của mình.
