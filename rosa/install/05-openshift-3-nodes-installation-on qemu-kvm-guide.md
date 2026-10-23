@@ -46,7 +46,7 @@ Nếu máy host yếu, có thể cân nhắc **Single Node OpenShift (SNO)**: 1 
 ## 3. Chuẩn bị host CentOS 9
 ### 3.1. Kiểm tra ảo hóa và cài gói
 
-```console
+```bash
 egrep -c '(vmx|svm)' /proc/cpuinfo   # phải > 0
 
 sudo dnf install -y qemu-kvm libvirt virt-install libvirt-client \
@@ -61,7 +61,7 @@ virt-host-validate qemu
 ### 3.2. Mở firewall cho mạng libvirt (nếu bật firewalld)
 libvirt thường tự xử lý. Nếu VM không ra được Internet, kiểm tra:
 
-```console
+```bash
 sudo firewall-cmd --get-active-zones
 sudo sysctl net.ipv4.ip_forward   # phải = 1
 ```
@@ -102,13 +102,13 @@ Tạo file `ocp-net.xml`:
 
 > Lưu ý: Ta có thể tạo các địa chỉ MAC bằng cách sử dụng lệnh:
 > 
-> ```console
+> ```bash
 > openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/:$//'
 > ```
 
 Kích hoạt mạng:
 
-```console
+```bash
 sudo virsh net-define ocp-net.xml
 sudo virsh net-start ocp
 sudo virsh net-autostart ocp
@@ -117,7 +117,7 @@ sudo virsh net-list --all
 
 Kiểm tra DNS từ host:
 
-```console
+```bash
 dig +short @192.168.100.1 api.ocp.lab.local          # 192.168.100.5
 dig +short @192.168.100.1 test.apps.ocp.lab.local    # 192.168.100.6
 ```
@@ -126,7 +126,7 @@ dig +short @192.168.100.1 test.apps.ocp.lab.local    # 192.168.100.6
 ### 5.1. Tải oc và openshift-install
 Chọn một phiên bản ổn định (stable) mới từ mirror chính thức. Ví dụ dùng kênh `stable`:
 
-```console
+```bash
 mkdir -p ~/ocp && cd ~/ocp
 BASE=https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable
 
@@ -144,14 +144,14 @@ oc version --client
 1. Đăng nhập `console.redhat.com`, vào mục OpenShift, chọn **Create cluster → Datacenter → Bare Metal (x86\_64) → Agent-based**, tải **pull secret** và lưu thành `~/pull-secret.txt`.
 2. Tạo SSH key để truy cập node khi cần debug:
 
-```console
+```bash
 ssh-keygen -t ed25519 -N '' -f ~/.ssh/ocp_key
 ```
 
 ### 5.3. Tạo thư mục cài đặt và install-config.yaml
 Tạo thư mục `~/ocp/install` và file `~/ocp/install/install-config.yaml`:
 
-```console
+```bash
 mkdir ~/ocp/install
 vi ~/ocp/install/install-config.yaml
 ```
@@ -191,7 +191,7 @@ sshKey: '<DÁN NỘI DUNG ~/.ssh/ocp_key.pub>'
 ### 5.4. agent-config.yaml
 Tạo file `~/ocp/install/agent-config.yaml`:
 
-```console
+```bash
 vi ~/ocp/install/agent-config.yaml
 ```
 
@@ -223,12 +223,12 @@ hosts:
 
 > Lưu ý: lệnh tạo ISO sẽ **xóa** hai file YAML trong thư mục. Hãy sao lưu trước:
 > 
-> ```console
+> ```bash
 > cp -r ~/ocp/install ~/ocp/install.bak
 > ```
 
 ## 6. Tạo ISO cài đặt
-```console
+```bash
 cd ~/ocp
 openshift-install --dir install agent create image --log-level=info
 
@@ -241,7 +241,7 @@ Sau lệnh này, thư mục `install/` có thêm thư mục `auth/` chứa `kube
 ## 7. Tạo 3 máy ảo
 Dùng vòng lặp để tạo 3 VM với MAC cố định, boot từ đĩa trước, CD (ISO) sau. Do đĩa trống nên lần đầu sẽ boot từ ISO; sau khi cài xong, VM boot từ đĩa.
 
-```console
+```bash
 for i in 1 2 3; do
   sudo virt-install \
     --name master$i \
@@ -264,14 +264,14 @@ Nếu host yếu, giảm `--vcpus 8` xuống `4` (cài chậm hơn) – không n
 
 Nếu một VM bị tắt thay vì khởi động lại sau lần boot đầu, chỉ cần bật lại:
 
-```console
+```bash
 sudo virsh start master1
 ```
 
 ## 8. Theo dõi quá trình cài đặt
 Chạy các lệnh sau trên host (có thể mất 40–90 phút tùy phần cứng):
 
-```console
+```bash
 cd ~/ocp
 openshift-install --dir install agent wait-for bootstrap-complete --log-level=info
 openshift-install --dir install agent wait-for install-complete --log-level=info
@@ -281,7 +281,7 @@ Khi hoàn tất, lệnh in ra địa chỉ web console, tên người dùng `kub
 
 Nếu cần xem trực tiếp trên node:
 
-```console
+```bash
 ssh -i ~/.ssh/ocp_key core@192.168.100.11
 journalctl -u agent -f          # giai đoạn agent
 sudo crictl ps                  # sau khi hệ thống lên
@@ -291,7 +291,7 @@ sudo crictl ps                  # sau khi hệ thống lên
 
 ### 9.1. Dùng oc
 
-```console
+```bash
 export KUBECONFIG=~/ocp/install/auth/kubeconfig
 oc get nodes
 oc get clusteroperators
@@ -317,7 +317,7 @@ Nếu truy cập từ máy khác ngoài host, cần thêm quy tắc forward ho�
 ## 10. Sau khi cài đặt
 1. **Gỡ ISO khỏi VM** (tùy chọn, tránh boot nhầm):
 
-```console
+```bash
 for i in 1 2 3; do
   sudo virsh change-media master$i sda --eject --config 2>/dev/null || true
 done
@@ -325,7 +325,7 @@ done
 
 2. **Tạo user thường** (htpasswd) rồi xóa `kubeadmin` khi không cần nữa:
 
-```console
+```bash
 htpasswd -c -B -b users.htpasswd admin 'MatKhauManh'
 oc create secret generic htpass-secret --from-file=htpasswd=users.htpasswd -n openshift-config
 
@@ -363,7 +363,7 @@ oc adm policy add-cluster-role-to-user cluster-admin admin
 
 Lệnh hữu ích để kiểm tra:
 
-```console
+```bash
 sudo virsh net-dhcp-leases ocp
 sudo virsh console master1          # thoát bằng Ctrl+]
 oc get co | grep -v 'True.*False.*False'
@@ -371,7 +371,7 @@ oc get co | grep -v 'True.*False.*False'
 
 ## 12. Dọn dẹp / cài lại
 
-```console
+```bash
 for i in 1 2 3; do
   sudo virsh destroy master$i 2>/dev/null
   sudo virsh undefine master$i --remove-all-storage
