@@ -992,7 +992,7 @@ Thay vào đó, hãy sử dụng plugin `oc-mirror` phiên bản 2 (v2).
 
 Ví dụ dưới đây hiển thị kết quả đầu ra của lệnh `oc adm release mirror`.
 
-```console
+```bash
 oc adm release mirror
 ```
 
@@ -1101,12 +1101,12 @@ Tạo các tệp cấu hình được chương trình cài đặt sử dụng đ
 1. Đặt tệp nhị phân `openshift-install` vào một thư mục nằm trong biến môi trường PATH của bạn. 
 2. Tạo một thư mục để lưu trữ cấu hình cài đặt bằng cách chạy lệnh sau:
 
-```console
+```bash
 mkdir ~/<directory_name>
 ```
 
 3. Tạo tệp `install-config.yaml` bằng cách chạy lệnh sau với nội dung:
-```console
+```bash
 vim ./my-cluster/install-config.yaml
 ```
 
@@ -1171,7 +1171,7 @@ Nếu sử dụng image phát hành (release image) có chứa nhiều payload (
 
 4. Tạo tệp `agent-config.yaml` bằng cách chạy lệnh sau:
 
-```console
+```bash
 cat > agent-config.yaml << EOF
 apiVersion: v1beta1
 kind: AgentConfig
@@ -1196,7 +1196,7 @@ Nếu bạn dự định khởi động ảnh agent từ ổ đĩa USB, hãy đ�
 
 1. Tạo ảnh agent bằng cách chạy lệnh sau:
 
-```console
+```bash
 openshift-install --dir <install_directory> agent create image
 ```
 
@@ -1204,13 +1204,13 @@ openshift-install --dir <install_directory> agent create image
 
 2. Nếu bạn dự định khởi động tệp ảnh ISO từ ổ đĩa USB, hãy thêm bản ghi khởi động chính (master boot record) vào tệp ảnh đó bằng cách chạy lệnh sau:
 
-```console
+```bash
 isohybrid --uefi <agent_iso_image>
 ```
 
 Ví dụ về lệnh
 
-```console
+```bash
 isohybrid --uefi agent.x86_64.iso
 ```
 
@@ -1258,7 +1258,7 @@ Bạn đã định cấu hình bản ghi DNS cho máy chủ API Kubernetes.
 
 1. Tùy chọn: Để biết khi nào máy chủ khởi động (máy chủ rendezvous) khởi động lại, hãy chạy lệnh sau:
 
-```console
+```bash
 ./openshift-install --dir <install_directory> agent wait-for bootstrap-complete \
     --log-level=info
 ```
@@ -1281,7 +1281,7 @@ Lệnh này hoàn tất thành công khi Kubernetes API server báo hiệu rằn
 
 2. Theo dõi tiến trình và xác minh quá trình cài đặt đã hoàn tất thành công bằng cách chạy lệnh sau:
 
-```console
+```bash
 openshift-install --dir <install_directory> agent wait-for install-complete
 ```
 
@@ -1310,7 +1310,7 @@ Bạn đã định cấu hình bản ghi DNS cho máy chủ API Kubernetes.
 
 1. Chạy lệnh sau và thu thập kết quả đầu ra:
 
-```console
+```bash
 ./openshift-install --dir <installation_directory> agent wait-for bootstrap-complete --log-level=debug
 ```
 
@@ -1323,7 +1323,7 @@ ERROR Bootstrap failed to complete: : bootstrap process timed out: context deadl
 
 2. Nếu kết quả từ lệnh trước đó cho thấy lỗi, hoặc nếu quá trình khởi động (bootstrap) không tiến triển, hãy chạy lệnh sau để kết nối với máy chủ điều phối (rendezvous host) và thu thập kết quả đầu ra:
 
-```console
+```bash
 ssh core@<node-ip> agent-gather -O >agent-gather.tar.xz
 ```
 
@@ -1331,38 +1331,38 @@ ssh core@<node-ip> agent-gather -O >agent-gather.tar.xz
 
 3. Nếu quá trình khởi động ban đầu (bootstrap) hoàn tất và các nút trong cụm (cluster nodes) khởi động lại, hãy chạy lệnh sau và thu thập kết quả đầu ra:
 
-```console
+```bash
 ./openshift-install --dir <install_directory> agent wait-for install-complete --log-level=debug
 ```
 
 4. Nếu kết quả từ lệnh trước đó cho thấy lỗi, hãy thực hiện các bước sau:
     * Xuất tệp `kubeconfig` vào môi trường của bạn bằng cách chạy lệnh sau:
 
-    ```console
+    ```bash
     export KUBECONFIG=<install_directory>/auth/kubeconfig
     ```
 
     * Thu thập thông tin phục vụ việc gỡ lỗi bằng cách chạy lệnh sau:
 
-    ```console
+    ```bash
     oc adm must-gather
     ```
 
     * Hãy tạo một tệp nén từ thư mục `must-gather` vừa được tạo trong thư mục làm việc của bạn bằng cách chạy lệnh sau:
 
-    ```console
+    ```bash
     tar cvaf must-gather.tar.gz <must_gather_directory>
     ```
 
 5. Hãy đính kèm thư mục cài đặt được sử dụng trong quá trình triển khai (ngoại trừ thư mục con /auth) vào yêu cầu hỗ trợ của bạn trên [Cổng thông tin khách hàng Red Hat](https://access.redhat.com/).
 6. Đồng thời, hãy đính kèm tất cả dữ liệu khác thu thập được từ quy trình này vào yêu cầu hỗ trợ đó.
 
-## 4. Cài đặt cụm với các tùy chỉnh
+## IV. Cài đặt cụm với các tùy chỉnh
 Bạn có thể cài đặt cụm OpenShift Container Platform bằng trình cài đặt dựa trên tác nhân (Agent-based Installer), với các tùy chỉnh để đáp ứng nhu cầu triển khai của mình.
 
 Các quy trình dưới đây mô tả cách triển khai một cụm OpenShift Container Platform gồm một nút duy nhất trong môi trường không kết nối mạng (disconnected environment). Bạn có thể sử dụng các quy trình này làm nền tảng và điều chỉnh tùy theo yêu cầu cụ thể của mình.
 
-### 4.1. Các điều kiện tiên quyết để cài đặt cụm bằng trình cài đặt dựa trên tác nhân (Agent-based Installer)
+### IV.1. Các điều kiện tiên quyết để cài đặt cụm bằng trình cài đặt dựa trên tác nhân (Agent-based Installer)
 Trước khi bắt đầu cài đặt cụm, bạn phải hoàn tất các tác vụ tiên quyết để chuẩn bị môi trường của mình. 
 
 * Bạn đã xem xét các thông tin chi tiết về quy trình cài đặt và cập nhật OpenShift Container Platform. Để biết thêm thông tin, hãy xem phần "Cài đặt và cập nhật". 
@@ -1370,7 +1370,7 @@ Trước khi bắt đầu cài đặt cụm, bạn phải hoàn tất các tác 
 * Nếu sử dụng tường lửa hoặc proxy, bạn đã định cấu hình để cho phép truy cập vào các trang web mà cụm của bạn cần kết nối. Để biết thêm thông tin, hãy xem phần "Định cấu hình tường lửa". 
 * Bạn đã định cấu hình tường lửa để cho phép lưu lượng truy cập TCP trên cổng 8090 từ tất cả các máy chủ (host) đến máy chủ điều phối (rendezvous host), nhờ đó các máy chủ có thể kết nối với Assisted Service API trong quá trình khám phá (discovery) và khởi động (bootstrap). Để biết thêm thông tin, hãy xem phần "Yêu cầu về cổng cho máy chủ điều phối".
 
-### 4.2. Tải xuống Trình cài đặt dựa trên tác nhân (Agent-based Installer)
+### IV.2. Tải xuống Trình cài đặt dựa trên tác nhân (Agent-based Installer)
 Bắt đầu quy trình cài đặt bằng cách tải xuống Trình cài đặt dựa trên tác nhân (Agent-based Installer) và giao diện dòng lệnh (CLI) cần thiết cho quá trình cài đặt của bạn.
 
 **Quy trình**
@@ -1383,7 +1383,7 @@ Bắt đầu quy trình cài đặt bằng cách tải xuống Trình cài đặ
 6. Tải xuống hoặc sao chép "pull secret" (bí mật kéo ảnh container) bằng cách nhấp vào Download pull secret hoặc Copy pull secret. 
 7. Nhấp vào Download command-line tools (Tải xuống các công cụ dòng lệnh) và đặt tệp nhị phân `openshift-install` vào một thư mục nằm trong biến môi trường PATH của bạn.
 
-### 4.3. Xác minh kiến trúc được hỗ trợ cho quá trình cài đặt dựa trên Agent (Agent-based installation)
+### IV.3. Xác minh kiến trúc được hỗ trợ cho quá trình cài đặt dựa trên Agent (Agent-based installation)
 
 Trước khi cài đặt cụm OpenShift Container Platform bằng trình cài đặt dựa trên Agent (Agent-based Installer), bạn có thể tùy chọn xác minh các kiến trúc được hỗ trợ để triển khai cụm.
 
@@ -1397,28 +1397,28 @@ Trước khi cài đặt cụm OpenShift Container Platform bằng trình cài �
 1. Đăng nhập vào giao diện dòng lệnh OpenShift (OpenShift CLI - `oc`). 
 2. Kiểm tra gói phát hành (release payload) bằng cách chạy lệnh sau:
 
-```console
+```bash
 ./openshift-install version
 ```
 
 Ví dụ đầu ra
 
-```console
+```bash
 ./openshift-install 4.22.0
 built from commit abc123def456
 release image quay.io/openshift-release-dev/ocp-release@sha256:123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz0
 release architecture amd64
 ```
 
-Nếu bạn đang sử dụng ảnh phát hành (release image) với gói dữ liệu `multi`, thì `release architecture` hiển thị trong kết quả của lệnh này chính là kiến trúc mặc định.
+Nếu bạn đang sử dụng `release image` với gói dữ liệu `multi`, thì `release architecture` hiển thị trong kết quả của lệnh này chính là kiến trúc mặc định.
 
 3. Để kiểm tra kiến trúc của payload, hãy chạy lệnh sau:
 
-```console
+```bash
 oc adm release info <release_image> -o jsonpath="{ .metadata.metadata}"
 ```
 
-Thay thế `<release_image>` bằng ảnh phát hành. Ví dụ: quay.io/openshift-release-dev/ocp-release@sha256:123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz0.
+Thay thế `<release_image>` bằng ảnh phát hành. Ví dụ: `quay.io/openshift-release-dev/ocp-release@sha256:123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz0`.
 
 Ví dụ đầu ra khi hình ảnh phát hành sử dụng cơ chế đa tải trọng (multi-payload)
 
@@ -1428,12 +1428,12 @@ Ví dụ đầu ra khi hình ảnh phát hành sử dụng cơ chế đa tải t
 
 Nếu bạn đang sử dụng image phát hành (release image) với payload `multi`, bạn có thể cài đặt cụm (cluster) trên các kiến trúc khác nhau như arm64, amd64, s390x và ppc64le. Ngược lại, bạn chỉ có thể cài đặt cụm trên `release architecture` được hiển thị trong kết quả của lệnh `openshift-install version`.
 
-## 4. Cài đặt cụm với các tùy chỉnh
+## IV. Cài đặt cụm với các tùy chỉnh
 Bạn có thể cài đặt cụm OpenShift Container Platform bằng trình cài đặt dựa trên tác nhân (Agent-based Installer), với các tùy chỉnh phù hợp với nhu cầu triển khai của mình.
 
 Các quy trình dưới đây hướng dẫn triển khai một cụm OpenShift Container Platform gồm một nút duy nhất trong môi trường không kết nối mạng (disconnected environment). Bạn có thể sử dụng các quy trình này làm nền tảng và điều chỉnh tùy theo yêu cầu cụ thể của mình.
 
-### 4.1. Các điều kiện tiên quyết để cài đặt cụm bằng trình cài đặt dựa trên tác nhân (Agent-based Installer)
+### IV.1. Các điều kiện tiên quyết để cài đặt cụm bằng trình cài đặt dựa trên tác nhân (Agent-based Installer)
 Trước khi bắt đầu cài đặt cụm, bạn phải hoàn tất các tác vụ tiên quyết để chuẩn bị môi trường của mình. 
 
 Bạn đã xem xét các thông tin chi tiết về quy trình cài đặt và cập nhật OpenShift Container Platform. Để biết thêm thông tin, hãy xem phần "Cài đặt và cập nhật". 
@@ -1441,7 +1441,7 @@ Bạn đã đọc nội dung "Chọn phương pháp cài đặt cụm và chuẩ
 Nếu sử dụng tường lửa hoặc proxy, bạn đã định cấu hình để cho phép truy cập vào các trang web mà cụm của bạn cần kết nối. Để biết thêm thông tin, hãy xem phần "Định cấu hình tường lửa". 
 Bạn đã định cấu hình tường lửa để cho phép lưu lượng truy cập TCP trên cổng 8090 từ tất cả các máy chủ (host) đến máy chủ điều phối (rendezvous host), nhờ đó các máy chủ có thể kết nối với Assisted Service API trong quá trình khám phá (discovery) và khởi động (bootstrap). Để biết thêm thông tin, hãy xem phần "Yêu cầu về cổng cho máy chủ điều phối".
 
-### 4.2. Tải xuống Trình cài đặt dựa trên tác nhân (Agent-based Installer)
+### IV.2. Tải xuống Trình cài đặt dựa trên tác nhân (Agent-based Installer)
 Bắt đầu quy trình cài đặt bằng cách tải xuống Trình cài đặt dựa trên tác nhân (Agent-based Installer) và giao diện dòng lệnh (CLI) cần thiết cho quá trình cài đặt của bạn.
 
 **Quy trình**
@@ -1454,17 +1454,1055 @@ Bắt đầu quy trình cài đặt bằng cách tải xuống Trình cài đặ
 6. Tải xuống hoặc sao chép "pull secret" (bí mật kéo ảnh container) bằng cách nhấp vào Download pull secret hoặc Copy pull secret. 
 7. Nhấp vào Download command-line tools (Tải xuống các công cụ dòng lệnh) và đặt tệp nhị phân `openshift-install` vào một thư mục nằm trong biến môi trường PATH của bạn.
 
-### 4.3. Xác minh kiến trúc được hỗ trợ cho quá trình cài đặt dựa trên Agent (Agent-based installation)
+### IV.3. Xác minh kiến trúc được hỗ trợ cho quá trình cài đặt dựa trên Agent (Agent-based installation)
 
 Trước khi cài đặt cụm OpenShift Container Platform bằng trình cài đặt dựa trên Agent (Agent-based Installer), bạn có thể tùy chọn xác minh các kiến trúc được hỗ trợ để triển khai cụm.
 
-Điều kiện tiên quyết
+**Điều kiện tiên quyết**
 
-Bạn đã cài đặt giao diện dòng lệnh OpenShift (OpenShift CLI - `oc`). 
-Bạn đã tải xuống chương trình cài đặt.
+* Bạn đã cài đặt giao diện dòng lệnh OpenShift (OpenShift CLI - `oc`). 
+* Bạn đã tải xuống chương trình cài đặt.
 
-Quy trình
+**Quy trình**
 
-Đăng nhập vào giao diện dòng lệnh OpenShift (OpenShift CLI - `oc`). 
+1. Đăng nhập vào giao diện dòng lệnh OpenShift (OpenShift CLI - `oc`). 
+2. Kiểm tra gói phát hành (release payload) bằng cách chạy lệnh sau:
 
-Kiểm tra gói phát hành (release payload) bằng cách chạy lệnh sau:
+```bash
+./openshift-install version
+```
+
+Ví dụ đầu ra
+
+```bash
+./openshift-install 4.22.0
+built from commit abc123def456
+release image quay.io/openshift-release-dev/ocp-release@sha256:123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz0
+release architecture amd64
+```
+
+Nếu bạn đang sử dụng `release image` với payload `multi`, thì `release architecture` hiển thị trong kết quả đầu ra của lệnh này chính là kiến trúc mặc định.
+
+3. Để kiểm tra kiến trúc của payload, hãy chạy lệnh sau:
+
+```bash
+oc adm release info <release_image> -o jsonpath="{ .metadata.metadata}"
+```
+
+Thay thế `<release_image>` bằng ảnh phát hành. Ví dụ: `quay.io/openshift-release-dev/ocp-release@sha256:123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz0`.
+
+Ví dụ đầu ra khi hình ảnh phát hành sử dụng cơ chế đa tải trọng (multi-payload)
+
+```json
+{"release.openshift.io architecture":"multi"}
+```
+
+Nếu bạn đang sử dụng image phát hành (release image) có chứa payload `multi`, bạn có thể cài đặt cụm (cluster) trên các kiến trúc khác nhau như arm64, amd64, s390x và ppc64le. Ngược lại, bạn chỉ có thể cài đặt cụm trên kiến trúc phát hành (`release architecture`) được hiển thị trong kết quả của lệnh `openshift-install version`.
+
+### IV.4. Tạo các dữ liệu đầu vào cấu hình ưu tiên
+Tạo các dữ liệu đầu vào cấu hình ưu tiên được sử dụng để xây dựng image của agent.
+
+> **Lưu ý:** Việc cấu hình các tệp `install-config.yaml` và `agent-config.yaml` là phương pháp được khuyến nghị khi sử dụng Agent-based Installer. Việc sử dụng các tệp manifest GitOps ZTP là tùy chọn.
+
+**Quy trình**
+
+1. Cài đặt thành phần phụ thuộc `nmstate` bằng cách chạy lệnh sau:
+
+```bash
+sudo dnf install /usr/bin/nmstatectl -y
+```
+
+3. Đặt tệp nhị phân `openshift-install` vào một thư mục nằm trong PATH của bạn.
+4. Tạo một thư mục để lưu trữ cấu hình cài đặt bằng cách chạy lệnh sau:
+
+```bash
+mkdir ~/<directory_name>
+```
+
+5. Tạo tệp `install-config.yaml` bằng cách chạy lệnh sau:
+
+```bash
+vi ./<directory_name>/install-config.yaml
+```
+
+```yaml
+apiVersion: v1
+baseDomain: test.example.com
+compute:
+- architecture: amd64
+  hyperthreading: Enabled
+  name: worker
+  replicas: 0
+controlPlane:
+  architecture: amd64
+  hyperthreading: Enabled
+  name: master
+  replicas: 1
+metadata:
+  name: sno-cluster
+networking:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  machineNetwork:
+  - cidr: 192.168.0.0/16
+  networkType: OVNKubernetes
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  none: {}
+pullSecret: '<pull_secret>'
+sshKey: '<ssh_pub_key>'
+additionalTrustBundle: |
+  -----BEGIN CERTIFICATE-----
+  ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+  -----END CERTIFICATE-----
+imageContentSources:
+- mirrors:
+  - <local_registry>/<local_repository_name>/release
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - <local_registry>/<local_repository_name>/release
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+```
+
+Trong đó:
+
+* `compute.architecture`: Xác định kiến trúc hệ thống. Các giá trị hợp lệ bao gồm amd64, arm64, ppc64le và s390x.  
+Nếu sử dụng image phát hành (release image) có chứa nhiều payload, bạn có thể cài đặt cụm (cluster) trên các kiến trúc khác nhau như arm64, amd64, s390x và ppc64le. Nếu không, bạn chỉ có thể cài đặt cụm trên kiến trúc được hiển thị trong kết quả của lệnh `openshift-install version`. Để biết thêm thông tin, hãy xem phần "Xác minh kiến trúc được hỗ trợ để cài đặt cụm bằng Agent-based Installer".
+* `metadata.name`: Xác định tên cụm của bạn. Đây là giá trị bắt buộc.
+* `networking.networkingType`: Xác định plugin mạng cho cụm cần cài đặt. Giá trị mặc định là `OVNKubernetes` – đây cũng là giá trị duy nhất được hỗ trợ.
+* `platform`: Xác định nền tảng (platform) của bạn. Nếu đặt nền tảng là `vSphere`, `baremetal` hoặc `none`, bạn có thể cấu hình các điểm cuối (endpoint) địa chỉ IP cho các nút (node) trong cụm theo ba cách: IPv4, IPv6, hoặc cả IPv4 và IPv6 song song (dual-stack).
+
+Ví dụ về mạng dual-stack (ngăn xếp kép)
+
+```yaml
+networking:
+  clusterNetwork:
+    - cidr: 172.21.0.0/16
+      hostPrefix: 23
+    - cidr: fd02::/48
+      hostPrefix: 64
+  machineNetwork:
+    - cidr: 192.168.11.0/16
+    - cidr: 2001:DB8::/32
+  serviceNetwork:
+    - 172.22.0.0/16
+    - fd03::/112
+  networkType: OVNKubernetes
+platform:
+  baremetal:
+    apiVIPs:
+    - 192.168.11.3
+    - 2001:DB8::4
+    ingressVIPs:
+    - 192.168.11.4
+    - 2001:DB8::5
+```
+
+> **Lưu ý:** Đối với các nền tảng bare-metal (phần cứng vật lý), các thiết lập máy chủ được thực hiện trong phần nền tảng (platform) của tệp `install-config.yaml` sẽ được sử dụng theo mặc định, trừ khi chúng bị ghi đè bởi các cấu hình được thiết lập trong tệp `agent-config.yaml`.
+
+* `pullSecret`: Chỉ định pull secret của bạn.
+* `sshKey`: Chỉ định khóa công khai (public key) SSH của bạn.
+* `additionalTrustBundle`: Chỉ định nội dung của tệp chứng chỉ mà bạn đã sử dụng cho registry phản chiếu (mirror registry) của mình. Tệp chứng chỉ này có thể là chứng chỉ từ một cơ quan cấp chứng chỉ (CA) đáng tin cậy hiện có, hoặc là chứng chỉ tự ký (self-signed certificate) mà bạn đã tạo cho registry phản chiếu đó. Bạn bắt buộc phải chỉ định tham số này nếu đang sử dụng registry phản chiếu trong môi trường không kết nối internet (disconnected mirror registry).
+* `imageContentSources`: Chỉ định phần imageContentSources dựa trên kết quả đầu ra của lệnh mà bạn đã sử dụng để phản chiếu kho lưu trữ (repository). Bạn bắt buộc phải chỉ định tham số này nếu đang sử dụng registry phản chiếu trong môi trường không kết nối internet (disconnected mirror registry).
+
+> **Quan trọng**
+> 
+> * Khi sử dụng lệnh `oc adm release mirror`, hãy dùng dữ liệu đầu ra từ phần `imageContentSources`. 
+> * Khi sử dụng lệnh `oc mirror`, hãy dùng phần `repositoryDigestMirrors` trong tệp `ImageContentSourcePolicy` được tạo ra sau khi chạy lệnh đó. 
+> * Tài nguyên `ImageContentSourcePolicy` hiện đã lỗi thời (deprecated).
+
+5. Tạo tệp `agent-config.yaml` bằng cách chạy lệnh sau:
+
+```bash
+vi agent-config.yaml
+```
+
+```yaml
+apiVersion: v1beta1
+kind: AgentConfig
+metadata:
+  name: sno-cluster
+rendezvousIP: 192.168.111.80
+hosts:
+  - hostname: master-0
+    interfaces:
+      - name: eno1
+        macAddress: 00:ef:44:21:e6:a5
+    rootDeviceHints:
+      deviceName: /dev/sdb
+    networkConfig:
+      interfaces:
+        - name: eno1
+          type: ethernet
+          state: up
+          mac-address: 00:ef:44:21:e6:a5
+          ipv4:
+            enabled: true
+            address:
+              - ip: 192.168.111.80
+                prefix-length: 23
+            dhcp: false
+      dns-resolver:
+        config:
+          server:
+            - 192.168.111.1
+      routes:
+        config:
+          - destination: 0.0.0.0/0
+            next-hop-address: 192.168.111.2
+            next-hop-interface: eno1
+            table-id: 254
+```
+
+Trong đó:
+
+* `rendezvousIP`: Xác định địa chỉ IP được sử dụng để quyết định nút nào sẽ thực hiện quy trình khởi động (bootstrapping) cũng như chạy thành phần dịch vụ hỗ trợ (assisted-service). Bạn bắt buộc phải cung cấp địa chỉ IP rendezvous nếu không chỉ định ít nhất một địa chỉ IP của máy chủ (host) trong tham số networkConfig. Nếu địa chỉ này không được cung cấp, một địa chỉ IP sẽ được chọn từ danh sách các máy chủ đã khai báo trong networkConfig.
+* `hosts`: Xác định cấu hình cho các máy chủ (host). Số lượng máy chủ được định nghĩa không được vượt quá tổng số máy chủ đã khai báo trong tệp install-config.yaml (tổng giá trị của các tham số compute.replicas và controlPlane.replicas). Cấu hình này là tùy chọn.
+* `hosts.hostname`: Xác định giá trị thay thế cho tên máy chủ (hostname) nhận được từ giao thức DHCP (Dynamic Host Configuration Protocol) hoặc từ truy vấn DNS ngược (reverse DNS lookup). Mỗi máy chủ phải có một tên duy nhất thông qua một trong các phương thức này. Cấu hình này là tùy chọn.
+* `hosts.rootDeviceHints`: Xác định cấu hình cho phép triển khai (provisioning) ảnh hệ điều hành Red Hat Enterprise Linux CoreOS (RHCOS) vào một thiết bị cụ thể. Chương trình cài đặt sẽ kiểm tra các thiết bị theo thứ tự phát hiện được và so sánh các giá trị tìm thấy với các giá trị gợi ý (hint values). Chương trình sẽ chọn thiết bị đầu tiên khớp với giá trị gợi ý đó. **Lưu ý:** Tham số này là bắt buộc đối với các cấu hình FCP multipath trên hệ thống IBM Z.
+* `hosts.networkConfig`: Xác định cấu hình giao diện mạng của một máy chủ theo định dạng NMState. Cấu hình này là tùy chọn.
+
+### IV.5. Tạo các tệp manifest bổ sung
+Là một tác vụ tùy chọn, bạn có thể tạo thêm các tệp manifest để định cấu hình cụm (cluster) của mình ngoài những cấu hình đã có sẵn trong các tệp `install-config.yaml` và `agent-config.yaml`.
+
+> **Quan trọng:** Các tùy chỉnh đối với cụm thông qua các tệp manifest bổ sung sẽ không được kiểm chứng, không đảm bảo sẽ hoạt động đúng cách và có thể khiến cụm rơi vào trạng thái không thể vận hành.
+
+#### IV.5.1. Tạo thư mục chứa các tệp manifest bổ sung
+Nếu bạn tạo thêm các tệp manifest để cấu hình quá trình cài đặt dựa trên Agent (Agent-based installation) ngoài các tệp `install-config.yaml` và `agent-config.yaml`, bạn phải tạo một thư mục con có tên là `openshift` nằm trong thư mục cài đặt của mình.
+
+Tất cả các cấu hình máy (machine configuration) bổ sung của bạn đều phải được đặt bên trong thư mục con này.
+
+> **Lưu ý:** Loại tệp manifest bổ sung phổ biến nhất mà bạn có thể thêm vào là đối tượng `MachineConfig`. Để xem các ví dụ về đối tượng `MachineConfig` có thể thêm trong quá trình cài đặt dựa trên Agent, hãy tham khảo mục "Sử dụng các đối tượng MachineConfig để cấu hình các node" trong phần "Tài nguyên bổ sung".
+
+**Quy trình:** Trên máy chủ thực hiện cài đặt, hãy tạo một thư mục con tên là `openshift` bên trong thư mục cài đặt bằng cách chạy lệnh sau:
+
+```bash
+mkdir <installation_directory>/openshift
+```
+
+#### IV.5.2. Tạo đối tượng manifest bao gồm cầu nối br-ex tùy chỉnh
+Theo mặc định, OpenShift Container Platform tự động cấu hình cầu nối Open vSwitch (OVS) `br-ex` trên các nút (node). Đối với các yêu cầu mạng nâng cao, bạn có thể ghi đè hành vi mặc định này trên các nền tảng bare-metal (phần cứng vật lý). Để thực hiện việc này, hãy sử dụng Agent-based Installer (trình cài đặt dựa trên tác nhân) để tạo một đối tượng MachineConfig bao gồm tệp cấu hình NMState.
+
+> **Quan trọng:** Các tùy chỉnh đối với cụm (cluster) thông qua các tệp manifest bổ sung sẽ không được kiểm chứng và không có gì đảm bảo rằng chúng sẽ hoạt động đúng cách. Những tệp manifest này có thể khiến cụm không còn hoạt động được. Để biết thêm thông tin về tệp manifest bổ sung, hãy xem phần "Tạo thư mục chứa các tệp manifest bổ sung".
+
+> **Lưu ý:** Bạn có thể sử dụng Butane để tạo các cấu hình máy (machine config). Để biết thêm thông tin, hãy xem phần "Tạo đối tượng MachineConfig bằng cách sử dụng Butane".
+
+Hãy cân nhắc sử dụng cấu hình cầu nối `br-ex` tùy chỉnh cho bất kỳ tác vụ nào sau đây:
+
+* Bạn cần sửa đổi cầu nối `br-ex` sau khi đã cài đặt cụm. 
+* Bạn cần sửa đổi đơn vị truyền tải tối đa (MTU) cho cụm của mình. 
+* Bạn cần cập nhật các giá trị DNS. 
+* Bạn cần sửa đổi các thuộc tính cho một giao diện liên kết (bond interface) khác. Các ví dụ bao gồm MIImon (Media Independent Interface Monitor), chế độ liên kết (bonding mode) hoặc Chất lượng dịch vụ (QoS). 
+* Bạn cần bật Giao thức khám phá lớp liên kết (Link Layer Discovery Protocol - LLDP) để phát hiện và khắc phục sự cố kết nối với thiết bị chuyển mạch (switch).
+
+> **Lưu ý:** Hãy sử dụng cầu nối OVS `br-ex` mặc định cho các môi trường tiêu chuẩn. Hãy sử dụng cơ chế cầu nối OVS `br-ex` mặc định cho các môi trường chỉ có một bộ điều khiển giao diện mạng (NIC) với các thiết lập mạng mặc định.
+
+Sau khi bạn cài đặt Red Hat Enterprise Linux CoreOS (RHCOS) và hệ thống khởi động lại, Machine Config Operator sẽ đưa các tệp cấu hình Ignition vào từng nút. Thao tác này đảm bảo rằng mỗi nút đều nhận được cấu hình mạng cho cầu nối `br-ex`. Để tránh xung đột cấu hình, cơ chế cầu nối OVS `br-ex` mặc định sẽ bị vô hiệu hóa. Cảnh báo
+
+> Danh sách tên giao diện dưới đây đã được dành riêng; bạn không được phép sử dụng các tên này trong cấu hình NMstate:
+> 
+> - br-ext
+> - br-int
+> - br-local
+> - br-nexthop
+> - br0
+> - ext-vxlan
+> - ext
+> - genev_sys_*
+> - int
+> - k8s-*
+> - ovn-k8s-*
+> - patch-br-*
+> - tun0
+> - vxlan_sys_*
+
+**Các điều kiện tiên quyết**
+
+* Tùy chọn: Bạn đã cài đặt công cụ dòng lệnh (CLI) `nmstatectl` để xác thực cấu hình NMState của mình. 
+* Bạn đã kiểm tra xem thư mục con `openshift` có tồn tại trong thư mục cài đặt hay không. Nếu thư mục con này chưa tồn tại, hãy tạo nó.
+
+**Quy trình**
+
+1. Tạo một tệp cấu hình NMState và xác định cấu hình mạng cầu nối (bridge network) `br-ex` tùy chỉnh trong tệp đó:
+
+Ví dụ về cấu hình NMState cho mạng cầu nối `br-ex` tùy chỉnh
+
+```yaml
+interfaces:
+- name: enp2s0
+  type: ethernet
+  state: up
+  mtu: 9000
+  ipv4:
+    enabled: false
+  ipv6:
+    enabled: false
+- name: br-ex
+  type: ovs-bridge
+  state: up
+  ipv4:
+    enabled: false
+    dhcp: false
+  ipv6:
+    enabled: false
+    dhcp: false
+  bridge:
+    options:
+      mcast-snooping-enable: true
+    port:
+    - name: enp2s0
+    - name: br-ex
+- name: br-ex
+  type: ovs-interface
+  state: up
+  copy-mac-from: enp2s0
+  mtu: 9000
+  ipv4:
+    enabled: true
+    dhcp: true
+    auto-route-metric: 48
+  ipv6:
+    enabled: true
+    dhcp: true
+    auto-route-metric: 48
+# ...
+```
+
+Trong đó:
+
+* `interfaces.name`: Xác định tên của giao diện (interface).
+* `interfaces.type`: Xác định loại giao diện Ethernet.
+* `interfaces.state`: Xác định trạng thái mong muốn cho giao diện sau khi được tạo.
+* `mtu`: Để đảm bảo tính ổn định và hiệu suất mạng, bạn phải khai báo rõ ràng giá trị MTU trong tệp cấu hình (manifest) cho mọi giao diện. Không nên dựa vào cơ chế cấu hình MTU tự động. Giá trị MTU được thiết lập trên một cổng cầu nối (bridge port) hoặc giao diện có gắn thẻ VLAN không được vượt quá kích thước khung hình (frame size) tối đa mà phương tiện vật lý kết nối hỗ trợ. Nếu các giá trị này không khớp, sẽ dẫn đến tình trạng phân mảnh gói tin hoặc mất kết nối.
+* `ipv4.enabled`: Trong ví dụ này, tùy chọn này dùng để vô hiệu hóa IPv4 và IPv6.
+* `port.name`: Xác định card mạng (NIC) của nút (node) mà cầu nối (bridge) sẽ kết nối vào.
+* `auto-route-metric`: Thiết lập tham số này thành 48 để đảm bảo tuyến đường mặc định (default route) của br-ex luôn có mức ưu tiên cao nhất (giá trị metric thấp nhất). Cấu hình này giúp ngăn ngừa xung đột định tuyến với các giao diện khác được dịch vụ NetworkManager tự động cấu hình.
+
+2. Sử dụng lệnh cat để mã hóa nội dung cấu hình NMState sang định dạng base64:
+
+```bash
+cat <nmstate_configuration>.yml | base64
+```
+
+Thay thế `<nmstate_configuration>` bằng tên tệp YAML tài nguyên NMState của bạn.
+
+3. Hãy tạo một tệp `MachineConfig` dưới dạng tệp manifest bổ sung. Trong tệp này, hãy xác định cấu hình mạng cầu nối (bridge network) `br-ex` tùy chỉnh, tương tự như ví dụ dưới đây. Trình cài đặt dựa trên tác nhân (Agent-based Installer) sẽ tự động áp dụng các cập nhật từ đối tượng `MachineConfig` vào cụm (cluster) của bạn.
+
+```yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 10-br-ex-worker
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,<base64_encoded_nmstate_configuration>
+        mode: 0644
+        overwrite: true
+        path: /etc/nmstate/openshift/worker-0.yml
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,<base64_encoded_nmstate_configuration>
+        mode: 0644
+        overwrite: true
+        path: /etc/nmstate/openshift/worker-1.yml
+# ...
+```
+
+Trong đó:
+
+* `metadata.name`: Xác định tên của chính sách.
+* `contents.source`: Ghi thông tin đã mã hóa base64 vào đường dẫn được chỉ định.
+* `path`: Đối với mỗi nút (node) trong cụm (cluster) của bạn, hãy chỉ định đường dẫn dựa trên tên máy chủ (hostname) của nút đó cùng với dữ liệu tệp cấu hình Ignition (đã mã hóa base64) tương ứng với loại máy đó. Vai trò `worker` là vai trò mặc định cho các nút trong cụm của bạn. Bạn bắt buộc phải sử dụng phần mở rộng .yml cho các tệp cấu hình. Ví dụ: hãy sử dụng `$(hostname -s).yml` khi chỉ định đường dẫn theo tên máy chủ rút gọn cho từng nút hoặc tất cả các nút trong tệp manifest `MachineConfig`. 
+
+Bạn có thể áp dụng một cấu hình chung duy nhất cho tất cả các nút trong cụm bằng cách sử dụng tệp cấu hình `/etc/nmstate/openshift/cluster.yml`. Trong trường hợp này, bạn không cần phải chỉ định đường dẫn theo tên máy chủ rút gọn cho từng nút (ví dụ như `/etc/nmstate/openshift/<node_hostname>.yml`). Ví dụ:
+
+Ví dụ về tệp cấu hình `/etc/nmstate/openshift/cluster.yml`
+
+```yaml
+# ...
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,<base64_encoded_nmstate_configuration>
+        mode: 0644
+        overwrite: true
+        path: /etc/nmstate/openshift/cluster.yml
+# ...
+```
+
+4. Hãy lưu tệp manifest bổ sung vào thư mục con `openshift` nằm trong thư mục cài đặt của bạn.
+
+Sau khi hoàn tất các bước cấu hình khác cho quá trình cài đặt — chẳng hạn như mã hóa ổ đĩa — bạn hãy tạo tệp ảnh ISO. Khi khởi động từ tệp ảnh này, cấu hình tùy chỉnh cho cầu nối `br-ex` sẽ được áp dụng cho từng nút (node) trong cụm (cluster) của bạn.
+
+#### IV.5.3. Tạo các phân vùng đĩa
+Thông thường, bạn nên sử dụng cấu hình phân vùng đĩa mặc định được tạo trong quá trình cài đặt RHCOS. Tuy nhiên, trong một số trường hợp, bạn có thể muốn tạo một phân vùng riêng cho một thư mục mà bạn dự đoán sẽ tăng dung lượng theo thời gian.
+
+OpenShift Container Platform hỗ trợ thêm một phân vùng duy nhất để gắn lưu trữ vào thư mục `/var` hoặc một thư mục con của `/var`. Ví dụ:
+
+* `/var/lib/containers`: Chứa các nội dung liên quan đến container; dung lượng này có thể tăng lên khi có thêm nhiều image và container được thêm vào hệ thống. 
+* `/var/lib/etcd`: Chứa dữ liệu mà bạn có thể muốn tách riêng, chẳng hạn như để tối ưu hóa hiệu suất lưu trữ của etcd. 
+* `/var`: Chứa dữ liệu mà bạn có thể muốn tách riêng, ví dụ như phục vụ mục đích kiểm toán (auditing). 
+
+> **Quan trọng:** Đối với các đĩa có dung lượng lớn hơn 100GB, và đặc biệt là lớn hơn 1TB, bạn nên tạo một phân vùng `/var` riêng biệt.
+
+Việc lưu trữ nội dung của thư mục `/var` trên một phân vùng riêng giúp dễ dàng mở rộng dung lượng lưu trữ cho các khu vực đó khi cần thiết, đồng thời cho phép cài đặt lại OpenShift Container Platform trong tương lai mà vẫn giữ nguyên dữ liệu. Phương pháp này giúp tránh việc phải tải lại các container hoặc sao chép các tệp nhật ký (log) có dung lượng lớn trong quá trình cập nhật hệ thống.
+
+Việc sử dụng phân vùng riêng cho thư mục `/var` (hoặc thư mục con của `/var`) cũng ngăn chặn tình trạng dữ liệu trong thư mục đó tăng lên quá mức, gây đầy hệ thống tệp gốc (root file system).
+
+Quy trình dưới đây thiết lập một phân vùng `/var` riêng biệt bằng cách thêm một tệp cấu hình máy (machine config manifest) vào tệp cấu hình Ignition cho một loại node cụ thể trong giai đoạn chuẩn bị cài đặt.
+
+**Điều kiện tiên quyết**
+
+Bạn đã tạo một thư mục con có tên là `openshift` bên trong thư mục cài đặt của mình.
+
+**Quy trình**
+
+1. Tạo một tệp cấu hình Butane để thiết lập phân vùng bổ sung. Ví dụ: đặt tên tệp là `$HOME/clusterconfig/98-var-partition.bu`, thay đổi tên thiết bị đĩa thành tên thiết bị lưu trữ trên các hệ thống worker, và thiết lập dung lượng lưu trữ phù hợp. Ví dụ này đặt thư mục `/var` trên một phân vùng riêng biệt:
+
+```yaml
+variant: openshift
+version: 4.22.0
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 98-var-partition
+storage:
+  disks:
+  - device: /dev/disk/by-id/<device_name>
+    partitions:
+    - label: var
+      start_mib: <partition_start_offset>
+      size_mib: <partition_size>
+      number: 5
+  filesystems:
+    - device: /dev/disk/by-partlabel/var
+      path: /var
+      format: xfs
+      mount_options: [defaults, prjquota]
+      with_mount_unit: true
+```
+
+Trong đó:
+
+* `<device_name>`: Chỉ định tên thiết bị lưu trữ của ổ đĩa mà bạn muốn phân vùng.
+* `<partition_start_offset>`: Chỉ định giá trị độ lệch (offset) tối thiểu cho ổ đĩa khởi động. Để đạt hiệu suất tối ưu, hãy đặt giá trị độ lệch tối thiểu là 25000 mebibyte. Hệ thống tệp gốc (root file system) sẽ tự động được thay đổi kích thước để lấp đầy toàn bộ không gian khả dụng cho đến độ lệch đã chỉ định. Nếu không chỉ định giá trị độ lệch, hoặc nếu giá trị được chỉ định nhỏ hơn mức tối thiểu khuyến nghị, hệ thống tệp gốc sẽ quá nhỏ; điều này có thể dẫn đến việc các lần cài đặt lại RHCOS sau này ghi đè lên phần đầu của phân vùng dữ liệu.
+* `<partition_size>`: Chỉ định kích thước của phân vùng dữ liệu (tính bằng mebibyte).
+* `mount_options`: Tùy chọn gắn (mount option) `prjquota` phải được bật đối với các hệ thống tệp được sử dụng cho lưu trữ container. 
+
+> **Lưu ý:** Khi tạo một phân vùng `/var` riêng biệt, bạn không thể sử dụng các loại instance (instance type) khác nhau cho các nút tính toán (compute node) nếu các loại instance đó không có cùng tên thiết bị.
+
+2. Tạo tệp manifest từ cấu hình Butane và lưu tệp đó vào thư mục `clusterconfig/openshift`. Chẳng hạn, hãy chạy lệnh sau:
+
+```bash
+butane $HOME/clusterconfig/98-var-partition.bu -o $HOME/clusterconfig/openshift/98-var-partition.yaml
+```
+
+#### IV.5.4. Sử dụng các tệp manifest ZTP
+Là một tác vụ tùy chọn, bạn có thể sử dụng các tệp manifest GitOps Zero Touch Provisioning (ZTP) để định cấu hình quá trình cài đặt của mình, vượt ra ngoài các tùy chọn có sẵn thông qua các tệp `install-config.yaml` và `agent-config.yaml`.
+
+Xem phần "Những thách thức tại vùng biên mạng" (Challenges of the network far edge) để tìm hiểu thêm về GitOps Zero Touch Provisioning (ZTP).
+
+> **Quan trọng:** Zero Touch Provisioning (ZTP) không được hỗ trợ cho các cụm gồm hai nút có cơ chế cách ly nút (fencing - TNF). Mặc dù bạn có thể sử dụng Red Hat Advanced Cluster Management (RHACM) để thực hiện cài đặt, nhưng các thành phần cơ sở hạ tầng bổ sung cần thiết cho ZTP vẫn chưa được kiểm chứng cho cấu trúc liên kết (topology) này.
+
+> **Lưu ý:** Các tệp manifest GitOps ZTP có thể được tạo ra dù bạn có định cấu hình trước các tệp `install-config.yaml` và `agent-config.yaml` hay không. Nếu bạn chọn định cấu hình các tệp `install-config.yaml` và `agent-config.yaml`, các cấu hình đó sẽ được nhập vào các tệp manifest cụm ZTP khi chúng được tạo.
+
+**Điều kiện tiên quyết**
+
+Bạn đã đặt tệp nhị phân `openshift-install` vào một thư mục nằm trong biến môi trường PATH của hệ thống. 
+Tùy chọn: Bạn đã tạo và định cấu hình các tệp `install-config.yaml` và `agent-config.yaml`.
+
+**Quy trình**
+
+1. Tạo các tệp manifest cụm ZTP bằng cách chạy lệnh sau:
+
+```bash
+openshift-install agent create cluster-manifests --dir <installation_directory>
+```
+
+> **Quan trọng:** Nếu bạn đã tạo các tệp `install-config.yaml` và `agent-config.yaml`, các tệp này sẽ bị xóa và thay thế bằng các tệp cấu hình cụm (cluster manifests) được tạo ra thông qua lệnh này. Mọi cấu hình đã thực hiện trong các tệp `install-config.yaml` và `agent-config.yaml` sẽ được đưa vào các tệp cấu hình cụm ZTP khi bạn chạy lệnh `openshift-install agent create cluster-manifests`.
+
+2. Hãy truy cập vào thư mục cluster-manifests bằng cách chạy lệnh sau:
+
+```bash
+cd <installation_directory>/cluster-manifests
+```
+
+3. Hãy định cấu hình các tệp manifest trong thư mục `cluster-manifests`. Để xem các tệp mẫu, hãy tham khảo phần "Sample GitOps ZTP custom resources" (Các tài nguyên tùy chỉnh ZTP mẫu theo phương pháp GitOps).
+4. Đối với các cụm (cluster) trong môi trường không kết nối internet (disconnected clusters): Nếu bạn chưa xác định cấu hình mirror trong tệp `install-config.yaml` trước khi tạo các tệp manifest ZTP, hãy thực hiện các bước sau:
+    * Chuyển đến thư mục `mirror` bằng cách chạy lệnh sau: `cd ../mirror`
+    * Định cấu hình các tệp manifest trong thư mục `mirror`.
+
+#### IV.5.5. Mã hóa ổ đĩa
+Là một tác vụ tùy chọn, bạn có thể mã hóa ổ đĩa hoặc phân vùng của mình trong quá trình cài đặt OpenShift Container Platform bằng trình cài đặt dựa trên tác nhân (Agent-based Installer).
+
+> **Quan trọng:** Nếu vẫn còn các khóa mã hóa TPM từ hệ điều hành trước đó trên máy chủ vật lý (bare-metal host), quá trình triển khai cụm (cluster) có thể bị treo. Để tránh tình trạng này, bạn nên đặt lại (reset) chip TPM trong BIOS trước khi khởi động tệp ISO.
+
+**Điều kiện tiên quyết**
+
+Bạn đã tạo và cấu hình các tệp `install-config.yaml` và `agent-config.yaml`, trừ khi bạn đang sử dụng các tệp cấu hình ZTP (ZTP manifests). 
+Bạn đã đặt tệp thực thi `openshift-install` vào một thư mục nằm trong biến môi trường PATH của hệ thống.
+
+**Quy trình**
+
+1. Tạo các tệp cấu hình cụm ZTP bằng cách chạy lệnh sau:
+
+```bash
+openshift-install agent create cluster-manifests --dir <installation_directory>
+```
+
+> **Quan trọng:** Nếu bạn đã tạo các tệp `install-config.yaml` và `agent-config.yaml`, các tệp này sẽ bị xóa và thay thế bằng các tệp cấu hình cụm (cluster manifests) được tạo ra thông qua lệnh này.
+
+Mọi cấu hình đã thực hiện trong các tệp `install-config.yaml` và `agent-config.yaml` sẽ được đưa vào các tệp cấu hình cụm ZTP khi bạn chạy lệnh `openshift-install agent create cluster-manifests`.
+
+> **Lưu ý:** Nếu bạn đã tạo các tệp cấu hình cụm ZTP trước đó, hãy bỏ qua bước này.
+
+2. Hãy truy cập vào thư mục `cluster-manifests` bằng cách chạy lệnh sau:
+
+```bash
+cd <installation_directory>/cluster-manifests
+```
+
+3. Thêm phần sau đây vào tệp `agent-cluster-install.yaml`:
+
+```yaml
+diskEncryption:
+    enableOn: all
+    mode: tang
+    tangServers: "server1": "http://tang-server-1.example.com:7500"
+```
+
+Trong đó:
+
+* `diskEncryption.enableOn`: Xác định các nút (node) cần bật tính năng mã hóa đĩa. Các giá trị hợp lệ bao gồm: none, all, masters và workers.
+* `diskEncryption.mode`: Xác định chế độ mã hóa đĩa sẽ được sử dụng. Các giá trị hợp lệ bao gồm: tpmv2 và tang.
+* `diskEncryption.tangServers`: Xác định các máy chủ Tang (Tang servers) nếu bạn sử dụng Tang. Giá trị này là tùy chọn.
+
+#### IV.5.6. Cấu hình MTU cho mạng cụm (cluster network) trong quá trình cài đặt
+Bạn có thể thiết lập rõ ràng giá trị MTU (Maximum Transmission Unit - đơn vị truyền tải tối đa) cho mạng cụm trong quá trình cài đặt bằng cách thêm một tài nguyên tùy chỉnh (Custom Resource - CR) loại `Network` vào thư mục `openshift` trong cấu hình của trình cài đặt dựa trên tác nhân (Agent-based Installer).
+
+Việc thiết lập MTU cho mạng cụm với một khoảng dự phòng (headroom) ngay từ giai đoạn triển khai sẽ giúp tránh được nhu cầu cập nhật MTU ở giai đoạn vận hành sau đó (Day 2) — một quy trình vốn đòi hỏi phải khởi động lại tất cả các nút (node) trong cụm theo phương thức cuốn chiếu (rolling reboot) ít nhất hai lần.
+
+Trong quá trình cài đặt, Cluster Network Operator (CNO) sẽ tự động tính toán MTU cho mạng cụm dựa trên MTU của giao diện mạng chính (primary network interface). Nếu bạn bật IPsec ngay từ khi cài đặt, phép tính này sẽ bao gồm cả phần dung lượng tiêu tốn (overhead) của OVN-Kubernetes (100 byte) lẫn phần dung lượng tiêu tốn của IPsec. Nếu bạn dự định bật IPsec hoặc một công nghệ đóng gói (encapsulation) khác ở giai đoạn vận hành sau đó (Day 2), thì giá trị MTU được tính toán ban đầu sẽ chỉ bao gồm phần tiêu tốn của OVN-Kubernetes, dẫn đến việc không đủ dung lượng cần thiết.
+
+Bằng cách thiết lập rõ ràng MTU cho mạng cụm ngay từ lúc cài đặt, bạn có thể dự phòng thêm dung lượng cho các nhu cầu trong tương lai, từ đó tránh được quá trình thay đổi MTU gây gián đoạn hệ thống.
+
+> **Quan trọng:** Giá trị MTU của mạng cụm phải thấp hơn MTU của mạng máy chủ (machine network) ít nhất 100 byte để bù trừ cho phần dung lượng tiêu tốn của lớp phủ (overlay) OVN-Kubernetes. Nếu bạn dự định bật IPsec ở giai đoạn vận hành sau đó (Day 2), hãy dành thêm 46 byte làm khoảng dự phòng cho IPsec. Ví dụ: với MTU của mạng máy chủ là 9100 byte, bạn nên đặt MTU cho mạng cụm là 8900 byte; con số này đã bao gồm các phần bù trừ sau:
+> 
+> * Phần tiêu tốn của OVN-Kubernetes: 100 byte
+> * Khoảng dự phòng cho IPsec: 46 byte
+> * Khoảng dự phòng bổ sung: 54 byte
+> * Tổng cộng phần bù trừ: 200 byte
+> 
+> Để tránh chọn giá trị MTU vượt quá khả năng hỗ trợ của nút, hãy kiểm tra giá trị MTU tối đa (`maxmtu`) mà giao diện mạng chấp nhận bằng cách chạy lệnh `ip -d link`.
+
+**Điều kiện tiên quyết**
+
+* Bạn đã tạo các tệp `install-config.yaml` và `agent-config.yaml` cho quá trình cài đặt của mình. 
+* Bạn đã tạo thư mục con `openshift` bên trong thư mục cài đặt, như được mô tả trong phần "Tạo thư mục chứa các tệp manifest bổ sung".
+
+**Quy trình**
+
+1. Trong tệp `agent-config.yaml`, hãy thiết lập MTU (Maximum Transmission Unit) cho mạng máy chủ (machine network) trên giao diện mạng của từng máy chủ bằng cách sử dụng cấu hình NMState. 
+
+Ví dụ sau đây cấu hình một giao diện Ethernet với giá trị MTU là 9100:
+
+```yaml
+apiVersion: v1beta1
+kind: AgentConfig
+metadata:
+  name: sno-cluster
+rendezvousIP: 192.168.111.80
+hosts:
+  - hostname: master-0
+    interfaces:
+      - name: eno1
+        macAddress: 00:ef:44:21:e6:a5
+    networkConfig:
+      interfaces:
+        - name: eno1
+          type: ethernet
+          state: up
+          mtu: 9100
+          ipv4:
+            enabled: true
+            dhcp: false
+            address:
+              - ip: "192.168.111.80"
+                prefix-length: 24
+```
+
+2. Tạo một tệp manifest CR `Network` có tên là set-cluster-mtu.yaml để thiết lập MTU cho mạng cụm:
+
+```yaml
+apiVersion: operator.openshift.io/v1
+kind: Network
+metadata:
+  name: cluster
+spec:
+  defaultNetwork:
+    ovnKubernetesConfig:
+      mtu: 8900
+```
+
+Trong đó:
+
+* `mtu`: Xác định giá trị MTU cho mạng cụm (cluster network). Giá trị này phải nhỏ hơn giá trị MTU của mạng máy chủ (machine network) ít nhất 100 byte. Trong ví dụ này, giá trị được đặt thấp hơn 200 byte so với mức MTU 9100 của mạng máy chủ, nhằm tạo khoảng dự phòng cho IPsec và các yêu cầu khác trong tương lai.
+
+3. Đặt tệp manifest `set-cluster-mtu.yaml` vào thư mục con openshift nằm trong thư mục cài đặt của bạn:
+
+```
+<installation_directory>/
+├── install-config.yaml
+├── agent-config.yaml
+└── openshift/
+    └── set-cluster-mtu.yaml
+```
+
+> **Lưu ý:** Các tệp manifest trong thư mục `openshift` không thể ghi đè lên các tệp manifest mặc định của cụm (cluster). Hạn chế này không áp dụng đối với tài nguyên tùy chỉnh (CR) mạng (Network CR) liên quan đến thông số MTU của mạng cụm, vì cấu hình MTU không nằm trong tập hợp các tệp manifest mặc định.
+
+4. Hãy tạo ảnh (image) tác nhân và khởi động các máy chủ của bạn theo hướng dẫn trong phần "Tạo và khởi động ảnh tác nhân".  
+Trong quá trình cài đặt cụm (cluster), chương trình cài đặt sẽ áp dụng Network CR như một tệp manifest bổ sung, và CNO sẽ sử dụng giá trị MTU được chỉ định thay vì tự động tính toán giá trị này.
+
+**Xác minh**
+
+Sau khi quá trình cài đặt cụm hoàn tất, hãy xác minh MTU của mạng cụm bằng cách chạy lệnh sau:
+
+```bash
+oc get networks.operator.openshift.io cluster -o yaml
+```
+
+Ví dụ đầu ra
+
+```yaml
+apiVersion: operator.openshift.io/v1
+kind: Network
+metadata:
+  name: cluster
+# ...
+spec:
+  # ...
+  defaultNetwork:
+    ovnKubernetesConfig:
+      # ...
+      mtu: 8900
+```
+
+### IV.6. Tạo và khởi động ảnh agent
+Sau khi đã chuẩn bị các dữ liệu cấu hình cho quá trình cài đặt, hãy tạo ảnh ISO và khởi động ảnh đó trên các máy của bạn.
+
+**Điều kiện tiên quyết**
+
+Nếu bạn dự định khởi động ảnh agent từ ổ đĩa USB, hãy đảm bảo rằng bạn đã cài đặt gói phần mềm syslinux.
+
+**Quy trình**
+
+1. Tạo ảnh agent bằng cách chạy lệnh sau:
+
+```bash
+openshift-install --dir <install_directory> agent create image
+```
+
+> **Lưu ý:** Red Hat Enterprise Linux CoreOS (RHCOS) hỗ trợ cơ chế đa đường dẫn (multipathing) trên đĩa chính, giúp tăng cường khả năng chống chịu trước các lỗi phần cứng, từ đó đạt được độ sẵn sàng cao hơn cho máy chủ. Cơ chế đa đường dẫn được bật theo mặc định trong tệp ảnh ISO của tác nhân (agent ISO image), với cấu hình mặc định nằm tại /etc/multipath.conf.
+
+2. Nếu bạn dự định khởi động tệp ảnh ISO từ ổ đĩa USB, hãy thêm bản ghi khởi động chính (master boot record) vào tệp ảnh đó bằng cách chạy lệnh sau:
+
+```bash
+isohybrid --uefi <agent_iso_image>
+```
+
+Ví dụ về lệnh
+
+```bash
+isohybrid --uefi agent.x86_64.iso
+```
+
+3. Khởi động tệp ảnh `agent.x86_64.iso`, `agent.aarch64.iso` hoặc `agent.s390x.iso` trên các máy vật lý (bare-metal).
+
+### IV.7. Thêm các tác nhân (agent) IBM Z với RHEL KVM
+Bạn có thể thêm thủ công các tác nhân IBM Z® với RHEL KVM.
+
+Chỉ sử dụng quy trình này cho các cụm (cluster) IBM Z® sử dụng RHEL KVM.
+
+> **Lưu ý:** Tham số `nmstateconfig` phải được cấu hình cho quá trình khởi động KVM.
+
+**Quy trình**
+
+1. Khởi động máy RHEL KVM của bạn. 
+2. Để triển khai máy chủ ảo, hãy chạy lệnh `virt-install` với các tham số sau:
+
+Khởi động từ ISO
+
+```bash
+virt-install
+    --name <vm_name> \
+    --autostart \
+    --memory=<memory> \
+    --cpu host \
+    --vcpus=<vcpus> \
+    --cdrom \<path_to_image>/<agent_iso_image> \
+    --disk pool=default,size=<disk_pool_size> \
+    --network network:default,mac=<mac_address> \
+    --graphics none \
+    --noautoconsole \
+    --os-variant rhel9.0 \
+    --wait=-1
+```
+
+Đối với tham số `--cdrom`, hãy chỉ định vị trí của tệp ảnh ISO trên máy chủ cục bộ, ví dụ: `<path_to_image>/home/<image>.iso`.
+
+> **Lưu ý:** Đối với các quá trình cài đặt dựa trên KVM sử dụng thiết bị DASD trên hệ thống IBM Z, cần tạo một phân vùng (ví dụ: `/dev/dasdb1`) bằng công cụ phân vùng fdasd.
+
+3. Tùy chọn: Bật chế độ FIPS.
+
+Để bật chế độ FIPS trên các cụm IBM Z® sử dụng RHEL KVM, bạn phải dùng phương thức khởi động PXE và chạy lệnh `virt-install` với các tham số sau:
+
+Khởi động qua PXE
+
+```bash
+virt-install \
+   --name <vm_name> \
+   --autostart \
+   --ram=16384 \
+   --cpu host \
+   --vcpus=8 \
+   --location <path_to_kernel_initrd_image>,kernel=kernel.img,initrd=initrd.img \
+   --disk <qcow_image_path> \
+   --network network:macvtap ,mac=<mac_address> \
+   --graphics none \
+   --noautoconsole \
+   --wait=-1 \
+   --extra-args "rd.neednet=1 nameserver=<nameserver>" \
+   --extra-args "ip=<IP>::<nameserver>::<hostname>:enc1:none" \
+   --extra-args "coreos.live.rootfs_url=http://<http_server>:8080/agent.s390x-rootfs.img" \
+   --extra-args "random.trust_cpu=on rd.luks.options=discard" \
+   --extra-args "ignition.firstboot ignition.platform.id=metal" \
+   --extra-args "console=tty1 console=ttyS1,115200n8" \
+   --extra-args "coreos.inst.persistent-kargs=console=tty1 console=ttyS1,115200n8" \
+   --extra-args "fips=1" \
+   --osinfo detect=on,require=off
+```
+
+Trong đó:
+
+* `--location`: Chỉ định vị trí của kernel/initrd trên máy chủ HTTP hoặc HTTPS.
+* `--extra-args "fips=1"`: Chỉ định việc kích hoạt chế độ FIPS. Mục này là bắt buộc, bên cạnh việc thiết lập tham số fips thành true trong tệp `install-config.yaml`. 
+
+> **Lưu ý:** Đối với các quá trình cài đặt dựa trên KVM sử dụng thiết bị DASD trên hệ thống IBM Z, cần tạo một phân vùng (ví dụ: `/dev/dasdb1`) bằng công cụ phân vùng fdasd. Hiện tại, chỉ phương thức khởi động qua PXE (PXE boot) mới được hỗ trợ để kích hoạt chế độ FIPS trên IBM Z®.
+
+### IV.8. Xác minh khả năng tải xuống các image phát hành (release image) của host cài đặt hiện tại
+Sau khi bạn khởi động image tác nhân (agent image) và các dịch vụ mạng đã sẵn sàng trên host, ứng dụng console của tác nhân sẽ thực hiện kiểm tra việc tải xuống (pull check) để xác minh rằng host hiện tại có thể truy xuất các image phát hành hay không.
+
+Nếu quá trình kiểm tra tải xuống chính hoàn tất thành công, bạn có thể thoát khỏi ứng dụng để tiếp tục quá trình cài đặt. Nếu quá trình kiểm tra thất bại, ứng dụng sẽ thực hiện các bước kiểm tra bổ sung — hiển thị trong phần "Các bước kiểm tra bổ sung" (Additional checks) của giao diện văn bản (TUI) — nhằm hỗ trợ bạn khắc phục sự cố. Việc một trong các bước kiểm tra bổ sung này thất bại không nhất thiết là vấn đề nghiêm trọng, miễn là quá trình kiểm tra tải xuống chính vẫn thành công.
+
+Nếu có các vấn đề về cấu hình mạng trên host có thể gây lỗi cài đặt, bạn có thể sử dụng ứng dụng console để điều chỉnh cấu hình mạng của mình.
+
+> **Quan trọng:** Nếu ứng dụng console của tác nhân phát hiện các vấn đề về cấu hình mạng trên host, quy trình cài đặt sẽ tạm dừng cho đến khi người dùng chủ động dừng ứng dụng console và xác nhận ý định tiếp tục thực hiện.
+
+**Quy trình**
+
+1. Đợi ứng dụng console của tác nhân kiểm tra xem image phát hành đã cấu hình có thể được tải xuống từ registry hay không. 
+2. Nếu ứng dụng console của tác nhân thông báo rằng các bước kiểm tra kết nối của trình cài đặt đã hoàn tất thành công, hãy đợi thông báo nhắc nhở tự động hết thời gian chờ (timeout) để tiếp tục quá trình cài đặt. 
+
+> **Lưu ý:** Bạn vẫn có thể chọn xem hoặc thay đổi các thiết lập cấu hình mạng ngay cả khi các bước kiểm tra kết nối đã thành công. Tuy nhiên, nếu bạn chọn tương tác với ứng dụng console của tác nhân thay vì để thông báo tự động hết thời gian chờ, bạn sẽ cần phải thoát khỏi giao diện TUI theo cách thủ công để tiếp tục quá trình cài đặt.
+
+3. Nếu các bước kiểm tra ứng dụng bảng điều khiển tác nhân (agent console application) không đạt yêu cầu – được biểu thị bằng biểu tượng màu đỏ bên cạnh mục kiểm tra URL hình ảnh phát hành (Release image URL pull check) – hãy thực hiện các bước sau để định cấu hình lại cài đặt mạng của máy chủ:
+    * Xem phần **Check Errors** trong giao diện văn bản (TUI). Phần này hiển thị các thông báo lỗi cụ thể cho những mục kiểm tra không đạt.
+    * Chọn **Configure network** để khởi chạy giao diện văn bản (TUI) của NetworkManager.
+    * Chọn **Edit a connection** rồi chọn kết nối mà bạn muốn cấu hình lại.
+    * Chỉnh sửa cấu hình và chọn **OK** để lưu các thay đổi.
+    * Chọn **Back** để trở về màn hình chính của NetworkManager TUI.
+    * Chọn **Activate a Connection**.
+    * Chọn mạng vừa cấu hình lại để hủy kích hoạt mạng đó.
+    * Chọn lại mạng đó một lần nữa để kích hoạt lại.
+    * Chọn **Back**, sau đó chọn **Quit** để trở về ứng dụng bảng điều khiển tác nhân (agent console).
+    * Đợi ít nhất năm giây để các quy trình kiểm tra mạng liên tục khởi động lại với cấu hình mạng mới.
+    * Nếu quy trình kiểm tra tải URL hình ảnh phát hành (`Release image URL` pull check) thành công và hiển thị biểu tượng màu xanh lục bên cạnh URL, hãy chọn **Quit** để rời khỏi ứng dụng bảng điều khiển tác nhân và tiếp tục quá trình cài đặt.
+
+### IV.9. Theo dõi và xác minh tiến trình cài đặt
+Sau khi quá trình cài đặt bắt đầu, bạn có thể theo dõi tiến trình cài đặt và xác minh xem việc cài đặt đã hoàn tất thành công hay chưa.
+
+**Điều kiện tiên quyết**
+
+Bạn đã định cấu hình bản ghi DNS cho máy chủ API Kubernetes.
+
+**Quy trình**
+
+1. Tùy chọn: Để biết khi nào máy chủ khởi động (bootstrap host/rendezvous host) khởi động lại, hãy chạy lệnh sau:
+
+```bash
+./openshift-install --dir <install_directory> agent wait-for bootstrap-complete \
+    --log-level=info
+```
+
+Trong đó:
+
+* `--dir`: chỉ định đường dẫn đến thư mục nơi tệp ISO của tác nhân (agent) được tạo ra.
+* `--log-level`: chỉ định mức độ chi tiết của thông tin trong quá trình cài đặt. Các giá trị hợp lệ bao gồm: `info`, `warn`, `debug` và `error`.
+
+Ví dụ đầu ra
+
+```
+...................................................................
+...................................................................
+INFO Bootstrap configMap status is complete
+INFO cluster bootstrap is complete
+```
+
+Lệnh này hoàn tất thành công khi Kubernetes API server báo hiệu rằng nó đã được khởi tạo trên các máy thuộc control plane.
+
+2. Theo dõi tiến trình và xác minh quá trình cài đặt đã hoàn tất thành công bằng cách chạy lệnh sau:
+
+```bash
+openshift-install --dir <install_directory> agent wait-for install-complete
+```
+
+Hãy thay thế `<install_directory>` bằng đường dẫn đến thư mục nơi tệp ISO của tác nhân (agent) được tạo ra.
+
+Ví dụ đầu ra
+
+```
+...................................................................
+...................................................................
+INFO Cluster is installed
+INFO Install complete!
+INFO To access the cluster as the system:admin user when using 'oc', run
+INFO     export KUBECONFIG=/home/core/installer/auth/kubeconfig
+INFO Access the OpenShift web-console here: https://console-openshift-console.apps.sno-cluster.test.example.com
+```
+
+> **Lưu ý:** Nếu bạn đang sử dụng phương pháp tùy chọn là các tệp manifest GitOps ZTP, bạn có thể định cấu hình các điểm cuối địa chỉ IP cho các nút cụm (cluster node) thông qua tệp AgentClusterInstall.yaml theo ba cách:
+> 
+> * IPv4
+> * IPv6
+> * IPv4 và IPv6 song song (dual-stack)
+> 
+> IPv6 chỉ được hỗ trợ trên các nền tảng phần cứng vật lý (bare metal).
+
+Ví dụ về mạng dual-stack (ngăn xếp kép)
+
+```yaml
+apiVIP: 192.168.11.3
+ingressVIP: 192.168.11.4
+clusterDeploymentRef:
+  name: mycluster
+imageSetRef:
+  name: openshift-4.22
+networking:
+  clusterNetwork:
+  - cidr: 172.21.0.0/16
+    hostPrefix: 23
+  - cidr: fd02::/48
+    hostPrefix: 64
+  machineNetwork:
+  - cidr: 192.168.11.0/16
+  - cidr: 2001:DB8::/32
+  serviceNetwork:
+  - 172.22.0.0/16
+  - fd03::/112
+  networkType: OVNKubernetes
+```
+
+### IV.10. Các tài nguyên tùy chỉnh (custom resource) mẫu cho GitOps ZTP
+Bạn có thể tùy chọn sử dụng các đối tượng tài nguyên tùy chỉnh (custom resource - CR) của GitOps Zero Touch Provisioning (ZTP) để cài đặt cụm OpenShift Container Platform bằng trình cài đặt dựa trên tác nhân (Agent-based Installer).
+
+Bạn có thể tùy chỉnh các tài nguyên tùy chỉnh GitOps ZTP dưới đây để chỉ định chi tiết hơn về cụm OpenShift Container Platform của mình. Các tài nguyên tùy chỉnh GitOps ZTP mẫu sau đây dành cho một cụm gồm một nút duy nhất (single-node cluster).
+
+Ví dụ tệp `agent-cluster-install.yaml`
+
+```yaml
+  apiVersion: extensions.hive.openshift.io/v1beta1
+  kind: AgentClusterInstall
+  metadata:
+    name: test-agent-cluster-install
+    namespace: cluster0
+  spec:
+    clusterDeploymentRef:
+      name: ostest
+    imageSetRef:
+      name: openshift-4.22
+    networking:
+      clusterNetwork:
+      - cidr: 10.128.0.0/14
+        hostPrefix: 23
+      serviceNetwork:
+      - 172.30.0.0/16
+    provisionRequirements:
+      controlPlaneAgents: 1
+      workerAgents: 0
+    sshPublicKey: <ssh_public_key>
+```
+
+Ví dụ tệp `cluster-deployment.yaml`
+
+```yaml
+apiVersion: hive.openshift.io/v1
+kind: ClusterDeployment
+metadata:
+  name: ostest
+  namespace: cluster0
+spec:
+  baseDomain: test.metalkube.org
+  clusterInstallRef:
+    group: extensions.hive.openshift.io
+    kind: AgentClusterInstall
+    name: test-agent-cluster-install
+    version: v1beta1
+  clusterName: ostest
+  controlPlaneConfig:
+    servingCertificates: {}
+  platform:
+    agentBareMetal: {}
+  pullSecretRef:
+    name: pull-secret
+```
+
+Để liên kết các máy chủ vật lý (bare-metal host) cụ thể vào một cụm theo phương thức khai báo, hãy sử dụng chú thích (annotation) `bmac.agent-install.openshift.io/cluster-reference` trên các tài nguyên `BareMetalHost`.
+
+Ví dụ tệp `cluster-image-set.yaml`
+
+```yaml
+apiVersion: hive.openshift.io/v1
+kind: ClusterImageSet
+metadata:
+  name: openshift-4.22
+spec:
+  releaseImage: registry.ci.openshift.org/ocp/release:4.22.0-0.nightly-2022-06-06-025509
+```
+
+Ví dụ tệp infra-env.yaml
+
+```yaml
+apiVersion: agent-install.openshift.io/v1beta1
+kind: InfraEnv
+metadata:
+  name: myinfraenv
+  namespace: cluster0
+spec:
+  clusterRef:
+    name: ostest
+    namespace: cluster0
+  cpuArchitecture: aarch64
+  pullSecretRef:
+    name: pull-secret
+  sshAuthorizedKey: <ssh_public_key>
+  nmStateConfigLabelSelector:
+    matchLabels:
+      cluster0-nmstate-label-name: cluster0-nmstate-label-value
+```
+
+Trường `clusterRef` cùng các trường con của nó (`name` và `namespace`) là tùy chọn. Để kích hoạt quy trình liên kết muộn (late-binding), hãy xóa trường `clusterRef` và các trường con của nó khỏi đối tượng InfraEnv CR. Khi đó, các máy chủ (host) sẽ được liên kết với các cụm (cluster) một cách riêng lẻ thông qua việc sử dụng chú thích (annotation) `bmac.agent-install.openshift.io/cluster-reference` trên các tài nguyên `BareMetalHost`.
+
+Ví dụ tệp `nmstateconfig.yaml`
+
+```yaml
+apiVersion: agent-install.openshift.io/v1beta1
+kind: NMStateConfig
+metadata:
+  name: master-0
+  namespace: openshift-machine-api
+  labels:
+    cluster0-nmstate-label-name: cluster0-nmstate-label-value
+spec:
+  config:
+    interfaces:
+      - name: eth0
+        type: ethernet
+        state: up
+        mac-address: 52:54:01:aa:aa:a1
+        ipv4:
+          enabled: true
+          address:
+            - ip: 192.168.122.2
+              prefix-length: 23
+          dhcp: false
+    dns-resolver:
+      config:
+        server:
+          - 192.168.122.1
+    routes:
+      config:
+        - destination: 0.0.0.0/0
+          next-hop-address: 192.168.122.1
+          next-hop-interface: eth0
+          table-id: 254
+  interfaces:
+    - name: "eth0"
+      macAddress: 52:54:01:aa:aa:a1
+```
+
+Ví dụ tệp pull-secret.yaml
+
+```yaml
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/dockerconfigjson
+metadata:
+  name: pull-secret
+  namespace: cluster0
+stringData:
+  .dockerconfigjson: <pull_secret>
+```
+
+#### IV.11. Thu thập dữ liệu nhật ký (log) từ quá trình cài đặt dựa trên Agent bị lỗi
+Nếu quá trình cài đặt dựa trên Agent (Agent-based installation) gặp lỗi, bạn có thể thu thập dữ liệu nhật ký để cung cấp cho yêu cầu hỗ trợ (support case).
+
+**Điều kiện tiên quyết**
+
+Bạn đã cấu hình bản ghi DNS cho máy chủ API Kubernetes.
+
+**Quy trình**
+
+1. Chạy lệnh sau và thu thập kết quả đầu ra:
+
+```bash
+./openshift-install --dir <installation_directory> agent wait-for bootstrap-complete --log-level=debug
+```
+
+Thông báo lỗi ví dụ
+
+```
+...
+ERROR Bootstrap failed to complete: : bootstrap process timed out: context deadline exceeded
+```
+
+2. Nếu kết quả từ lệnh trước đó cho thấy lỗi, hoặc nếu quá trình khởi động (bootstrap) không tiến triển, hãy chạy lệnh sau để kết nối với máy chủ điều phối (rendezvous host) và thu thập kết quả đầu ra:
+
+```bash
+ssh core@<node-ip> agent-gather -O >agent-gather.tar.xz
+```
+
+> **Lưu ý:** Bộ phận Hỗ trợ của Red Hat có thể chẩn đoán hầu hết các vấn đề bằng cách sử dụng dữ liệu thu thập được từ máy chủ kết nối (rendezvous host); tuy nhiên, nếu một số máy chủ không thể đăng ký, thì việc thu thập dữ liệu này từ tất cả các máy chủ có thể sẽ hữu ích.
+
+3. Nếu quá trình khởi động ban đầu (bootstrap) hoàn tất và các nút trong cụm (cluster nodes) khởi động lại, hãy chạy lệnh sau và thu thập kết quả đầu ra:
+
+```bash
+./openshift-install --dir <install_directory> agent wait-for install-complete --log-level=debug
+```
+
+4. Nếu kết quả từ lệnh trước đó cho thấy lỗi, hãy thực hiện các bước sau:
+    * Xuất tệp kubeconfig vào môi trường của bạn bằng cách chạy lệnh sau:
+
+    ```bash
+    export KUBECONFIG=<install_directory>/auth/kubeconfig
+    ```
+
+    * Thu thập thông tin phục vụ việc gỡ lỗi bằng cách chạy lệnh sau:
+
+    ```bash
+    oc adm must-gather
+    ```
+
+    * Hãy tạo một tệp nén từ thư mục "must-gather" vừa được tạo trong thư mục làm việc của bạn bằng cách chạy lệnh sau:
+
+    ```bash
+    tar cvaf must-gather.tar.gz <must_gather_directory>
+    ```
+
+5. Hãy đính kèm thư mục cài đặt được sử dụng trong quá trình triển khai (ngoại trừ thư mục con /auth) vào yêu cầu hỗ trợ của bạn trên Cổng thông tin khách hàng Red Hat (Red Hat Customer Portal).
+6. Đồng thời, hãy đính kèm tất cả dữ liệu khác thu thập được từ quy trình này vào yêu cầu hỗ trợ đó.
