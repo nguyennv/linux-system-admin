@@ -2644,3 +2644,519 @@ Bạn đã khởi động tất cả các máy chủ sẽ tạo thành cụm c�
 Trong quá trình cài đặt, nút kết nối (rendezvous node) sẽ khởi động lại và bảng điều khiển (console) mà bạn đã sử dụng để cấu hình cài đặt sẽ không còn truy cập được nữa. Tại thời điểm đó, URL của bảng điều khiển web cho cụm đã triển khai sẽ được cung cấp; tuy nhiên, bảng điều khiển này sẽ chỉ có thể truy cập được sau khi quá trình cài đặt cụm hoàn tất.
 
 Sau khi cụm đã được cài đặt, bạn có thể truy cập URL này và đăng nhập vào bảng điều khiển web bằng các thông tin xác thực đã tải xuống trước đó.
+
+## 6. Chuẩn bị các tài nguyên PXE cho OpenShift Container Platform
+Bạn có thể tạo các tài nguyên cần thiết để khởi động cụm OpenShift Container Platform thông qua PXE bằng cách sử dụng trình cài đặt dựa trên tác nhân (Agent-based Installer).
+
+Các tài nguyên mà bạn tạo theo các quy trình này sẽ triển khai một hệ thống OpenShift Container Platform gồm một nút duy nhất (single-node). Bạn có thể sử dụng các quy trình này làm nền tảng và điều chỉnh cấu hình tùy theo yêu cầu của mình.
+
+Hãy tham khảo mục "Cài đặt cụm OpenShift Container Platform bằng trình cài đặt dựa trên tác nhân" để tìm hiểu thêm về các tùy chọn cấu hình khác có sẵn với trình cài đặt này.
+
+### 6.1. Các điều kiện tiên quyết để chuẩn bị tài nguyên PXE
+Trước khi bắt đầu chuẩn bị các tài nguyên PXE, bạn phải hoàn tất các tác vụ tiên quyết. 
+
+Bạn đã xem xét các thông tin chi tiết về quy trình cài đặt và cập nhật OpenShift Container Platform. Để biết thêm thông tin, hãy xem phần [Cài đặt và cập nhật](https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/architecture/architecture-installation).
+
+### 6.2. Tải xuống Trình cài đặt dựa trên tác nhân (Agent-based Installer)
+Bắt đầu quy trình cài đặt bằng cách tải xuống Trình cài đặt dựa trên tác nhân (Agent-based Installer) và giao diện dòng lệnh (CLI) cần thiết cho quá trình cài đặt của bạn.
+
+**Quy trình**
+
+1. Đăng nhập vào Red Hat Hybrid Cloud Console bằng thông tin đăng nhập của bạn. 
+2. Điều hướng đến mục [Datacenter](https://console.redhat.com/openshift/create/datacenter). 
+3. Nhấp vào **Run Agent-based Installer locally**. 
+4. Chọn hệ điều hành và kiến trúc phù hợp cho **OpenShift Installer** và **Command line interface**. 
+5. Nhấp vào **Download Installer** để tải xuống và giải nén chương trình cài đặt. 
+6. Tải xuống hoặc sao chép "pull secret" (bí mật kéo hình ảnh) bằng cách nhấp vào **Download pull secret** hoặc **Copy pull secret**. 
+7. Nhấp vào **Download command-line tools** và đặt tệp nhị phân `openshift-install` vào một thư mục nằm trong biến môi trường `PATH` của bạn.
+
+### 6.3. Tạo các tệp cấu hình đầu vào ưu tiên
+Tạo các tệp cấu hình đầu vào được sử dụng để tạo các tệp PXE.
+
+> **Lưu ý:** Việc cấu hình các tệp `install-config.yaml` và `agent-config.yaml` là phương pháp ưu tiên khi sử dụng trình cài đặt dựa trên tác nhân (Agent-based Installer). Việc sử dụng các tệp manifest GitOps ZTP là tùy chọn.
+
+**Quy trình**
+
+1. Cài đặt thành phần phụ thuộc `nmstate` bằng cách chạy lệnh sau:
+
+```bash
+sudo dnf install /usr/bin/nmstatectl -y
+```
+2. Đặt tệp nhị phân openshift-install vào một thư mục nằm trong PATH của bạn.
+3. Tạo một thư mục để lưu trữ cấu hình cài đặt bằng cách chạy lệnh sau:
+
+```bash
+mkdir ~/<directory_name>
+```
+
+4. Tạo tệp install-config.yaml bằng cách chạy lệnh sau:
+
+```bash
+vi ./<directory_name>/install-config.yaml
+```
+
+```yaml
+apiVersion: v1
+baseDomain: test.example.com
+compute:
+- architecture: amd64
+  hyperthreading: Enabled
+  name: worker
+  replicas: 0
+controlPlane:
+  architecture: amd64
+  hyperthreading: Enabled
+  name: master
+  replicas: 1
+metadata:
+  name: sno-cluster
+networking:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  machineNetwork:
+  - cidr: 192.168.0.0/16
+  networkType: OVNKubernetes
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  none: {}
+pullSecret: '<pull_secret>'
+sshKey: '<ssh_pub_key>'
+additionalTrustBundle: |
+  -----BEGIN CERTIFICATE-----
+  ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+  -----END CERTIFICATE-----
+imageContentSources:
+- mirrors:
+  - <local_registry>/<local_repository_name>/release
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - <local_registry>/<local_repository_name>/release
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+```
+
+Trong đó:
+
+* `compute.architecture`: Xác định kiến trúc hệ thống. Các giá trị hợp lệ bao gồm `amd64`, `arm64`, `ppc64le` và `s390x`. Nếu sử dụng image phát hành (release image) có chứa nhiều payload, bạn có thể cài đặt cụm (cluster) trên các kiến trúc khác nhau như `arm64`, `amd64`, `s390x` và `ppc64le`. Nếu không, bạn chỉ có thể cài đặt cụm trên kiến trúc được hiển thị trong kết quả của lệnh `openshift-install version`. Để biết thêm thông tin, hãy xem phần "Xác minh kiến trúc được hỗ trợ để cài đặt cụm bằng Agent-based Installer".
+* `metadata.name`: Xác định tên cụm của bạn. Đây là giá trị bắt buộc.
+* `networking.networkingType`: Xác định plugin mạng cho cụm cần cài đặt. Giá trị mặc định là `OVNKubernetes` – đây cũng là giá trị duy nhất được hỗ trợ.
+* `platform`: Xác định nền tảng (platform) của bạn. Nếu đặt nền tảng là `vSphere`, `baremetal` hoặc `none`, bạn có thể cấu hình các điểm cuối (endpoint) địa chỉ IP cho các nút (node) trong cụm theo ba cách: IPv4, IPv6, hoặc cả IPv4 và IPv6 song song (dual-stack).
+
+Ví dụ về mạng dual-stack (ngăn xếp kép)
+
+```yaml
+networking:
+  clusterNetwork:
+    - cidr: 172.21.0.0/16
+      hostPrefix: 23
+    - cidr: fd02::/48
+      hostPrefix: 64
+  machineNetwork:
+    - cidr: 192.168.11.0/16
+    - cidr: 2001:DB8::/32
+  serviceNetwork:
+    - 172.22.0.0/16
+    - fd03::/112
+  networkType: OVNKubernetes
+platform:
+  baremetal:
+    apiVIPs:
+    - 192.168.11.3
+    - 2001:DB8::4
+    ingressVIPs:
+    - 192.168.11.4
+    - 2001:DB8::5
+```
+
+> **Lưu ý:** Đối với các nền tảng bare-metal (phần cứng vật lý), các thiết lập máy chủ được thực hiện trong phần nền tảng (platform) của tệp `install-config.yaml` sẽ được sử dụng theo mặc định, trừ khi chúng bị ghi đè bởi các cấu hình được thiết lập trong tệp `agent-config.yaml`.
+
+* `pullSecret`: Chỉ định pull secret của bạn.
+* `sshKey`: Chỉ định khóa công khai (public key) SSH của bạn.
+* `additionalTrustBundle`: Chỉ định nội dung của tệp chứng chỉ mà bạn đã sử dụng cho registry phản chiếu (mirror registry) của mình. Tệp chứng chỉ này có thể là chứng chỉ từ một cơ quan cấp chứng chỉ (CA) đáng tin cậy hiện có, hoặc là chứng chỉ tự ký (self-signed certificate) mà bạn đã tạo cho registry phản chiếu đó. Bạn bắt buộc phải chỉ định tham số này nếu đang sử dụng registry phản chiếu trong môi trường không kết nối internet (disconnected mirror registry).
+* `imageContentSources`: Chỉ định phần `imageContentSources` dựa trên kết quả đầu ra của lệnh mà bạn đã sử dụng để phản chiếu kho lưu trữ (repository). Bạn bắt buộc phải chỉ định tham số này nếu đang sử dụng registry phản chiếu trong môi trường không kết nối internet (disconnected mirror registry).
+
+> **Quan trọng:**
+> 
+> * Khi sử dụng lệnh `oc adm release mirror`, hãy dùng dữ liệu đầu ra từ phần `imageContentSources`. 
+> * Khi sử dụng lệnh `oc mirror`, hãy dùng phần `repositoryDigestMirrors` trong tệp `ImageContentSourcePolicy` được tạo ra sau khi chạy lệnh đó. 
+> * Tài nguyên `ImageContentSourcePolicy` hiện đã lỗi thời (deprecated).
+
+5. Tạo tệp agent-config.yaml bằng cách chạy lệnh sau:
+
+```bash
+vi agent-config.yaml
+```
+
+```yaml
+apiVersion: v1beta1
+kind: AgentConfig
+metadata:
+  name: sno-cluster
+rendezvousIP: 192.168.111.80
+hosts:
+  - hostname: master-0
+    interfaces:
+      - name: eno1
+        macAddress: 00:ef:44:21:e6:a5
+    rootDeviceHints:
+      deviceName: /dev/sdb
+    networkConfig:
+      interfaces:
+        - name: eno1
+          type: ethernet
+          state: up
+          mac-address: 00:ef:44:21:e6:a5
+          ipv4:
+            enabled: true
+            address:
+              - ip: 192.168.111.80
+                prefix-length: 23
+            dhcp: false
+      dns-resolver:
+        config:
+          server:
+            - 192.168.111.1
+      routes:
+        config:
+          - destination: 0.0.0.0/0
+            next-hop-address: 192.168.111.2
+            next-hop-interface: eno1
+            table-id: 254
+```
+
+Trong đó:
+
+* `rendezvousIP`: Xác định địa chỉ IP được sử dụng để quyết định nút nào sẽ thực hiện quy trình khởi động (bootstrapping) cũng như chạy thành phần dịch vụ hỗ trợ (assisted-service). Bạn bắt buộc phải cung cấp địa chỉ IP rendezvous nếu không chỉ định ít nhất một địa chỉ IP của máy chủ (host) trong tham số networkConfig. Nếu địa chỉ này không được cung cấp, một địa chỉ IP sẽ được chọn từ danh sách các máy chủ đã khai báo trong networkConfig.
+* `hosts`: Xác định cấu hình cho các máy chủ (host). Số lượng máy chủ được định nghĩa không được vượt quá tổng số máy chủ đã khai báo trong tệp install-config.yaml (tổng giá trị của các tham số compute.replicas và controlPlane.replicas). Cấu hình này là tùy chọn.
+* `hosts.hostname`: Xác định một giá trị để ghi đè lên tên máy chủ (hostname) nhận được từ giao thức DHCP (Dynamic Host Configuration Protocol) hoặc từ truy vấn ngược DNS (reverse DNS lookup). Mỗi máy chủ phải có một tên duy nhất thông qua một trong các phương thức này. Cấu hình này là tùy chọn.
+* `hosts.rootDeviceHints`: Xác định cấu hình cho phép triển khai (provisioning) ảnh hệ điều hành Red Hat Enterprise Linux CoreOS (RHCOS) vào một thiết bị cụ thể. Chương trình cài đặt sẽ kiểm tra các thiết bị theo thứ tự phát hiện được, sau đó so sánh các giá trị thu thập từ thiết bị với các giá trị gợi ý (hint values) được cung cấp. Chương trình sẽ chọn thiết bị đầu tiên khớp với giá trị gợi ý đó. **Lưu ý:** Tham số này là bắt buộc đối với các cấu hình FCP multipath trên hệ thống IBM Z.
+* `hosts.networkConfig`: Xác định cấu hình giao diện mạng của một máy chủ theo định dạng NMState. Cấu hình này là tùy chọn.
+
+6. Tùy chọn: Để tạo tập lệnh iPXE, hãy thêm bootArtifactsBaseURL vào tệp agent-config.yaml:
+
+```yaml
+apiVersion: v1beta1
+kind: AgentConfig
+metadata:
+  name: sno-cluster
+rendezvousIP: 192.168.111.80
+bootArtifactsBaseURL: <asset_server_URL>
+```
+
+Trong đó `<asset_server_URL>` là URL của máy chủ mà bạn sẽ tải các tài nguyên PXE lên.
+
+### 6.4. Tạo các tài nguyên PXE
+Tạo các tài nguyên và tập lệnh tùy chọn để triển khai trong cơ sở hạ tầng PXE của bạn.
+
+**Quy trình**
+
+1. Tạo các tài nguyên PXE bằng cách chạy lệnh sau:
+
+```bash
+openshift-install agent create pxe-files
+```
+
+Các tài nguyên PXE được tạo ra cùng với tập lệnh iPXE tùy chọn nằm trong thư mục `boot-artifacts`.
+
+Ví dụ về hệ thống tệp chứa các tài nguyên PXE và tập lệnh iPXE tùy chọn
+
+```
+boot-artifacts
+    ├─ agent.x86_64-initrd.img
+    ├─ agent.x86_64.ipxe
+    ├─ agent.x86_64-rootfs.img
+    └─ agent.x86_64-vmlinuz
+```
+
+> Quan trọng: Nội dung của thư mục `boot-artifacts` thay đổi tùy theo kiến trúc được chỉ định.
+
+> **Lưu ý:** Red Hat Enterprise Linux CoreOS (RHCOS) hỗ trợ cơ chế đa đường dẫn (multipathing) trên ổ đĩa chính, giúp tăng cường khả năng chống chịu trước các lỗi phần cứng, từ đó nâng cao tính sẵn sàng của máy chủ. Cơ chế này được bật theo mặc định trong tệp ảnh ISO của tác nhân (Agent ISO), với cấu hình `/etc/multipath.conf` mặc định.
+
+2. Hãy tải các tài nguyên PXE và tập lệnh tùy chọn lên cơ sở hạ tầng của bạn, tại nơi mà chúng có thể được truy cập trong quá trình khởi động.
+
+> **Lưu ý:** Nếu bạn đã tạo tập lệnh iPXE, vị trí của các tài nguyên đó phải khớp với giá trị `bootArtifactsBaseURL` mà bạn đã thêm vào tệp `agent-config.yaml`.
+
+### 6.5. Thêm thủ công các tác nhân (agent) IBM Z
+Sau khi tạo các tài nguyên PXE, bạn có thể thêm các tác nhân IBM Z®.
+
+Chỉ sử dụng quy trình này cho các cụm (cluster) IBM Z®.
+
+Tùy thuộc vào môi trường IBM Z® của mình, bạn có thể chọn một trong các tùy chọn sau:
+
+* Thêm tác nhân IBM Z® với z/VM
+* Thêm tác nhân IBM Z® với RHEL KVM
+* Thêm tác nhân IBM Z® với Phân vùng logic (Logical Partition - LPAR)
+
+> **Lưu ý:** Hiện tại, tính năng hỗ trợ khởi động từ ISO trên IBM Z® (s390x) chỉ khả dụng đối với Red Hat Enterprise Linux (RHEL) KVM; tùy chọn này mang lại sự linh hoạt trong việc chọn phương thức cài đặt qua PXE hoặc qua ISO. Đối với các hệ thống sử dụng z/VM và Phân vùng logic (LPAR), chỉ hỗ trợ phương thức khởi động qua PXE.
+
+#### 6.5.1. Các yêu cầu về mạng đối với IBM Z
+Trong các môi trường IBM Z, các công nghệ mạng tiên tiến như Open Systems Adapter (OSA), HiperSockets và Remote Direct Memory Access (RDMA) over Converged Ethernet (RoCE) đòi hỏi những cấu hình đặc thù, khác biệt so với các thiết lập mạng tiêu chuẩn. Các cấu hình này cần được duy trì ổn định xuyên suốt nhiều lần khởi động trong quá trình cài đặt dựa trên tác nhân (Agent-based Installation).
+
+Để duy trì các tham số này trong suốt quá trình khởi động, cần thêm tham số `ai.ip_cfg_override=1` vào tệp `.parm`. Tham số này được sử dụng cùng với các card mạng đã được cấu hình nhằm đảm bảo quá trình triển khai trên IBM Z diễn ra thành công và hiệu quả.
+
+Bảng dưới đây liệt kê các thiết bị mạng được hỗ trợ trên từng hypervisor đối với chức năng ghi đè cấu hình mạng:
+
+| Thiết bị mạng                                    | z/VM            | KVM                | LPAR Cổ điển   | LPAR DPM       |
+|--------------------------------------------------|-----------------|--------------------|----------------|----------------|
+| Bộ chuyển mạch ảo                                | Được hỗ trợ (1) | Không áp dụng (2)  | Không áp dụng  | Không áp dụng  |
+| Bộ thích ứng hệ thống mở (OSA) kết nối trực tiếp | Được hỗ trợ     | Không bắt buộc (3) | Không bắt buộc | Không bắt buộc |
+| RDMA qua Ethernet hội tụ (RoCE)                  | Không bắt buộc  | Không bắt buộc     | Không bắt buộc | Không bắt buộc |
+| HiperSockets                                     | Được hỗ trợ     | Không bắt buộc     | Được hỗ trợ    | Không bắt buộc |
+
+1. Được hỗ trợ: Khi tham số `ai.ip_cfg_override` là bắt buộc đối với quy trình cài đặt.
+2. Không áp dụng: Khi một card mạng không phù hợp để sử dụng trên hypervisor.
+3. Không bắt buộc: Khi tham số `ai.ip_cfg_override` không cần thiết cho quy trình cài đặt.
+
+#### 6.5.2. Cấu hình ghi đè mạng trong môi trường IBM Z
+Bạn có thể chỉ định địa chỉ IP tĩnh trên các máy IBM Z sử dụng Phân vùng logic (Logical Partition - LPAR) và z/VM. Cách làm này hữu ích trong trường hợp các thiết bị mạng không được gán địa chỉ MAC tĩnh.
+
+> **Lưu ý:** Nếu bạn đang sử dụng thiết bị mạng OSA ở chế độ Processor Resource/Systems Manager (PR/SM), việc thiếu địa chỉ MAC cố định có thể dẫn đến tình trạng các vai trò của nút (node) được gán một cách linh hoạt (động). Điều này có nghĩa là vai trò của từng nút không cố định và có thể thay đổi, do hệ thống không thể liên kết một cách ổn định các địa chỉ MAC cụ thể với các vai trò nút đã được chỉ định. Nếu địa chỉ MAC không cố định đối với bất kỳ giao diện nào, các vai trò cho các nút sẽ được gán ngẫu nhiên trong quá trình cài đặt dựa trên tác nhân (Agent-based installation).
+
+**Quy trình**
+
+* Nếu bạn đã có sẵn tệp `.parm`, hãy chỉnh sửa tệp đó để thêm mục sau:
+
+```
+ai.ip_cfg_override=1
+```
+
+Tham số này cho phép tệp bổ sung các thiết lập mạng vào trình cài đặt Red Hat Enterprise Linux CoreOS (RHCOS).
+
+> **Lưu ý:** Tham số ghi đè (override) sẽ thay thế các thiết lập cấu hình mạng của máy chủ.
+
+```
+rd.neednet=1 cio_ignore=all,!condev
+console=ttysclp0
+coreos.live.rootfs_url=<coreos_url>
+ip=<ip>::<gateway>:<netmask>:<hostname>::none nameserver=<dns>
+rd.znet=qeth,<network_adaptor_range>,layer2=1
+rd.<disk_type>=<adapter>
+rd.zfcp=<adapter>,<wwpn>,<lun> random.trust_cpu=on
+zfcp.allow_lun_scan=0
+ai.ip_cfg_override=1
+ignition.firstboot ignition.platform.id=metal
+random.trust_cpu=on
+```
+
+* Đối với thành phần `coreos.live.rootfs_url`, hãy chỉ định thành phần `rootfs` tương ứng với nhân (kernel) và `initramfs` mà bạn đang sử dụng để khởi động. Chỉ hỗ trợ các giao thức HTTP và HTTPS.
+* Đối với các trường hợp cài đặt trên thiết bị lưu trữ truy cập trực tiếp (DASD), hãy sử dụng tham số `rd.` để chỉ định thiết bị DASD nơi Red Hat Enterprise Linux CoreOS (RHCOS) sẽ được cài đặt. Đối với các trường hợp cài đặt trên đĩa sử dụng giao thức Fibre Channel (FCP), hãy sử dụng `rd.zfcp=<adapter>,<wwpn>,<lun>` để chỉ định đĩa FCP nơi RHCOS sẽ được cài đặt.
+* Hãy cung cấp các giá trị cho `<adapter>`, `<wwpn>` và `<lun>` như trong ví dụ sau: `rd.zfcp=0.0.8002,0x500507630400d1e3,0x4000404600000000`.
+
+> **Quan trọng**
+> 
+> Tham số nhân (kernel parameter) `ip=` sử dụng cú pháp sau: `ip=[IP]:[Gateway]:[Netmask]:[Hostname]:[Interface]:[None]:[DNS]`
+> 
+> Đối với các cấu hình VLAN:
+> 
+> * Cần định nghĩa riêng biệt cả giao diện cơ sở (base interface) và giao diện VLAN được gắn thẻ (tagged VLAN interface). 
+> * Tham số `vlan=` dùng để liên kết giao diện được gắn thẻ (ví dụ: `encbdf0.300`) với giao diện vật lý bên dưới (ví dụ: `encbdf0`).
+> 
+> Đối với các giao diện được gộp nhóm (bonded interfaces):
+> 
+> * Không cần thay đổi các tham số dòng lệnh mặc định của nhân hệ thống. 
+> * Để cài đặt các nút (nodes) sử dụng giao diện được gộp nhóm, hãy cung cấp cấu hình `bond` phù hợp trong tệp `agent-config`.
+
+#### 6.5.3. Thêm các tác nhân (agent) IBM Z với z/VM
+Bạn có thể thêm thủ công các tác nhân IBM Z® với z/VM.
+
+Chỉ sử dụng quy trình này cho các cụm (cluster) IBM Z® có sử dụng z/VM.
+
+**Điều kiện tiên quyết**
+
+Bạn đã có một máy chủ tệp (file server) đang hoạt động và có quyền truy cập vào các máy ảo (VM) khách.
+
+**Quy trình**
+
+1. Tạo tệp tham số (parameter file) cho máy ảo khách z/VM:
+
+```
+rd.neednet=1 \
+console=ttysclp0 \
+coreos.live.rootfs_url=<rootfs_url> \
+ip=172.18.78.2::172.18.78.1:255.255.255.0:::none nameserver=172.18.78.1 \
+zfcp.allow_lun_scan=0 \
+ai.ip_cfg_override=1 \
+rd.znet=qeth,0.0.bdd0,0.0.bdd1,0.0.bdd2,layer2=1 \
+rd.dasd=0.0.4411 \
+rd.zfcp=0.0.8001,0x50050763040051e3,0x4000406300000000 \
+fips=1 \
+random.trust_cpu=on rd.luks.options=discard \
+ignition.firstboot ignition.platform.id=metal \
+console=tty1 console=ttyS1,115200n8 \
+coreos.inst.persistent-kargs="console=tty1 console=ttyS1,115200n8"
+```
+
+* Đối với thành phần `coreos.live.rootfs_url`, hãy chỉ định thành phần `rootfs` tương ứng với kernel và `initramfs` mà bạn đang sử dụng để khởi động. Chỉ hỗ trợ các giao thức HTTP và HTTPS.
+* Đối với tham số `ip`, bạn có thể để hệ thống tự động cấp địa chỉ IP thông qua DHCP hoặc tự thiết lập địa chỉ IP theo cách thủ công, như được mô tả trong tài liệu "Cài đặt cụm (cluster) với z/VM trên IBM Z® và IBM® LinuxONE".
+* Giá trị mặc định của `zfcp.allow_lun_scan` là 1. Hãy bỏ qua tham số này khi sử dụng bộ chuyển đổi mạng OSA.
+* Đối với các hệ thống cài đặt trên ổ đĩa loại DASD, hãy sử dụng `rd.dasd` để chỉ định ổ đĩa DASD nơi Red Hat Enterprise Linux CoreOS (RHCOS) sẽ được cài đặt. Không cần sử dụng tham số này đối với ổ đĩa loại FCP.
+
+* Đối với các hệ thống cài đặt trên ổ đĩa loại FCP, hãy sử dụng `rd.zfcp=<adapter>,<wwpn>,<lun>` để chỉ định ổ đĩa FCP nơi RHCOS sẽ được cài đặt. Không cần sử dụng tham số này đối với ổ đĩa loại DASD.
+
+> **Lưu ý:** Đối với các cấu hình FCP đa đường dẫn (multipath), hãy cung cấp tất cả các đường dẫn khả dụng đến ổ đĩa thay vì chỉ một đường dẫn duy nhất, đồng thời thêm `rd.multipath=default` để kích hoạt tính năng đa đường dẫn trong quá trình cài đặt.
+
+```
+rd.zfcp=<adapter1>,<wwpn1>,<lun1> \
+rd.zfcp=<adapter2>,<wwpn2>,<lun2> \
+rd.multipath=default
+```
+
+* Để bật chế độ FIPS, hãy chỉ định `fips=1`. Mục này là bắt buộc, bên cạnh việc thiết lập tham số `fips` thành `true` trong tệp `install-config.yaml`.
+
+Giữ nguyên tất cả các tham số khác.
+
+2. Gửi (punch) các tệp kernel.img, generic.parm và initrd.img tới thiết bị đọc ảo (virtual reader) của máy ảo khách z/VM.
+
+Để biết thêm thông tin, hãy xem mục "PUNCH" trong tài liệu của IBM.
+
+> **Mẹo:** Bạn có thể sử dụng lệnh CP PUNCH hoặc, nếu đang dùng Linux, lệnh vmur để truyền tệp giữa hai máy ảo khách z/VM.
+
+3. Đăng nhập vào hệ thống giám sát hội thoại (Conversational Monitor System - CMS) trên máy khởi động (bootstrap machine).
+4. Thực hiện IPL (Initial Program Load) cho máy khởi động từ thiết bị đọc (reader) bằng cách chạy lệnh sau:
+
+```bash
+ipl c
+```
+
+Để biết thêm thông tin, hãy xem "[IPL](https://www.ibm.com/docs/en/zvm/latest?topic=commands-ipl)" trong tài liệu của IBM.
+
+#### 6.5.4. Thêm các tác nhân (agent) IBM Z với RHEL KVM
+Bạn có thể thêm thủ công các tác nhân IBM Z® với RHEL KVM.
+
+Chỉ sử dụng quy trình này cho các cụm (cluster) IBM Z® sử dụng RHEL KVM.
+
+> **Lưu ý:** Tham số `nmstateconfig` phải được cấu hình cho quá trình khởi động KVM.
+
+**Quy trình**
+
+1. Khởi động máy RHEL KVM của bạn. 
+2. Để triển khai máy chủ ảo, hãy chạy lệnh `virt-install` với các tham số sau:
+
+```bash
+virt-install \
+   --name <vm_name> \
+   --autostart \
+   --ram=16384 \
+   --cpu host \
+   --vcpus=8 \
+   --location <path_to_kernel_initrd_image>,kernel=kernel.img,initrd=initrd.img \
+   --disk <qcow_image_path> \
+   --network network:macvtap ,mac=<mac_address> \
+   --graphics none \
+   --noautoconsole \
+   --wait=-1 \
+   --extra-args "rd.neednet=1 nameserver=<nameserver>" \
+   --extra-args "ip=<IP>::<nameserver>::<hostname>:enc1:none" \
+   --extra-args "coreos.live.rootfs_url=http://<http_server>:8080/agent.s390x-rootfs.img" \
+   --extra-args "random.trust_cpu=on rd.luks.options=discard" \
+   --extra-args "ignition.firstboot ignition.platform.id=metal" \
+   --extra-args "console=tty1 console=ttyS1,115200n8" \
+   --extra-args "coreos.inst.persistent-kargs=console=tty1 console=ttyS1,115200n8" \
+   --osinfo detect=on,require=off
+```
+
+Đối với tham số `--location`, hãy chỉ định vị trí của các tệp kernel và initrd. Vị trí này có thể là đường dẫn trên máy chủ cục bộ hoặc một URL sử dụng giao thức HTTP hoặc HTTPS.
+
+3. Tùy chọn: Bật chế độ FIPS.
+
+Để bật chế độ FIPS trên các cụm IBM Z® sử dụng RHEL KVM, bạn phải dùng phương thức khởi động PXE (PXE boot) và chạy lệnh `virt-install` với các tham số sau:
+
+Khởi động qua PXE
+
+```bash
+virt-install \
+   --name <vm_name> \
+   --autostart \
+   --ram=16384 \
+   --cpu host \
+   --vcpus=8 \
+   --location <path_to_kernel_initrd_image>,kernel=kernel.img,initrd=initrd.img \
+   --disk <qcow_image_path> \
+   --network network:macvtap ,mac=<mac_address> \
+   --graphics none \
+   --noautoconsole \
+   --wait=-1 \
+   --extra-args "rd.neednet=1 nameserver=<nameserver>" \
+   --extra-args "ip=<IP>::<nameserver>::<hostname>:enc1:none" \
+   --extra-args "coreos.live.rootfs_url=http://<http_server>:8080/agent.s390x-rootfs.img" \
+   --extra-args "random.trust_cpu=on rd.luks.options=discard" \
+   --extra-args "ignition.firstboot ignition.platform.id=metal" \
+   --extra-args "console=tty1 console=ttyS1,115200n8" \
+   --extra-args "coreos.inst.persistent-kargs=console=tty1 console=ttyS1,115200n8" \
+   --extra-args "fips=1" \
+   --osinfo detect=on,require=off
+```
+
+Trong đó:
+
+* `--location`: Chỉ định vị trí của kernel/initrd trên máy chủ HTTP hoặc HTTPS.
+* `--extra-args "fips=1"`: Chỉ định việc kích hoạt chế độ FIPS. Mục này là bắt buộc, bên cạnh việc thiết lập tham số fips thành true trong tệp `install-config.yaml`. 
+
+> **Lưu ý**
+> 
+> * Đối với các quá trình cài đặt dựa trên KVM sử dụng thiết bị DASD trên hệ thống IBM Z, cần tạo một phân vùng (ví dụ: /dev/dasdb1) bằng công cụ phân vùng fdasd. 
+> * Hiện tại, chỉ phương thức khởi động qua PXE (PXE boot) mới được hỗ trợ để kích hoạt chế độ FIPS trên IBM Z®.
+
+#### 6.5.5. Thêm các tác nhân (agent) IBM Z vào một Phân vùng Logic (LPAR)
+Bạn có thể thêm thủ công các tác nhân IBM Z® vào cụm (cluster) của mình đang chạy trong môi trường LPAR.
+
+Chỉ sử dụng quy trình này cho các cụm IBM Z® đang chạy trong LPAR.
+
+**Điều kiện tiên quyết**
+
+Bạn đã cài đặt Python 3.
+Bạn có một máy chủ tệp (file server) đang hoạt động và có quyền truy cập vào Phân vùng Logic (LPAR).
+
+**Quy trình**
+
+1. Tạo tệp tham số khởi động cho các tác nhân.
+
+```
+rd.neednet=1 cio_ignore=all,!condev \
+console=ttysclp0 \
+ignition.firstboot ignition.platform.id=metal
+coreos.live.rootfs_url=http://<http_server>/rhcos-<version>-live-rootfs.<architecture>.img \
+coreos.inst.persistent-kargs=console=ttysclp0 \
+ip=<ip>::<gateway>:<netmask>:<hostname>::none nameserver=<dns> \
+rd.znet=qeth,<network_adaptor_range>,layer2=1
+rd.<disk_type>=<adapter> \
+fips=1 \
+zfcp.allow_lun_scan=0 \
+ai.ip_cfg_override=1 \
+random.trust_cpu=on rd.luks.options=discard
+```
+
+* Đối với thành phần `coreos.live.rootfs_url`, hãy chỉ định thành phần `rootfs` tương ứng với nhân (kernel) và `initramfs` mà bạn đang khởi chạy. Chỉ hỗ trợ các giao thức HTTP và HTTPS.
+* Đối với tham số `ip`, hãy gán địa chỉ IP theo cách thủ công, như được mô tả trong phần "Cài đặt cụm (cluster) với z/VM trên IBM Z và IBM LinuxONE".
+* Đối với các hệ thống cài đặt trên ổ đĩa loại DASD, hãy sử dụng `rd.dasd` để chỉ định ổ đĩa DASD nơi sẽ cài đặt Red Hat Enterprise Linux CoreOS (RHCOS). Đối với các hệ thống cài đặt trên ổ đĩa loại FCP, hãy sử dụng `rd.zfcp=<adapter>,<wwpn>,<lun>` để chỉ định ổ đĩa FCP nơi sẽ cài đặt RHCOS.
+
+> **Lưu ý:** Đối với các cấu hình FCP đa đường dẫn (multipath), hãy cung cấp nhiều đường dẫn khả dụng đến ổ đĩa thay vì chỉ một đường dẫn duy nhất, đồng thời thêm tham số `rd.multipath=default` để kích hoạt tính năng đa đường dẫn trong quá trình cài đặt.
+
+Ví dụ
+
+```
+rd.zfcp=<adapter1>,<wwpn1>,<lun1> \
+rd.zfcp=<adapter2>,<wwpn2>,<lun2> \
+rd.multipath=default
+```
+
+* Để kích hoạt chế độ FIPS, hãy chỉ định `fips=1`. Mục này là bắt buộc, bên cạnh việc thiết lập tham số `fips` thành `true` trong tệp `install-config.yaml`.
+
+> **Lưu ý:** Các tệp `.ins` và `initrd.img.addrsize` được tự động tạo cho kiến trúc `s390x` dưới dạng các thành phần khởi động (`boot-artifacts`) từ chương trình cài đặt; các tệp này chỉ được sử dụng khi khởi động trong môi trường LPAR.
+
+Ví dụ về hệ thống tệp với phương thức khởi động LPAR
+
+```
+boot-artifacts
+    ├─ agent.s390x-generic.ins
+    ├─ agent.s390x-initrd.addrsize
+    ├─ agent.s390x-rootfs.img
+    └─ agent.s390x-kernel.img
+    └─ agent.s390x-rootfs.img
+```
+
+2. Hãy đổi tên tệp boot-artifacts được liệt kê trong tệp tham số generic.ins sao cho khớp với tên của các tệp boot-artifacts do chương trình cài đặt tạo ra.
+3. Chuyển các tệp tham số initrd, kernel, generic.ins và initrd.img.addrsize sang máy chủ tệp (file server). Để biết thêm thông tin, hãy xem phần "Booting Linux in LPAR mode" (Khởi động Linux ở chế độ LPAR) trong tài liệu của IBM.
+4. Khởi động máy.
+5. Lặp lại quy trình này cho tất cả các máy khác trong cụm (cluster).
