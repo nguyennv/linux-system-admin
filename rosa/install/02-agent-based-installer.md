@@ -2645,19 +2645,19 @@ Trong quá trình cài đặt, nút kết nối (rendezvous node) sẽ khởi đ
 
 Sau khi cụm đã được cài đặt, bạn có thể truy cập URL này và đăng nhập vào bảng điều khiển web bằng các thông tin xác thực đã tải xuống trước đó.
 
-## 6. Chuẩn bị các tài nguyên PXE cho OpenShift Container Platform
+## VI. Chuẩn bị các tài nguyên PXE cho OpenShift Container Platform
 Bạn có thể tạo các tài nguyên cần thiết để khởi động cụm OpenShift Container Platform thông qua PXE bằng cách sử dụng trình cài đặt dựa trên tác nhân (Agent-based Installer).
 
 Các tài nguyên mà bạn tạo theo các quy trình này sẽ triển khai một hệ thống OpenShift Container Platform gồm một nút duy nhất (single-node). Bạn có thể sử dụng các quy trình này làm nền tảng và điều chỉnh cấu hình tùy theo yêu cầu của mình.
 
 Hãy tham khảo mục "Cài đặt cụm OpenShift Container Platform bằng trình cài đặt dựa trên tác nhân" để tìm hiểu thêm về các tùy chọn cấu hình khác có sẵn với trình cài đặt này.
 
-### 6.1. Các điều kiện tiên quyết để chuẩn bị tài nguyên PXE
+### VI.1. Các điều kiện tiên quyết để chuẩn bị tài nguyên PXE
 Trước khi bắt đầu chuẩn bị các tài nguyên PXE, bạn phải hoàn tất các tác vụ tiên quyết. 
 
 Bạn đã xem xét các thông tin chi tiết về quy trình cài đặt và cập nhật OpenShift Container Platform. Để biết thêm thông tin, hãy xem phần [Cài đặt và cập nhật](https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/architecture/architecture-installation).
 
-### 6.2. Tải xuống Trình cài đặt dựa trên tác nhân (Agent-based Installer)
+### VI.2. Tải xuống Trình cài đặt dựa trên tác nhân (Agent-based Installer)
 Bắt đầu quy trình cài đặt bằng cách tải xuống Trình cài đặt dựa trên tác nhân (Agent-based Installer) và giao diện dòng lệnh (CLI) cần thiết cho quá trình cài đặt của bạn.
 
 **Quy trình**
@@ -2670,7 +2670,7 @@ Bắt đầu quy trình cài đặt bằng cách tải xuống Trình cài đặ
 6. Tải xuống hoặc sao chép "pull secret" (bí mật kéo hình ảnh) bằng cách nhấp vào **Download pull secret** hoặc **Copy pull secret**. 
 7. Nhấp vào **Download command-line tools** và đặt tệp nhị phân `openshift-install` vào một thư mục nằm trong biến môi trường `PATH` của bạn.
 
-### 6.3. Tạo các tệp cấu hình đầu vào ưu tiên
+### VI.3. Tạo các tệp cấu hình đầu vào ưu tiên
 Tạo các tệp cấu hình đầu vào được sử dụng để tạo các tệp PXE.
 
 > **Lưu ý:** Việc cấu hình các tệp `install-config.yaml` và `agent-config.yaml` là phương pháp ưu tiên khi sử dụng trình cài đặt dựa trên tác nhân (Agent-based Installer). Việc sử dụng các tệp manifest GitOps ZTP là tùy chọn.
@@ -2846,7 +2846,7 @@ bootArtifactsBaseURL: <asset_server_URL>
 
 Trong đó `<asset_server_URL>` là URL của máy chủ mà bạn sẽ tải các tài nguyên PXE lên.
 
-### 6.4. Tạo các tài nguyên PXE
+### VI.4. Tạo các tài nguyên PXE
 Tạo các tài nguyên và tập lệnh tùy chọn để triển khai trong cơ sở hạ tầng PXE của bạn.
 
 **Quy trình**
@@ -2877,7 +2877,7 @@ boot-artifacts
 
 > **Lưu ý:** Nếu bạn đã tạo tập lệnh iPXE, vị trí của các tài nguyên đó phải khớp với giá trị `bootArtifactsBaseURL` mà bạn đã thêm vào tệp `agent-config.yaml`.
 
-### 6.5. Thêm thủ công các tác nhân (agent) IBM Z
+### VI.5. Thêm thủ công các tác nhân (agent) IBM Z
 Sau khi tạo các tài nguyên PXE, bạn có thể thêm các tác nhân IBM Z®.
 
 Chỉ sử dụng quy trình này cho các cụm (cluster) IBM Z®.
@@ -2890,7 +2890,7 @@ Tùy thuộc vào môi trường IBM Z® của mình, bạn có thể chọn m�
 
 > **Lưu ý:** Hiện tại, tính năng hỗ trợ khởi động từ ISO trên IBM Z® (s390x) chỉ khả dụng đối với Red Hat Enterprise Linux (RHEL) KVM; tùy chọn này mang lại sự linh hoạt trong việc chọn phương thức cài đặt qua PXE hoặc qua ISO. Đối với các hệ thống sử dụng z/VM và Phân vùng logic (LPAR), chỉ hỗ trợ phương thức khởi động qua PXE.
 
-#### 6.5.1. Các yêu cầu về mạng đối với IBM Z
+#### VI.5.1. Các yêu cầu về mạng đối với IBM Z
 Trong các môi trường IBM Z, các công nghệ mạng tiên tiến như Open Systems Adapter (OSA), HiperSockets và Remote Direct Memory Access (RDMA) over Converged Ethernet (RoCE) đòi hỏi những cấu hình đặc thù, khác biệt so với các thiết lập mạng tiêu chuẩn. Các cấu hình này cần được duy trì ổn định xuyên suốt nhiều lần khởi động trong quá trình cài đặt dựa trên tác nhân (Agent-based Installation).
 
 Để duy trì các tham số này trong suốt quá trình khởi động, cần thêm tham số `ai.ip_cfg_override=1` vào tệp `.parm`. Tham số này được sử dụng cùng với các card mạng đã được cấu hình nhằm đảm bảo quá trình triển khai trên IBM Z diễn ra thành công và hiệu quả.
@@ -2908,7 +2908,7 @@ Bảng dưới đây liệt kê các thiết bị mạng được hỗ trợ tr�
 2. Không áp dụng: Khi một card mạng không phù hợp để sử dụng trên hypervisor.
 3. Không bắt buộc: Khi tham số `ai.ip_cfg_override` không cần thiết cho quy trình cài đặt.
 
-#### 6.5.2. Cấu hình ghi đè mạng trong môi trường IBM Z
+#### VI.5.2. Cấu hình ghi đè mạng trong môi trường IBM Z
 Bạn có thể chỉ định địa chỉ IP tĩnh trên các máy IBM Z sử dụng Phân vùng logic (Logical Partition - LPAR) và z/VM. Cách làm này hữu ích trong trường hợp các thiết bị mạng không được gán địa chỉ MAC tĩnh.
 
 > **Lưu ý:** Nếu bạn đang sử dụng thiết bị mạng OSA ở chế độ Processor Resource/Systems Manager (PR/SM), việc thiếu địa chỉ MAC cố định có thể dẫn đến tình trạng các vai trò của nút (node) được gán một cách linh hoạt (động). Điều này có nghĩa là vai trò của từng nút không cố định và có thể thay đổi, do hệ thống không thể liên kết một cách ổn định các địa chỉ MAC cụ thể với các vai trò nút đã được chỉ định. Nếu địa chỉ MAC không cố định đối với bất kỳ giao diện nào, các vai trò cho các nút sẽ được gán ngẫu nhiên trong quá trình cài đặt dựa trên tác nhân (Agent-based installation).
@@ -2957,7 +2957,7 @@ random.trust_cpu=on
 > * Không cần thay đổi các tham số dòng lệnh mặc định của nhân hệ thống. 
 > * Để cài đặt các nút (nodes) sử dụng giao diện được gộp nhóm, hãy cung cấp cấu hình `bond` phù hợp trong tệp `agent-config`.
 
-#### 6.5.3. Thêm các tác nhân (agent) IBM Z với z/VM
+#### VI.5.3. Thêm các tác nhân (agent) IBM Z với z/VM
 Bạn có thể thêm thủ công các tác nhân IBM Z® với z/VM.
 
 Chỉ sử dụng quy trình này cho các cụm (cluster) IBM Z® có sử dụng z/VM.
@@ -3021,7 +3021,7 @@ ipl c
 
 Để biết thêm thông tin, hãy xem "[IPL](https://www.ibm.com/docs/en/zvm/latest?topic=commands-ipl)" trong tài liệu của IBM.
 
-#### 6.5.4. Thêm các tác nhân (agent) IBM Z với RHEL KVM
+#### VI.5.4. Thêm các tác nhân (agent) IBM Z với RHEL KVM
 Bạn có thể thêm thủ công các tác nhân IBM Z® với RHEL KVM.
 
 Chỉ sử dụng quy trình này cho các cụm (cluster) IBM Z® sử dụng RHEL KVM.
@@ -3098,7 +3098,7 @@ Trong đó:
 > * Đối với các quá trình cài đặt dựa trên KVM sử dụng thiết bị DASD trên hệ thống IBM Z, cần tạo một phân vùng (ví dụ: /dev/dasdb1) bằng công cụ phân vùng fdasd. 
 > * Hiện tại, chỉ phương thức khởi động qua PXE (PXE boot) mới được hỗ trợ để kích hoạt chế độ FIPS trên IBM Z®.
 
-#### 6.5.5. Thêm các tác nhân (agent) IBM Z vào một Phân vùng Logic (LPAR)
+#### VI.5.5. Thêm các tác nhân (agent) IBM Z vào một Phân vùng Logic (LPAR)
 Bạn có thể thêm thủ công các tác nhân IBM Z® vào cụm (cluster) của mình đang chạy trong môi trường LPAR.
 
 Chỉ sử dụng quy trình này cho các cụm IBM Z® đang chạy trong LPAR.
