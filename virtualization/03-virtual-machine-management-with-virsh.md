@@ -724,9 +724,9 @@ $ virsh pool-autostart mypool
 
 ```bash
 $ virsh pool-define-as mypool dir --target /var/lib/libvirt/pools/mypool && \
-$ virsh pool-build mypool && \
-$ virsh pool-start mypool && \
-$ virsh pool-autostart mypool
+  virsh pool-build mypool && \
+  virsh pool-start mypool && \
+  virsh pool-autostart mypool
 ```
 
 ### Các thao tác với pool lưu trữ

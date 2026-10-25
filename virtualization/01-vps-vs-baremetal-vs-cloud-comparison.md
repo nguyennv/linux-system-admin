@@ -109,8 +109,8 @@ $ cat /proc/cgroups
 
 ```bash
 $ fio --name=random-write --ioengine=libaio --rw=randwrite \
-    --bs=4k --size=1G --numjobs=1 --iodepth=16 \
-    --runtime=60 --time_based --end_fsync=1
+  --bs=4k --size=1G --numjobs=1 --iodepth=16 \
+  --runtime=60 --time_based --end_fsync=1
 ```
 
 3. Khả năng tùy biến phần cứng hạn chế - Không thể thay đổi:
@@ -214,14 +214,14 @@ $ hdparm -Tt /dev/nvme0n1
 
 ```bash
 $ mdadm --create /dev/md0 --level=10 --raid-devices=4 \
-      /dev/sda /dev/sdb /dev/sdc /dev/sdd
+  /dev/sda /dev/sdb /dev/sdc /dev/sdd
 ```
 
 - Tối ưu hóa kernel cho phần cứng cụ thể
 
 ```bash
 $ echo "performance" | tee \
-/sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+  /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 ```
 
 ### Ưu điểm của Bare-metal
@@ -248,7 +248,7 @@ $ ipmitool sensor list
 
 ```bash
 for i in {1..10}; do
-    sysbench cpu --cpu-max-prime=20000 run | grep "events per second"
+  sysbench cpu --cpu-max-prime=20000 run | grep "events per second"
 done
 ```
 
@@ -310,9 +310,9 @@ Hạ tầng đám mây cung cấp các tài nguyên điện toán theo nhu cầu
 
 ```bash
 $ aws ec2 run-instances \
-    --image-id ami-0c55b159cbfafe1f0 \
-    --instance-type t3.medium \
-    --key-name my-key
+  --image-id ami-0c55b159cbfafe1f0 \
+  --instance-type t3.medium \
+  --key-name my-key
 ```
 
 **Nền tảng như một Dịch vụ (PaaS):**
@@ -331,10 +331,10 @@ $ aws ec2 run-instances \
 
 ```bash
 $ aws autoscaling create-auto-scaling-group \
-    --auto-scaling-group-name my-asg \
-    --min-size 2 \
-    --max-size 10 \
-    --desired-capacity 3
+  --auto-scaling-group-name my-asg \
+  --min-size 2 \
+  --max-size 10 \
+  --desired-capacity 3
 ```
 
 2. Phân bố địa lý:
@@ -388,8 +388,8 @@ $ tofu apply
 
 ```bash
 $ aws ce get-cost-and-usage \
-    --time-period Start=2024-01-01,End=2024-01-31 \
-    --granularity MONTHLY
+  --time-period Start=2024-01-01,End=2024-01-31 \
+  --granularity MONTHLY
 ```
 
 2. Sự phụ thuộc vào nhà cung cấp
@@ -499,17 +499,17 @@ Mở rộng theo chiều dọc
 
 ```bash
 $ aws ec2 modify-instance-attribute \
-    --instance-id i-1234567890abcdef0 \
-    --instance-type t3.large
+  --instance-id i-1234567890abcdef0 \
+  --instance-type t3.large
 ```
 
 Tự động mở rộng theo chiều ngang
 
 ```bash
 $ aws autoscaling put-scaling-policy \
-    --auto-scaling-group-name my-asg \
-    --policy-name scale-up \
-    --scaling-adjustment 2
+  --auto-scaling-group-name my-asg \
+  --policy-name scale-up \
+  --scaling-adjustment 2
 ```
 
 ### Quản lý và Bảo trì
@@ -716,16 +716,16 @@ $ dnf -y install fio
 
 ```bash
 $ fio --name=randwrite --ioengine=libaio --rw=randrw \
-    --bs=4k --size=4G --numjobs=4 --iodepth=32 \
-    --runtime=60 --time_based --group_reporting
+  --bs=4k --size=4G --numjobs=4 --iodepth=32 \
+  --runtime=60 --time_based --group_reporting
 ```
 
 * Đọc/ghi tuần tự
 
 ```bash
 $ fio --name=seqwrite --ioengine=libaio --rw=write \
-    --bs=1M --size=4G --numjobs=1 --iodepth=16 \
-    --runtime=60 --time_based
+  --bs=1M --size=4G --numjobs=1 --iodepth=16 \
+  --runtime=60 --time_based
 ```
 
 ### Đánh giá hiệu năng mạng
@@ -793,9 +793,9 @@ $ dnf -y install qemu-kvm libvirt virt-install
 
 ```bash
 $ aws ec2 purchase-reserved-instances \
-    --instance-type t3.medium \
-    --instance-count 2 \
-    --offering-type All Upfront
+  --instance-type t3.medium \
+  --instance-count 2 \
+  --offering-type All Upfront
 ```
 
 2. Triển khai tính năng tự động mở rộng quy mô. Giảm quy mô trong giờ thấp điểm
@@ -803,8 +803,8 @@ $ aws ec2 purchase-reserved-instances \
 
 ```bash
 $ aws ec2 request-spot-instances \
-    --spot-price "0.05" \
-    --instance-count 5
+  --spot-price "0.05" \
+  --instance-count 5
 ```
 
 4. Điều chỉnh kích thước instance cho phù hợp. Sử dụng các đề xuất từ AWS Cost Explorer.
@@ -930,8 +930,8 @@ $ aws iam create-policy --policy-name LeastPrivilege
 
 ```bash
 $ aws ec2 create-security-group \
-    --group-name web-servers \
-    --description "Web servers security group"
+  --group-name web-servers \
+  --description "Web servers security group"
 ```
 
 3. Mã hóa dữ liệu tĩnh

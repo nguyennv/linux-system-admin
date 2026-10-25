@@ -151,7 +151,7 @@ $ sudo apt upgrade -y
 
 ```bash
 $ sudo apt install -y \
-     qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
+  qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
 ```
 
 * Cài đặt các công cụ quản lý
@@ -254,7 +254,7 @@ $ sudo dnf groupinstall "Virtualization Host" -y
 
 ```bash
 $ sudo dnf install -y \
-     qemu-kvm libvirt virt-install virt-manager virt-viewer
+  qemu-kvm libvirt virt-install virt-manager virt-viewer
 ```
 
 * Cài đặt thêm công cụ
@@ -337,7 +337,7 @@ $ sudo pacman -Syu
 
 ```bash
 $ sudo pacman -S qemu-full virt-manager \
-     virt-viewer libvirt bridge-utils dnsmasq
+  virt-viewer libvirt bridge-utils dnsmasq
 ```
 
 * Cài đặt thêm công cụ
@@ -479,7 +479,7 @@ $ sudo modprobe kvm_intel nested=1
 * Làm cho bền vững
 
 ```bash
-$ echo "options kvm_intel nested=1" | $ sudo tee /etc/modprobe.d/kvm-intel.conf
+$ echo "options kvm_intel nested=1" | sudo tee /etc/modprobe.d/kvm-intel.conf
 ```
 
 * Xác minh tính năng ảo hóa lồng nhau
@@ -492,7 +492,7 @@ $ cat /sys/module/kvm_intel/parameters/nested
 * Dành cho AMD
 
 ```bash
-$ echo "options kvm_amd nested=1" | $ sudo tee /etc/modprobe.d/kvm-amd.conf
+$ echo "options kvm_amd nested=1" | sudo tee /etc/modprobe.d/kvm-amd.conf
 $ cat /sys/module/kvm_amd/parameters/nested
 ```
 
@@ -506,8 +506,8 @@ $ cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 * Chuyển sang chế độ hiệu năng cao
 
 ```bash
-$ echo performance | $ sudo tee \
-     /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+$ echo performance | sudo tee \
+  /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 ```
 
 * Thiết lập vĩnh viễn (dịch vụ systemd)
@@ -543,13 +543,13 @@ $ cat /proc/meminfo | grep Huge
 * Cấu hình huge page
 
 ```bash
-$ echo 1024 | $ sudo tee /proc/sys/vm/nr_hugepages
+$ echo 1024 | sudo tee /proc/sys/vm/nr_hugepages
 ```
 
 * Thiết lập vĩnh viễn
 
 ```bash
-$ echo "vm.nr_hugepages=1024" | $ sudo tee -a /etc/sysctl.conf
+$ echo "vm.nr_hugepages=1024" | sudo tee -a /etc/sysctl.conf
 $ sudo sysctl -p
 ```
 
@@ -757,23 +757,23 @@ KSM giảm mức sử dụng bộ nhớ bằng cách chia sẻ các trang giốn
 * Bật KSM
 
 ```bash
-$ echo 1 | $ sudo tee /sys/kernel/mm/ksm/run
+$ echo 1 | sudo tee /sys/kernel/mm/ksm/run
 ```
 
 * Cấu hình các tham số quét
 
 ```bash
-$ echo 100 | $ sudo tee /sys/kernel/mm/ksm/pages_to_scan
-$ echo 20 | $ sudo tee /sys/kernel/mm/ksm/sleep_millisecs
+$ echo 100 | sudo tee /sys/kernel/mm/ksm/pages_to_scan
+$ echo 20 | sudo tee /sys/kernel/mm/ksm/sleep_millisecs
 ```
 
 * Làm cho bền vững
 
 ```bash
 $ echo "w /sys/kernel/mm/ksm/run - - - - 1" | \
-sudo tee /etc/tmpfiles.d/ksm.conf
+  sudo tee /etc/tmpfiles.d/ksm.conf
 $ echo "w /sys/kernel/mm/ksm/pages_to_scan - - - - 100" | \
-sudo tee -a /etc/tmpfiles.d/ksm.conf
+  sudo tee -a /etc/tmpfiles.d/ksm.conf
 ```
 
 * Kiểm tra số liệu thống kê KSM
@@ -1087,7 +1087,7 @@ $ sudo virsh list --all
 
 ```bash
 $ sudo cp /var/lib/libvirt/images/my-vm.qcow2 \
-       /backup/my-vm-$(date +%Y%m%d).qcow2
+  /backup/my-vm-$(date +%Y%m%d).qcow2
 ```
 
 * Nén bản sao lưu

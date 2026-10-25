@@ -311,8 +311,8 @@ Tìm các luồng anh em (hyperthreading siblings)
 
 ```bash
 for cpu in /sys/devices/system/cpu/cpu[0-9]*; do
-    echo -n "CPU $(basename $cpu | sed 's/cpu//'): "
-    cat $cpu/topology/thread_siblings_list
+  echo -n "CPU $(basename $cpu | sed 's/cpu//'): "
+  cat $cpu/topology/thread_siblings_list
 done
 
 # Ví dụ kết quả đầu ra:

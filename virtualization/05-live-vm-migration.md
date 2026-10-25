@@ -356,7 +356,7 @@ cn = CA
 ca
 cert_signing_key
 EOF
-certtool --generate-self-signed --load-privkey cakey.pem \
+$ certtool --generate-self-signed --load-privkey cakey.pem \
   --template ca.info --outfile cacert.pem
 ```
 
@@ -601,7 +601,7 @@ $ virsh shutdown my-vm
 
 ```bash
 while [ "$(virsh domstate my-vm)" != "shut off" ]; do
-    sleep 1
+  sleep 1
 done
 ```
 
@@ -611,7 +611,7 @@ done
 $ virsh dumpxml my-vm > my-vm.xml
 $ scp my-vm.xml root@destination-host:/tmp/
 $ scp /var/lib/libvirt/images/my-vm.qcow2 \
-    root@destination-host:/var/lib/libvirt/images/
+  root@destination-host:/var/lib/libvirt/images/
 ```
 
 * Trên máy chủ đích

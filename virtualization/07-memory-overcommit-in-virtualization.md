@@ -101,8 +101,8 @@ $ numastat -m
 ```bash
 virsh list --all
 for vm in $(virsh list --name); do
-    echo "VM: $vm"
-    virsh dominfo $vm | grep memory
+  echo "VM: $vm"
+  virsh dominfo $vm | grep memory
 done
 ```
 
@@ -110,7 +110,7 @@ done
 
 ```bash
 virsh list --name | while read vm; do
-    virsh dominfo $vm | grep "Max memory"
+  virsh dominfo $vm | grep "Max memory"
 done | awk '{sum+=$3} END {print "Total allocated: " sum/1024/1024 " GB"}'
 ```
 
@@ -118,8 +118,8 @@ done | awk '{sum+=$3} END {print "Total allocated: " sum/1024/1024 " GB"}'
 
 ```bash
 virsh list --name | while read vm; do
-    echo -n "$vm: "
-    virsh dommemstat $vm 2>/dev/null | grep actual
+  echo -n "$vm: "
+  virsh dommemstat $vm 2>/dev/null | grep actual
 done
 ```
 
@@ -277,7 +277,7 @@ rss 2359296     (host RSS)
 
 ```bash
 $ apt install numad  # Debian/Ubuntu
-vdnf install numad  # RHEL/CentOS
+$ dnf install numad  # RHEL/CentOS
 ```
 
 * Khởi động numad
@@ -692,8 +692,8 @@ $ free -h -s 1  # Cập nhật mỗi giây
 
 ```bash
 virsh list --name | while read vm; do
-    echo "=== $vm ==="
-    virsh dommemstat $vm 2>/dev/null
+  echo "=== $vm ==="
+  virsh dommemstat $vm 2>/dev/null
 done
 ```
 
@@ -772,8 +772,8 @@ check_memory() {
 
 # Chạy 5 phút một lần
 while true; do
-    check_memory
-    sleep 300
+  check_memory
+  sleep 300
 done
 ```
 

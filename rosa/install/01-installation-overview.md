@@ -493,7 +493,8 @@ Trình điều khiển Ingress cấu hình và quản lý bộ định tuyến c
     * Lệnh xem:
 
 ```bash
-oc get clusteringresses.ingress.openshift.io -n openshift-ingress-operator default -o yaml
+oc get clusteringresses.ingress.openshift.io \
+  -n openshift-ingress-operator default -o yaml
 ```
 
 **Ghi chú**  
@@ -612,7 +613,7 @@ Bạn đã cài đặt giao diện dòng lệnh OpenShift (oc).
 
 ```bash
 oc get clusterversion version -o \
-jsonpath='{.spec.capabilities}{"\n"}{.status.capabilities}{"\n"}'
+  jsonpath='{.spec.capabilities}{"\n"}{.status.capabilities}{"\n"}'
 ```
 
 Ví dụ đầu ra
@@ -633,7 +634,7 @@ Bạn đã cài đặt giao diện dòng lệnh OpenShift (oc).
 
 ```bash
 oc patch clusterversion version --type merge -p \
-'{"spec":{"capabilities":{"baselineCapabilitySet":"vCurrent"}}}'
+  '{"spec":{"capabilities":{"baselineCapabilitySet":"vCurrent"}}}'
 ```
 
 Đối với `baselineCapabilitySet`, bạn có thể chỉ định vCurrent, v4.22 hoặc None.
@@ -661,7 +662,7 @@ Ví dụ đầu ra
 
 ```bash
 oc patch clusterversion/version --type merge -p \
-'{"spec":{"capabilities":{"additionalEnabledCapabilities":["openshift-samples", "marketplace"]}}}'
+  '{"spec":{"capabilities":{"additionalEnabledCapabilities":["openshift-samples", "marketplace"]}}}'
 ```
 
 > **Quan trọng:** Bạn không thể vô hiệu hóa một tính năng đã được kích hoạt trong cụm (cluster). Cluster Version Operator (CVO) sẽ tiếp tục duy trì trạng thái của tính năng đã được kích hoạt trong cụm đó.
@@ -670,7 +671,7 @@ Nếu bạn cố gắng vô hiệu hóa một tính năng, CVO sẽ hiển thị
 
 ```bash
 oc get clusterversion version -o \
-jsonpath='{.status.conditions[?(@.type=="ImplicitlyEnabledCapabilities")]}{"\n"}'
+  jsonpath='{.status.conditions[?(@.type=="ImplicitlyEnabledCapabilities")]}{"\n"}'
 ```
 
 Ví dụ đầu ra
@@ -709,7 +710,7 @@ Bạn đã cài đặt giao diện dòng lệnh OpenShift (oc) phiên bản 4.16
 
 ```bash
 oc adm release extract --registry-config "${pullsecret_file}" \
---command=openshift-install-fips --to "${extract_dir}" ${RELEASE_IMAGE}
+  --command=openshift-install-fips --to "${extract_dir}" ${RELEASE_IMAGE}
 ```
 
 trong đó:
