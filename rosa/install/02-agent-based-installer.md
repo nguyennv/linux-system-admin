@@ -3160,3 +3160,243 @@ boot-artifacts
 3. Chuyển các tệp tham số initrd, kernel, generic.ins và initrd.img.addrsize sang máy chủ tệp (file server). Để biết thêm thông tin, hãy xem phần "Booting Linux in LPAR mode" (Khởi động Linux ở chế độ LPAR) trong tài liệu của IBM.
 4. Khởi động máy.
 5. Lặp lại quy trình này cho tất cả các máy khác trong cụm (cluster).
+
+## VII. Chuẩn bị các tài nguyên cài đặt cho việc khởi động qua iSCSI
+Bạn có thể khởi động cụm OpenShift Container Platform thông qua giao thức iSCSI (Internet Small Computer System Interface) bằng cách sử dụng tệp ảnh ISO được tạo bởi trình cài đặt dựa trên tác nhân (Agent-based Installer).
+
+Các quy trình dưới đây mô tả cách chuẩn bị những tài nguyên cài đặt cần thiết để khởi động từ một đích iSCSI (iSCSI target).
+
+Các tài nguyên mà bạn tạo ra trong các quy trình này sẽ triển khai một hệ thống OpenShift Container Platform gồm một nút duy nhất (single-node). Bạn có thể sử dụng các quy trình này làm nền tảng và điều chỉnh cấu hình tùy theo yêu cầu cụ thể của mình.
+
+### VII.1. Các yêu cầu đối với khởi động qua iSCSI
+Cần thực hiện một số cấu hình để kích hoạt tính năng khởi động qua iSCSI khi sử dụng trình cài đặt dựa trên tác nhân (Agent-based Installer).
+
+Các cấu hình sau đây là bắt buộc:
+
+* Phải thiết lập Giao thức Cấu hình Máy chủ Động (DHCP). Mạng tĩnh (static networking) không được hỗ trợ. 
+* Bạn phải tạo một mạng bổ sung dành riêng cho iSCSI, tách biệt với mạng máy (machine network) của cụm (cluster). Mạng máy sẽ bị khởi động lại trong quá trình cài đặt cụm và không thể được sử dụng cho phiên kết nối iSCSI. 
+* Nếu máy chủ dùng để khởi động tệp ảnh ISO tác nhân (agent ISO image) đã có sẵn ổ đĩa, bạn có thể cần chỉ định tên ổ đĩa iSCSI trong tham số `rootDeviceHints` để đảm bảo ổ đĩa đó được chọn làm ổ đĩa khởi động cho tệp ảnh Red Hat Enterprise Linux CoreOS (RHCOS) cuối cùng. Bạn cũng có thể sử dụng môi trường không ổ đĩa (diskless) cho việc khởi động qua iSCSI; trong trường hợp này, bạn không cần thiết lập tham số `rootDeviceHints`.
+
+### VII.2. Các điều kiện tiên quyết để cài đặt cụm bằng trình cài đặt dựa trên tác nhân (Agent-based Installer)
+Trước khi bắt đầu cài đặt cụm, bạn phải hoàn tất các tác vụ tiên quyết để chuẩn bị môi trường của mình. 
+
+* Bạn đã xem xét các thông tin chi tiết về quy trình cài đặt và cập nhật OpenShift Container Platform. Để biết thêm thông tin, hãy xem phần "Cài đặt và cập nhật" (Installation and update). 
+* Bạn đã đọc nội dung "Chọn phương pháp cài đặt cụm và chuẩn bị cho người dùng" (Selecting a cluster installation method and preparing it for users). 
+* Nếu sử dụng tường lửa hoặc proxy, bạn đã định cấu hình để cho phép truy cập vào các trang web mà cụm của bạn cần kết nối. Để biết thêm thông tin, hãy xem phần "Định cấu hình tường lửa" (Configuring your firewall). 
+* Bạn đã định cấu hình tường lửa để cho phép lưu lượng TCP trên cổng `8090` từ tất cả các máy chủ (host) đến máy chủ điều phối (rendezvous host), giúp các máy chủ có thể kết nối với Assisted Service API trong quá trình khám phá (discovery) và khởi động (bootstrap). Để biết thêm thông tin, hãy xem phần "Yêu cầu về cổng cho máy chủ điều phối" (Port requirements for the rendezvous host).
+
+### VII.3. Tải xuống Trình cài đặt dựa trên tác nhân (Agent-based Installer)
+Bắt đầu quy trình cài đặt bằng cách tải xuống Trình cài đặt dựa trên tác nhân (Agent-based Installer) và giao diện dòng lệnh (CLI) cần thiết cho quá trình cài đặt của bạn.
+
+**Quy trình**
+
+1. Đăng nhập vào Red Hat Hybrid Cloud Console bằng thông tin đăng nhập của bạn. 
+2. Điều hướng đến mục [Datacenter](https://console.redhat.com/openshift/create/datacenter). 
+3. Nhấp vào **Run Agent-based Installer locally**. 
+4. Chọn hệ điều hành và kiến trúc phù hợp cho **OpenShift Installer** và **Command line interface**. 
+5. Nhấp vào **Download Installer** để tải xuống và giải nén chương trình cài đặt. 
+6. Tải xuống hoặc sao chép "pull secret" (bí mật kéo ảnh container) bằng cách nhấp vào **Download pull secret** hoặc **Copy pull secret**. 
+7. Nhấp vào **Download command-line tools** và đặt tệp nhị phân `openshift-install` vào một thư mục nằm trong biến môi trường `PATH` của bạn.
+
+### VII.4. Tạo các dữ liệu cấu hình ưu tiên
+Tạo các dữ liệu cấu hình ưu tiên được sử dụng để xây dựng image cho agent.
+
+> **Lưu ý:** Việc cấu hình các tệp `install-config.yaml` và `agent-config.yaml` là phương pháp được khuyến nghị khi sử dụng Agent-based Installer. Việc sử dụng các tệp manifest GitOps ZTP là tùy chọn.
+
+**Quy trình**
+
+1. Cài đặt thành phần phụ thuộc `nmstate` bằng cách chạy lệnh sau:
+
+```bash
+sudo dnf install /usr/bin/nmstatectl -y
+```
+
+2. Đặt tệp nhị phân `openshift-install` vào một thư mục nằm trong `PATH` của bạn.
+3. Tạo một thư mục để lưu trữ cấu hình cài đặt bằng cách chạy lệnh sau:
+
+```bash
+mkdir ~/<directory_name>
+```
+
+4. Tạo tệp install-config.yaml bằng cách chạy lệnh sau:
+
+```bash
+vi ./<directory_name>/install-config.yaml
+```
+
+```yaml
+apiVersion: v1
+baseDomain: test.example.com
+compute:
+- architecture: amd64
+  hyperthreading: Enabled
+  name: worker
+  replicas: 0
+controlPlane:
+  architecture: amd64
+  hyperthreading: Enabled
+  name: master
+  replicas: 1
+metadata:
+  name: sno-cluster
+networking:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  machineNetwork:
+  - cidr: 192.168.0.0/16
+  networkType: OVNKubernetes
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  none: {}
+pullSecret: '<pull_secret>'
+sshKey: '<ssh_pub_key>'
+additionalTrustBundle: |
+  -----BEGIN CERTIFICATE-----
+  ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+  -----END CERTIFICATE-----
+imageContentSources:
+- mirrors:
+  - <local_registry>/<local_repository_name>/release
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - <local_registry>/<local_repository_name>/release
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+```
+
+Trong đó:
+
+* `compute.architecture`: Xác định kiến trúc hệ thống. Các giá trị hợp lệ bao gồm amd64, arm64, ppc64le và s390x. Nếu sử dụng image phát hành (release image) có chứa nhiều payload, bạn có thể cài đặt cụm (cluster) trên các kiến trúc khác nhau như arm64, amd64, s390x và ppc64le. Nếu không, bạn chỉ có thể cài đặt cụm trên kiến trúc được hiển thị trong kết quả của lệnh `openshift-install version`. Để biết thêm thông tin, hãy xem phần "Xác minh kiến trúc được hỗ trợ để cài đặt cụm bằng Agent-based Installer".
+* `metadata.name`: Xác định tên cụm của bạn. Đây là giá trị bắt buộc.
+* `networking.networkingType`: Xác định plugin mạng cho cụm cần cài đặt. Giá trị mặc định `OVNKubernetes` là giá trị duy nhất được hỗ trợ.
+* `platform`: Xác định nền tảng (platform) của bạn. Nếu đặt nền tảng là `vSphere`, `baremetal` hoặc `none`, bạn có thể cấu hình các điểm cuối (endpoint) địa chỉ IP cho các nút (node) trong cụm theo ba cách: IPv4, IPv6, hoặc cả IPv4 và IPv6 song song (dual-stack). 
+
+Ví dụ về mạng dual-stack (kép)
+
+```yaml
+networking:
+  clusterNetwork:
+    - cidr: 172.21.0.0/16
+      hostPrefix: 23
+    - cidr: fd02::/48
+      hostPrefix: 64
+  machineNetwork:
+    - cidr: 192.168.11.0/16
+    - cidr: 2001:DB8::/32
+  serviceNetwork:
+    - 172.22.0.0/16
+    - fd03::/112
+  networkType: OVNKubernetes
+platform:
+  baremetal:
+    apiVIPs:
+    - 192.168.11.3
+    - 2001:DB8::4
+    ingressVIPs:
+    - 192.168.11.4
+    - 2001:DB8::5
+```
+
+> **Lưu ý:** Đối với các nền tảng bare-metal (phần cứng vật lý), các thiết lập máy chủ được thực hiện trong phần nền tảng (platform) của tệp `install-config.yaml` sẽ được sử dụng theo mặc định, trừ khi chúng bị ghi đè bởi các cấu hình được thiết lập trong tệp `agent-config.yaml`.
+
+* `pullSecret`: Chỉ định pull secret của bạn.
+* `sshKey`: Chỉ định khóa công khai (public key) SSH của bạn.
+* `additionalTrustBundle`: Chỉ định nội dung của tệp chứng chỉ mà bạn đã sử dụng cho registry phản chiếu (mirror registry) của mình. Tệp chứng chỉ này có thể là chứng chỉ từ một cơ quan cấp chứng chỉ (CA) đáng tin cậy hiện có, hoặc là chứng chỉ tự ký (self-signed certificate) mà bạn đã tạo cho registry phản chiếu đó. Bạn bắt buộc phải chỉ định tham số này nếu đang sử dụng registry phản chiếu trong môi trường không kết nối internet (disconnected mirror registry).
+* `imageContentSources`: Chỉ định phần `imageContentSources` dựa trên kết quả đầu ra của lệnh mà bạn đã sử dụng để phản chiếu kho lưu trữ (repository). Bạn bắt buộc phải chỉ định tham số này nếu đang sử dụng registry phản chiếu trong môi trường không kết nối internet (disconnected mirror registry).
+
+> **Quan trọng**
+> 
+> * Khi sử dụng lệnh `oc adm release mirror`, hãy dùng dữ liệu đầu ra từ phần `imageContentSources`. 
+> * Khi sử dụng lệnh `oc mirror`, hãy dùng phần `repositoryDigestMirrors` trong tệp `ImageContentSourcePolicy` được tạo ra sau khi chạy lệnh đó. 
+> * Tài nguyên `ImageContentSourcePolicy` hiện đã lỗi thời (deprecated).
+
+5. Tạo tệp `agent-config.yaml` bằng cách chạy lệnh sau:
+
+```bash
+vi agent-config.yaml
+```
+
+```yaml
+apiVersion: v1beta1
+kind: AgentConfig
+metadata:
+  name: sno-cluster
+rendezvousIP: 192.168.111.80
+hosts:
+  - hostname: master-0
+    interfaces:
+      - name: eno1
+        macAddress: 00:ef:44:21:e6:a5
+    rootDeviceHints:
+      deviceName: /dev/sdb
+    networkConfig:
+      interfaces:
+        - name: eno1
+          type: ethernet
+          state: up
+          mac-address: 00:ef:44:21:e6:a5
+          ipv4:
+            enabled: true
+            address:
+              - ip: 192.168.111.80
+                prefix-length: 23
+            dhcp: false
+      dns-resolver:
+        config:
+          server:
+            - 192.168.111.1
+      routes:
+        config:
+          - destination: 0.0.0.0/0
+            next-hop-address: 192.168.111.2
+            next-hop-interface: eno1
+            table-id: 254
+minimalISO: true
+```
+
+Trong đó:
+
+* `rendezvousIP`: Xác định địa chỉ IP được sử dụng để quyết định nút nào sẽ thực hiện quy trình khởi động ban đầu (bootstrapping) cũng như chạy thành phần dịch vụ hỗ trợ (assisted-service). Bạn bắt buộc phải cung cấp địa chỉ IP rendezvous nếu không chỉ định ít nhất một địa chỉ IP của máy chủ (host) trong tham số networkConfig. Nếu địa chỉ này không được cung cấp, một địa chỉ IP sẽ được chọn từ danh sách các máy chủ đã khai báo trong networkConfig.
+* `hosts`: Xác định cấu hình cho các máy chủ. Số lượng máy chủ được định nghĩa không được vượt quá tổng số máy chủ đã khai báo trong tệp install-config.yaml (tổng của các giá trị compute.replicas và controlPlane.replicas). Cấu hình này là tùy chọn.
+* `hosts.hostname`: Xác định giá trị thay thế cho tên máy chủ (hostname) nhận được từ giao thức DHCP (Dynamic Host Configuration Protocol) hoặc từ truy vấn ngược DNS (reverse DNS lookup). Mỗi máy chủ phải có một tên duy nhất thông qua một trong các phương thức này. Cấu hình này là tùy chọn.
+* `hosts.rootDeviceHints`: Xác định cấu hình cho phép triển khai (provisioning) ảnh hệ điều hành Red Hat Enterprise Linux CoreOS (RHCOS) vào một thiết bị cụ thể. Chương trình cài đặt sẽ kiểm tra các thiết bị theo thứ tự phát hiện được và so sánh các giá trị thu thập từ thiết bị với các giá trị gợi ý (hint values) được cung cấp. Chương trình sẽ chọn thiết bị đầu tiên khớp với giá trị gợi ý đó. **Lưu ý:** Tham số này là bắt buộc đối với các cấu hình FCP multipath trên hệ thống IBM Z.
+* `hosts.networkConfig`: Xác định cấu hình giao diện mạng của một máy chủ theo định dạng NMState. Cấu hình này là tùy chọn.
+* `minimalISO`: Xác định xem có tạo tệp ảnh ISO không bao gồm tệp ảnh rootfs hay không; thay vào đó, tệp ISO này sẽ chứa thông tin về vị trí để tải tệp rootfs về. Bạn phải đặt tham số này thành `true` để kích hoạt tính năng khởi động qua iSCSI (iSCSI booting).
+
+### VII.5. Tạo các tệp cài đặt
+Tạo tệp ảnh ISO và lập một tập lệnh iPXE để tải lên đích iSCSI (iSCSI target) của bạn.
+
+**Quy trình**
+
+1. Tạo tệp ảnh tác nhân (agent image) bằng cách chạy lệnh sau:
+
+```bash
+openshift-install --dir <install_directory> agent create image
+```
+
+2. Tạo tập lệnh iPXE bằng cách chạy lệnh sau:
+
+```bash
+cat << EOF > agent.ipxe
+!ipxe
+set initiator-iqn <iscsi_initiator_base>:\${hostname}
+sanboot --keep iscsi:<iscsi_network_subnet>.1::::<iscsi_target_base>:\${hostname}
+EOF
+```
+
+Trong đó:
+
+* `<iscsi_initiator_base`>: Chỉ định tên iSCSI initiator trên máy chủ đang khởi động tệp ISO. Tên này cũng có thể được iSCSI target sử dụng.
+* `<iscsi_network_subnet>`: Chỉ định địa chỉ IP của iSCSI target.
+* `<iscsi_target_base>`: Chỉ định tên iSCSI target. Tên này có thể trùng với tên iSCSI initiator.
+
+Ví dụ về lệnh
+
+```bash
+cat << EOF > agent.ipxe
+!ipxe
+set initiator-iqn iqn.2023-01.com.example:\${hostname}
+sanboot --keep iscsi:192.168.45.1::::iqn.2023-01.com.example:\${hostname}
+EOF
+```
