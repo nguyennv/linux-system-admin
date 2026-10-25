@@ -8,6 +8,8 @@ Các mạng ảo của libvirt tận dụng những thành phần mạng của L
 
 Sau khi hoàn thành hướng dẫn này, bạn sẽ nắm vững kỹ năng cấu hình mạng libvirt, từ các thiết lập NAT cơ bản đến những kịch bản nâng cao liên quan đến VLAN, nhiều bridge, định tuyến tùy chỉnh và các chiến lược cô lập mạng thường được áp dụng trong môi trường thực tế.
 
+Tài liệu tham khảo: https://libvirt.org/formatnetwork.html
+
 ## Tìm hiểu về mạng ảo Libvirt
 ### Kiến trúc mạng Libvirt
 ```
@@ -815,6 +817,38 @@ $ vi dns-network.xml
 $ virsh net-define dns-network.xml
 $ virsh net-start dns-network
 ```
+
+## Cấu hình tùy chọn dnsmasq
+Chỉnh sửa file cấu hình mạng của libvirt bằng lệnh:
+
+```bash
+$ virsh net-edit <network-name>
+```
+
+*(Thay `<network-name>` bằng tên mạng, ví dụ: default).*
+
+Thêm namespace xmlns:dnsmasq vào thẻ `<network>` và khai báo các tùy chọn trong thẻ `<dnsmasq:options>` như sau:
+
+```xml
+<network xmlns:dnsmasq='http://libvirt.org/schemas/network/dnsmasq/1.0'>
+  <name>default</name>
+  <!-- Các cấu hình mạng khác... -->
+  
+  <dnsmasq:options>
+    <dnsmasq:option value="foo=bar"/>
+    <dnsmasq:option value="cname=*.foo.example.com,master.example.com"/>
+  </dnsmasq:options>
+</network>
+```
+
+Sau khi lưu và thoát khỏi `virsh net-edit`, cần khởi động lại mạng ảo để áp dụng thay đổi:
+
+```bash
+$ virsh net-destroy <network-name>
+$ virsh net-start <network-name>
+```
+
+**Lưu ý quan trọng:** Không sửa trực tiếp file sinh tự động. Các file cấu hình dnsmasq của libvirt thường nằm trong đường dẫn `/var/lib/libvirt/dnsmasq/*.conf` (hoặc tương tự) có cảnh báo tự động ghi đè, vì vậy bạn không nên sửa trực tiếp các file này. Mọi thay đổi phải thông qua virsh net-edit.
 
 ## Tường lửa và Bảo mật
 ### Các quy tắc tường lửa tùy chỉnh
