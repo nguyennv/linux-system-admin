@@ -16,8 +16,8 @@ VPS hosting tận dụng công nghệ ảo hóa phần cứng để tạo ra cá
 **KVM (Kernel-based Virtual Machine)** là công nghệ ảo hóa phổ biến nhất cho dịch vụ lưu trữ VPS:
 * Kiểm tra xem hệ thống của bạn có hỗ trợ ảo hóa hay không.
 
-```console
-egrep -c '(vmx|svm)' /proc/cpuinfo
+```bash
+$ egrep -c '(vmx|svm)' /proc/cpuinfo
 ```
 
 Nếu kết quả đầu ra > 0, tính năng ảo hóa được hỗ trợ.
@@ -25,8 +25,8 @@ Nếu kết quả đầu ra > 0, tính năng ảo hóa được hỗ trợ.
 
 * Xác minh các mô-đun KVM đã được nạp.
 
-```console
-lsmod | grep kvm
+```bash
+$ lsmod | grep kvm
 ```
 
 Kết quả hiển thị cần là: kvm_intel hoặc kvm_amd
@@ -46,21 +46,21 @@ Các nhà cung cấp VPS sử dụng các chiến lược phân bổ khác nhau:
 #### Nguồn lực được đảm bảo:
 * Kiểm tra dung lượng RAM được đảm bảo trên VPS của bạn.
 
-```console
-free -h
+```bash
+$ free -h
 ```
 
 * Xem phân bổ CPU
 
-```console
-nproc
-lscpu
+```bash
+$ nproc
+$ lscpu
 ```
 
 * Kiểm tra việc phân bổ đĩa
 
-```console
-df -h
+```bash
+$ df -h
 ```
 
 > **Cân nhắc về việc phân bổ quá mức:** Một số nhà cung cấp phân bổ quá mức CPU và RAM, nghĩa là tổng tài nguyên được phân bổ vượt quá dung lượng vật lý. Điều này hoạt động được vì không phải tất cả các máy ảo đều đạt đỉnh điểm cùng một lúc.
@@ -73,28 +73,28 @@ df -h
 2. Quyền truy cập Root và toàn quyền kiểm soát
 - Quyền truy cập root đầy đủ cho phép tùy biến hoàn toàn.
 
-```console
-sudo su -
+```bash
+$ sudo su -
 ```
 
 - Cài đặt bất kỳ phần mềm hoặc dịch vụ nào
 
-```console
-dnf -y install docker
-systemctl enable docker
+```bash
+$ dnf -y install docker
+$ systemctl enable docker
 ```
 
 3. Sự cô lập và bảo mật: Mỗi VPS được cô lập thông qua công nghệ ảo hóa:
 - VPS sử dụng cơ chế cách ly không gian tên. Mỗi tiến trình có các không gian tên riêng.
 
-```console
-ls /proc/*/ns/
+```bash
+$ ls /proc/*/ns/
 ```
 
 - cgroups kiểm soát việc sử dụng tài nguyên.
 
-```console
-cat /proc/cgroups
+```bash
+$ cat /proc/cgroups
 ```
 
 4. Các instance VPS triển khai nhanh có thể được thiết lập chỉ trong vài phút, thay vì hàng giờ hay hàng ngày.
@@ -107,8 +107,8 @@ cat /proc/cgroups
 2. Sự biến động về hiệu suất
 - Kiểm tra sự biến thiên hiệu năng I/O
 
-```console
-fio --name=random-write --ioengine=libaio --rw=randwrite \
+```bash
+$ fio --name=random-write --ioengine=libaio --rw=randwrite \
     --bs=4k --size=1G --numjobs=1 --iodepth=16 \
     --runtime=60 --time_based --end_fsync=1
 ```
@@ -123,34 +123,34 @@ fio --name=random-write --ioengine=libaio --rw=randwrite \
 **Dịch vụ lưu trữ web và các ứng dụng:**
 - Hoàn hảo cho các stack LAMP/LEMP.
 
-```console
-dnf -y install nginx mysql-server php-fpm
-systemctl enable nginx mysql
+```bash
+$ dnf -y install nginx mysql-server php-fpm
+$ systemctl enable nginx mysql
 ```
 
 **Môi trường Phát triển và Kiểm thử:**
 
 - Triển khai nhanh môi trường
 
-```console
-docker run -d --name dev-env alpine:latest
+```bash
+$ docker run -d --name dev-env alpine:latest
 ```
 
 **Cơ sở dữ liệu quy mô nhỏ đến trung bình:**
 
 - MySQL/PostgreSQL với mức tải trung bình
 
-```console
-dnf -y install postgresql-14
-systemctl enable postgresql
+```bash
+$ dnf -y install postgresql-14
+$ systemctl enable postgresql
 ```
 
 **Microservices và các ứng dụng được đóng gói trong container:**
 
 - Docker và điều phối container
 
-```console
-dnf -y install docker docker-compose
+```bash
+$ dnf -y install docker docker-compose
 ```
 
 ## Tìm hiểu về máy chủ Bare-metal
@@ -162,17 +162,17 @@ Máy chủ Bare-metal là máy chủ vật lý chuyên dụng được cấp ph�
 
 - Xem phần cứng thực tế
 
-```console
-lscpu | grep "Model name"
-dmidecode -t processor
-dmidecode -t memory
+```bash
+$ lscpu | grep "Model name"
+$ dmidecode -t processor
+$ dmidecode -t memory
 ```
 
 - Kiểm tra các ổ đĩa vật lý
 
-```console
-lsblk -d
-smartctl -a /dev/sda
+```bash
+$ lsblk -d
+$ smartctl -a /dev/sda
 ```
 
 **Dành riêng toàn bộ tài nguyên:** Mọi thành phần đều dành riêng cho bạn:
@@ -188,20 +188,20 @@ smartctl -a /dev/sda
 
 - Đo hiệu năng CPU
 
-```console
-sysbench cpu --cpu-max-prime=20000 run
+```bash
+$ sysbench cpu --cpu-max-prime=20000 run
 ```
 
 - Kiểm tra băng thông bộ nhớ
 
-```console
-sysbench memory --memory-total-size=10G run
+```bash
+$ sysbench memory --memory-total-size=10G run
 ```
 
 - Đo hiệu năng I/O của ổ đĩa
 
-```console
-hdparm -Tt /dev/nvme0n1
+```bash
+$ hdparm -Tt /dev/nvme0n1
 ```
 
 **Không xảy ra hiệu ứng "hàng xóm ồn ào" (Noisy Neighbor):**
@@ -212,15 +212,15 @@ hdparm -Tt /dev/nvme0n1
 
 - Cấu hình các mảng RAID
 
-```console
-mdadm --create /dev/md0 --level=10 --raid-devices=4 \
+```bash
+$ mdadm --create /dev/md0 --level=10 --raid-devices=4 \
       /dev/sda /dev/sdb /dev/sdc /dev/sdd
 ```
 
 - Tối ưu hóa kernel cho phần cứng cụ thể
 
-```console
-echo "performance" | tee \
+```bash
+$ echo "performance" | tee \
 /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 ```
 
@@ -235,8 +235,8 @@ echo "performance" | tee \
 - Tùy chọn cấu hình RAID
 - Giám sát phần cứng trực tiếp
 
-```console
-ipmitool sensor list
+```bash
+$ ipmitool sensor list
 ```
 
 3. Tuân thủ và Bảo mật
@@ -246,7 +246,7 @@ ipmitool sensor list
 4. Hiệu năng ổn định, có thể dự đoán được
 - Kết quả kiểm chuẩn nhất quán
 
-```console
+```bash
 for i in {1..10}; do
     sysbench cpu --cpu-max-prime=20000 run | grep "events per second"
 done
@@ -308,8 +308,8 @@ Hạ tầng đám mây cung cấp các tài nguyên điện toán theo nhu cầu
 
 - AWS EC2, Google Compute Engine, Azure VMs. Ví dụ: Khởi chạy instance EC2 thông qua CLI
 
-```console
-aws ec2 run-instances \
+```bash
+$ aws ec2 run-instances \
     --image-id ami-0c55b159cbfafe1f0 \
     --instance-type t3.medium \
     --key-name my-key
@@ -329,8 +329,8 @@ aws ec2 run-instances \
 1. Tính linh hoạt và Tự động mở rộng:
 - Ví dụ về tự động mở rộng AWS
 
-```console
-aws autoscaling create-auto-scaling-group \
+```bash
+$ aws autoscaling create-auto-scaling-group \
     --auto-scaling-group-name my-asg \
     --min-size 2 \
     --max-size 10 \
@@ -340,8 +340,8 @@ aws autoscaling create-auto-scaling-group \
 2. Phân bố địa lý:
 - Triển khai trên nhiều khu vực. Chọn các khu vực dựa trên khoảng cách đến người dùng
 
-```console
-aws ec2 describe-regions --output table
+```bash
+$ aws ec2 describe-regions --output table
 ```
 3. Dịch vụ Quản lý:
     * Cơ sở dữ liệu được quản lý (RDS, Cloud SQL)
@@ -351,10 +351,10 @@ aws ec2 describe-regions --output table
 4. Cơ sở hạ tầng dựa trên API:
 - Cơ sở hạ tầng dưới dạng mã với OpenTofu
 
-```console
-tofu init
-tofu plan
-tofu apply
+```bash
+$ tofu init
+$ tofu plan
+$ tofu apply
 ```
 
 ### Ưu điểm của cơ sở hạ tầng đám mây
@@ -386,8 +386,8 @@ tofu apply
 1. Khó lường về chi phí
 - Theo dõi chi tiêu cho dịch vụ đám mây
 
-```console
-aws ce get-cost-and-usage \
+```bash
+$ aws ce get-cost-and-usage \
     --time-period Start=2024-01-01,End=2024-01-31 \
     --granularity MONTHLY
 ```
@@ -497,16 +497,16 @@ aws ce get-cost-and-usage \
 
 Mở rộng theo chiều dọc
 
-```console
-aws ec2 modify-instance-attribute \
+```bash
+$ aws ec2 modify-instance-attribute \
     --instance-id i-1234567890abcdef0 \
     --instance-type t3.large
 ```
 
 Tự động mở rộng theo chiều ngang
 
-```console
-aws autoscaling put-scaling-policy \
+```bash
+$ aws autoscaling put-scaling-policy \
     --auto-scaling-group-name my-asg \
     --policy-name scale-up \
     --scaling-adjustment 2
@@ -520,15 +520,15 @@ aws autoscaling put-scaling-policy \
 * Bảng điều khiển (đôi khi có)
 * Cập nhật hệ thống
 
-```console
-dnf upgrade -y
+```bash
+$ dnf upgrade -y
 ```
 
 * Giám sát
 
-```console
-systemctl status
-htop
+```bash
+$ systemctl status
+$ htop
 ```
 
 **Quản lý máy chủ vật lý:**
@@ -541,15 +541,15 @@ htop
 
 Giám sát phần cứng bằng IPMI
 
-```console
-ipmitool sensor list
-ipmitool sel list
+```bash
+$ ipmitool sensor list
+$ ipmitool sel list
 ```
 
 Giải pháp sao lưu tùy chỉnh
 
-```console
-rsync -avz /data/ backup-server:/backups/
+```bash
+$ rsync -avz /data/ backup-server:/backups/
 ```
 
 **Quản lý đám mây:**
@@ -560,15 +560,15 @@ rsync -avz /data/ backup-server:/backups/
 
 Cơ sở hạ tầng dưới dạng mã
 
-```console
-terraform apply
-ansible-playbook deploy.yml
+```bash
+$ terraform apply
+$ ansible-playbook deploy.yml
 ```
 
 Sao lưu tự động
 
-```console
-aws backup create-backup-plan --backup-plan file://plan.json
+```bash
+$ aws backup create-backup-plan --backup-plan file://plan.json
 ```
 
 ## Khung ra quyết định
@@ -653,9 +653,9 @@ aws backup create-backup-plan --backup-plan file://plan.json
 
 Kết nối qua VPN
 
-```console
-strongswan configuration
-ipsec tunnel between Baremetal <-> Cloud
+```bash
+$ strongswan configuration
+$ ipsec tunnel between Baremetal <-> Cloud
 ```
 
 ### Chiến lược đa đám mây
@@ -667,24 +667,24 @@ ipsec tunnel between Baremetal <-> Cloud
 
 Terraform đa đám mây
 
-```console
-provider "aws" { ... }
-provider "gcp" { ... }
-provider "azure" { ... }
+```bash
+$ provider "aws" { ... }
+$ provider "gcp" { ... }
+$ provider "azure" { ... }
 ```
 
 ## Kiểm thử hiệu năng và Đo hiệu năng (Benchmarking)
 ### Đo hiệu năng CPU
 Cài đặt sysbench
 
-```console
-dnf -y install sysbench
+```bash
+$ dnf -y install sysbench
 ```
 
 Kiểm tra hiệu năng CPU
 
-```console
-sysbench cpu --cpu-max-prime=20000 --threads=4 run
+```bash
+$ sysbench cpu --cpu-max-prime=20000 --threads=4 run
 ```
 
 * So sánh kết quả giữa các nền tảng
@@ -695,35 +695,35 @@ sysbench cpu --cpu-max-prime=20000 --threads=4 run
 ### Đo hiệu năng bộ nhớ
 * Kiểm tra thông lượng bộ nhớ
 
-```console
-sysbench memory --memory-total-size=10G --threads=4 run
+```bash
+$ sysbench memory --memory-total-size=10G --threads=4 run
 ```
 
 * Kiểm tra độ trễ bộ nhớ
 
-```console
-lat_mem_rd -P 4 -N 10 1024
+```bash
+$ lat_mem_rd -P 4 -N 10 1024
 ```
 
 ### Đo hiệu năng I/O đĩa
 * Cài đặt fio
 
-```console
-dnf -y install fio
+```bash
+$ dnf -y install fio
 ```
 
 * Kiểm tra đọc/ghi ngẫu nhiên
 
-```console
-fio --name=randwrite --ioengine=libaio --rw=randrw \
+```bash
+$ fio --name=randwrite --ioengine=libaio --rw=randrw \
     --bs=4k --size=4G --numjobs=4 --iodepth=32 \
     --runtime=60 --time_based --group_reporting
 ```
 
 * Đọc/ghi tuần tự
 
-```console
-fio --name=seqwrite --ioengine=libaio --rw=write \
+```bash
+$ fio --name=seqwrite --ioengine=libaio --rw=write \
     --bs=1M --size=4G --numjobs=1 --iodepth=16 \
     --runtime=60 --time_based
 ```
@@ -731,20 +731,20 @@ fio --name=seqwrite --ioengine=libaio --rw=write \
 ### Đánh giá hiệu năng mạng
 * Cài đặt iperf3
 
-```console
-dnf -y install iperf3
+```bash
+$ dnf -y install iperf3
 ```
 
 * Phía máy chủ
 
-```console
-iperf3 -s
+```bash
+$ iperf3 -s
 ```
 
 * Phía máy khách
 
-```console
-iperf3 -c server-ip -t 60 -P 4
+```bash
+$ iperf3 -c server-ip -t 60 -P 4
 ```
 
 * Kết quả điển hình:
@@ -758,31 +758,31 @@ iperf3 -c server-ip -t 60 -P 4
 
 - Theo dõi mức sử dụng thực tế
 
-```console
-htop
-free -h
-df -h
+```bash
+$ htop
+$ free -h
+$ df -h
 ```
 
 2. Sử dụng các cam kết dài hạn. Nhiều nhà cung cấp đưa ra mức giảm giá (10-20%) cho gói thanh toán hàng năm.
 3. Tối ưu hóa hiệu năng ứng dụng. Giảm yêu cầu về tài nguyên thông qua tối ưu hóa mã nguồn.
 4. Triển khai bộ nhớ đệm
 
-```console
-dnf -y install redis-server memcached
+```bash
+$ dnf -y install redis-server memcached
 ```
 
 ### Tối ưu hóa chi phí máy chủ vật lý
 1. Tối đa hóa hiệu suất sử dụng: Chạy nhiều dịch vụ trên một máy chủ
 
-```console
-docker-compose up -d
+```bash
+$ docker-compose up -d
 ```
 
 2. Triển khai ảo hóa nếu cần thiết: Sử dụng KVM để tạo các máy ảo trên máy chủ vật lý (bare-metal).
 
-```console
-dnf -y install qemu-kvm libvirt virt-install 
+```bash
+$ dnf -y install qemu-kvm libvirt virt-install 
 ```
 
 3. Chọn phần cứng phù hợp. Đừng cấp phát dư thừa
@@ -791,8 +791,8 @@ dnf -y install qemu-kvm libvirt virt-install
 ### Tối ưu hóa chi phí đám mây
 1. Sử dụng Reserved Instance
 
-```console
-aws ec2 purchase-reserved-instances \
+```bash
+$ aws ec2 purchase-reserved-instances \
     --instance-type t3.medium \
     --instance-count 2 \
     --offering-type All Upfront
@@ -801,8 +801,8 @@ aws ec2 purchase-reserved-instances \
 2. Triển khai tính năng tự động mở rộng quy mô. Giảm quy mô trong giờ thấp điểm
 3. Sử dụng Spot Instance cho các khối lượng công việc không quan trọng.
 
-```console
-aws ec2 request-spot-instances \
+```bash
+$ aws ec2 request-spot-instances \
     --spot-price "0.05" \
     --instance-count 5
 ```
@@ -810,8 +810,8 @@ aws ec2 request-spot-instances \
 4. Điều chỉnh kích thước instance cho phù hợp. Sử dụng các đề xuất từ AWS Cost Explorer.
 5. Xóa các tài nguyên không sử dụng
 
-```console
-aws ec2 describe-volumes --filters "Name=status,Values=available"
+```bash
+$ aws ec2 describe-volumes --filters "Name=status,Values=available"
 ```
 
 6. Sử dụng các chính sách vòng đời S3. Chuyển dữ liệu cũ sang các tầng lưu trữ có chi phí thấp hơn.
@@ -820,29 +820,29 @@ aws ec2 describe-volumes --filters "Name=status,Values=available"
 ### Chuyển đổi từ VPS sang máy chủ vật lý (Bare Metal)
 1. Sao lưu VPS hiện tại
 
-```console
-rsync -avz --progress /var/www/ backup-location/
+```bash
+$ rsync -avz --progress /var/www/ backup-location/
 ```
 
 2. Triển khai máy chủ vật lý (Bare-metal server). Cài đặt cùng phiên bản hệ điều hành.
 3. Khôi phục dữ liệu
 
-```console
-rsync -avz backup-location/ /var/www/
+```bash
+$ rsync -avz backup-location/ /var/www/
 ```
 
 4. Cập nhật DNS. Trỏ về IP mới.
 5. Kiểm thử và xác minh
 
-```console
-curl -I https://yourdomain.com
+```bash
+$ curl -I https://yourdomain.com
 ```
 
 ### Chuyển đổi từ hệ thống Bare-metal sang Cloud
 1. Tạo cơ sở hạ tầng đám mây
 
-```console
-terraform apply
+```bash
+$ terraform apply
 ```
 
 2. Sử dụng các công cụ di chuyển
@@ -851,8 +851,8 @@ terraform apply
     * Google Cloud Migrate
 3. Đồng bộ hóa dữ liệu
 
-```console
-rsync -avz --progress source-server:/data/ /mnt/cloud-storage/
+```bash
+$ rsync -avz --progress source-server:/data/ /mnt/cloud-storage/
 ```
 
 4. Cập nhật cấu hình: Điều chỉnh cấu hình ứng dụng cho các dịch vụ đám mây.
@@ -862,16 +862,16 @@ rsync -avz --progress source-server:/data/ /mnt/cloud-storage/
 1. Tạo các tài nguyên đám mây tương đương. Đạt hoặc vượt thông số kỹ thuật của VPS.
 2. Di chuyển cơ sở dữ liệu
 
-```console
-pg_dump dbname | psql -h cloud-db-host dbname
+```bash
+$ pg_dump dbname | psql -h cloud-db-host dbname
 ```
 
 3. Di chuyển ứng dụng
 
-```console
-git clone repository
-docker build -t app:latest .
-docker push registry.cloud.com/app:latest
+```bash
+$ git clone repository
+$ docker build -t app:latest .
+$ docker push registry.cloud.com/app:latest
 ```
 
 4. Cập nhật DNS và kiểm tra: Chuyển dịch lưu lượng truy cập dần dần sử dụng DNS có trọng số
@@ -880,29 +880,29 @@ docker push registry.cloud.com/app:latest
 ### Bảo mật VPS
 1. Cập nhật thường xuyên
 
-```console
-dnf -y upgrade
+```bash
+$ dnf -y upgrade
 ```
 
 2. Cấu hình tường lửa
 
-```console
-firewall-cmd --permanent --add-port=22/tcp
-firewall-cmd --permanent --add-port=80/tcp
-firewall-cmd --permanent --add-port=443/tcp
-firewall-cmd --reload
+```bash
+$ firewall-cmd --permanent --add-port=22/tcp
+$ firewall-cmd --permanent --add-port=80/tcp
+$ firewall-cmd --permanent --add-port=443/tcp
+$ firewall-cmd --reload
 ```
 
 3. Fail2ban
 
-```console
-dnf -y install fail2ban
-systemctl enable fail2ban
+```bash
+$ dnf -y install fail2ban
+$ systemctl enable fail2ban
 ```
 
 4. Tăng cường bảo mật SSH. Chỉnh sửa /etc/ssh/sshd_config
 
-```console
+```
 PermitRootLogin no
 PasswordAuthentication no
 ```
@@ -915,21 +915,21 @@ PasswordAuthentication no
 3. Bảo mật IPMI: Mạng quản lý tách biệt; Mật khẩu IPMI mạnh.
 4. Mã hóa toàn bộ ổ đĩa
 
-```console
-cryptsetup luksFormat /dev/sda
+```bash
+$ cryptsetup luksFormat /dev/sda
 ```
 
 ### Bảo mật đám mây
 1. Các chính sách IAM
 
-```console
-aws iam create-policy --policy-name LeastPrivilege
+```bash
+$ aws iam create-policy --policy-name LeastPrivilege
 ```
 
 2. Nhóm bảo mật
 
-```console
-aws ec2 create-security-group \
+```bash
+$ aws ec2 create-security-group \
     --group-name web-servers \
     --description "Web servers security group"
 ```
@@ -941,31 +941,31 @@ aws ec2 create-security-group \
 4. Phân đoạn mạng: VPC, subnet, NACL
 5. Giám sát tuân thủ
 
-```console
-aws config start-configuration-recorder
+```bash
+$ aws config start-configuration-recorder
 ```
 
 ## Giám sát và Khả năng quan sát
 ### Giám sát VPS
 * Giám sát cơ bản
 
-```console
-htop
-iotop
-nethogs
+```bash
+$ htop
+$ iotop
+$ nethogs
 ```
 
 * Giám sát nâng cao
 
-```console
-dnf -y install prometheus node-exporter
-systemctl enable node-exporter
+```bash
+$ dnf -y install prometheus node-exporter
+$ systemctl enable node-exporter
 ```
 
 * Tổng hợp nhật ký. Cấu hình ghi nhật ký từ xa
 
-```console
-dnf -y install rsyslog
+```bash
+$ dnf -y install rsyslog
 ```
 
 ### Giám sát Bare-metal
@@ -973,24 +973,24 @@ Tất cả các dịch vụ giám sát VPS, cộng thêm:
 
 * Giám sát phần cứng
 
-```console
-dnf -y install lm-sensors
-sensors-detect
-sensors
+```bash
+$ dnf -y install lm-sensors
+$ sensors-detect
+$ sensors
 ```
 
 * Giám sát RAID
 
-```console
-cat /proc/mdstat
-mdadm --detail /dev/md0
+```bash
+$ cat /proc/mdstat
+$ mdadm --detail /dev/md0
 ```
 
 * Giám sát thông minh
 
-```console
-dnf -y install smartmontools
-smartctl -a /dev/sda
+```bash
+$ dnf -y install smartmontools
+$ smartctl -a /dev/sda
 ```
 
 ### Giám sát đám mây
@@ -998,20 +998,20 @@ Giám sát đám mây tích hợp sẵn
 
 * AWS CloudWatch
 
-```console
-aws cloudwatch put-metric-alarm
+```bash
+$ aws cloudwatch put-metric-alarm
 ```
 
 * Azure Monitor
 
-```console
-az monitor metrics alert create
+```bash
+$ az monitor metrics alert create
 ```
 
 * GCP Cloud Monitoring
 
-```console
-gcloud monitoring dashboards create
+```bash
+$ gcloud monitoring dashboards create
 ```
 
 * APM của bên thứ ba
@@ -1022,83 +1022,83 @@ gcloud monitoring dashboards create
 
 * Tải trọng cao
 
-```console
-top
-ps aux --sort=-%cpu | head
+```bash
+$ top
+$ ps aux --sort=-%cpu | head
 ```
 
 * Đĩa đầy
 
-```console
-df -h
-du -sh /* | sort -rh | head
+```bash
+$ df -h
+$ du -sh /* | sort -rh | head
 ```
 
 * Sự cố mạng
 
-```console
-netstat -tulpn
-ss -tulpn
+```bash
+$ netstat -tulpn
+$ ss -tulpn
 ```
 
 * Rò rỉ bộ nhớ
 
-```console
-ps aux --sort=-%mem | head
-free -h
+```bash
+$ ps aux --sort=-%mem | head
+$ free -h
 ```
 
 ### Khắc phục sự cố Bare-metal
 * Lỗi phần cứng
 
-```console
-dmesg | grep -i error
-journalctl -p err -b
+```bash
+$ dmesg | grep -i error
+$ journalctl -p err -b
 ```
 
 * Suy giảm hiệu năng RAID
 
-```console
-cat /proc/mdstat
-mdadm --detail /dev/md0
+```bash
+$ cat /proc/mdstat
+$ mdadm --detail /dev/md0
 ```
 
 * Các vấn đề về nhiệt độ
 
-```console
-sensors
-ipmitool sensor list | grep Temp
+```bash
+$ sensors
+$ ipmitool sensor list | grep Temp
 ```
 
 * Các vấn đề về gộp kết nối mạng
 
-```console
-cat /proc/net/bonding/bond0
+```bash
+$ cat /proc/net/bonding/bond0
 ```
 
 ### Khắc phục sự cố đám mây
 * Khả năng kết nối với instance
 
-```console
-aws ec2 describe-instances --instance-ids i-xxx
+```bash
+$ aws ec2 describe-instances --instance-ids i-xxx
 ```
 
 * Các vấn đề về nhóm bảo mật
 
-```console
-aws ec2 describe-security-groups
+```bash
+$ aws ec2 describe-security-groups
 ```
 
 * Các vấn đề về tự động mở rộng quy mô
 
-```console
-aws autoscaling describe-auto-scaling-groups
+```bash
+$ aws autoscaling describe-auto-scaling-groups
 ```
 
 * Nhật ký CloudWatch
 
-```console
-aws logs tail /aws/ec2/instance-id --follow
+```bash
+$ aws logs tail /aws/ec2/instance-id --follow
 ```
 
 ## Kết luận

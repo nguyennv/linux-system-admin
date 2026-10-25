@@ -66,8 +66,8 @@ Tỷ lệ phân bổ vượt mức: 1.25:1 (80/64)
 ### Xem bộ nhớ vật lý
 * Tổng bộ nhớ hệ thống
 
-```console
-free -h
+```bash
+$ free -h
 ```
 
 Kết quả đầu ra:
@@ -79,20 +79,20 @@ Swap:          8.0Gi       0B         8.0Gi
 ```
 
 * Thông tin chi tiết về bộ nhớ
-```console
-cat /proc/meminfo | head -20
+```bash
+$ cat /proc/meminfo | head -20
 ```
 
 * Bộ nhớ theo node NUMA
 
-```console
-numactl --hardware
+```bash
+$ numactl --hardware
 ```
 
 * Bộ nhớ trống trên mỗi núnodet
 
-```console
-numastat -m
+```bash
+$ numastat -m
 ```
 
 ### Kiểm tra mức sử dụng bộ nhớ hiện tại của máy ảo
@@ -175,14 +175,14 @@ Cơ chế ballooning bộ nhớ cho phép máy chủ thu hồi bộ nhớ từ c
 #### Bật thiết bị balloon trong máy ảo:
 * Kiểm tra xem máy ảo có thiết bị balloon hay không.
 
-```console
-virsh dumpxml my-vm | grep balloon
+```bash
+$ virsh dumpxml my-vm | grep balloon
 ```
 
 * Nếu chưa có thì thêm vào.
 
-```console
-virsh edit my-vm
+```bash
+$ virsh edit my-vm
 ```
 
 * Thêm vào trước `</devices>`:
@@ -196,41 +196,41 @@ virsh edit my-vm
 
 * Khởi động lại máy ảo
 
-```console
-virsh shutdown my-vm
-virsh start my-vm
+```bash
+$ virsh shutdown my-vm
+$ virsh start my-vm
 ```
 
 * Xác minh thiết bị balloon
 
-```console
-virsh dumpxml my-vm | grep balloon
+```bash
+$ virsh dumpxml my-vm | grep balloon
 ```
 
 #### Bên trong máy ảo khách (xác minh trình điều khiển):
 * Kiểm tra xem balloon driver đã được nạp chưa
 
-```console
-lsmod | grep virtio_balloon
+```bash
+$ lsmod | grep virtio_balloon
 ```
 
 * Nếu chưa được tải
 
-```console
-modprobe virtio_balloon
+```bash
+$ modprobe virtio_balloon
 ```
 
 * Làm cho bền vững
 
-```console
-echo "virtio_balloon" >> /etc/modules
+```bash
+$ echo "virtio_balloon" >> /etc/modules
 ```
 
 ### Sử dụng Memory Ballooning
 * Xem các cài đặt bộ nhớ hiện tại
 
-```console
-virsh dominfo my-vm | grep memory
+```bash
+$ virsh dominfo my-vm | grep memory
 ```
 
 > Kết quả đầu ra:
@@ -239,22 +239,22 @@ virsh dominfo my-vm | grep memory
 
 * Thiết lập bộ nhớ tối đa (yêu cầu khởi động lại máy ảo)
 
-```console
-virsh setmaxmem my-vm 4G --config
+```bash
+$ virsh setmaxmem my-vm 4G --config
 ```
 
 * Thiết lập bộ nhớ hiện tại (đang hoạt động, sử dụng cơ chế balloon)
 
-```console
-virsh setmem my-vm 2G --live
+```bash
+$ virsh setmem my-vm 2G --live
 ```
 
 Máy ảo hiện thực tế có 2GB, máy chủ đã thu hồi lại 2GB.
 
 * Xem số liệu thống kê bộ nhớ
 
-```console
-virsh dommemstat my-vm
+```bash
+$ virsh dommemstat my-vm
 ```
 
 Kết quả đầu ra:
@@ -275,22 +275,22 @@ rss 2359296     (host RSS)
 #### Sử dụng numad để quản lý NUMA và bộ nhớ tự động:
 * Cài đặt numad
 
-```console
-apt install numad  # Debian/Ubuntu
-dnf install numad  # RHEL/CentOS
+```bash
+$ apt install numad  # Debian/Ubuntu
+vdnf install numad  # RHEL/CentOS
 ```
 
 * Khởi động numad
 
-```console
-systemctl start numad
-systemctl enable numad
+```bash
+$ systemctl start numad
+$ systemctl enable numad
 ```
 
 * Cấu hình máy ảo để quản lý tự động
 
-```console
-virsh edit my-vm
+```bash
+$ virsh edit my-vm
 ```
 
 ```xml
@@ -328,34 +328,34 @@ Tổng cộng: 1 trang (giải phóng 2 trang)
 ### Bật KSM
 * Kiểm tra trạng thái KSM
 
-```console
-cat /sys/kernel/mm/ksm/run
+```bash
+$ cat /sys/kernel/mm/ksm/run
 ```
 
 0 = disabled, 1 = enabled
 
 * Bật KSM
 
-```console
-echo 1 | sudo tee /sys/kernel/mm/ksm/run
+```bash
+$ echo 1 | sudo tee /sys/kernel/mm/ksm/run
 ```
 
 * Cấu hình các tham số KSM. Số trang cần quét mỗi lần chạy
 
-```console
-echo 100 | sudo tee /sys/kernel/mm/ksm/pages_to_scan
+```bash
+$ echo 100 | sudo tee /sys/kernel/mm/ksm/pages_to_scan
 ```
 
 * Thời gian nghỉ giữa các lần quét (mili giây)
 
-```console
-echo 20 | sudo tee /sys/kernel/mm/ksm/sleep_millisecs
+```bash
+$ echo 20 | sudo tee /sys/kernel/mm/ksm/sleep_millisecs
 ```
 
 * Làm cho bền vững
 
-```console
-cat > /etc/tmpfiles.d/ksm.conf << 'EOF'
+```bash
+$ cat > /etc/tmpfiles.d/ksm.conf << 'EOF'
 w /sys/kernel/mm/ksm/run - - - - 1
 w /sys/kernel/mm/ksm/pages_to_scan - - - - 100
 w /sys/kernel/mm/ksm/sleep_millisecs - - - - 20
@@ -364,8 +364,8 @@ EOF
 
 * Hoặc tạo dịch vụ systemd
 
-```console
-cat > /etc/systemd/system/ksm.service << 'EOF'
+```bash
+$ cat > /etc/systemd/system/ksm.service << 'EOF'
 [Unit]
 Description=Enable Kernel Same-page Merging
 
@@ -380,24 +380,24 @@ WantedBy=multi-user.target
 EOF
 ```
 
-```console
-systemctl enable ksm
-systemctl start ksm
+```bash
+$ systemctl enable ksm
+$ systemctl start ksm
 ```
 
 ### Theo dõi hiệu suất KSM
 * Số liệu thống kê KSM
 
-```console
-cat /sys/kernel/mm/ksm/pages_sharing
-cat /sys/kernel/mm/ksm/pages_shared
-cat /sys/kernel/mm/ksm/pages_unshared
-cat /sys/kernel/mm/ksm/pages_volatile
+```bash
+$ cat /sys/kernel/mm/ksm/pages_sharing
+$ cat /sys/kernel/mm/ksm/pages_shared
+$ cat /sys/kernel/mm/ksm/pages_unshared
+$ cat /sys/kernel/mm/ksm/pages_volatile
 ```
 
 * Tính toán dung lượng bộ nhớ tiết kiệm được
 
-```console
+```bash
 SHARING=$(cat /sys/kernel/mm/ksm/pages_sharing)
 SHARED=$(cat /sys/kernel/mm/ksm/pages_shared)
 SAVED=$((SHARING - SHARED))
@@ -407,14 +407,14 @@ echo "Memory saved by KSM: ${SAVED_MB} MB"
 
 * Thông tin chi tiết về KSM
 
-```console
-grep -H '' /sys/kernel/mm/ksm/*
+```bash
+$ grep -H '' /sys/kernel/mm/ksm/*
 ```
 
 * Theo dõi KSM theo thời gian
 
-```console
-watch -n 5 'echo "Pages sharing: $(cat /sys/kernel/mm/ksm/pages_sharing)"; \
+```bash
+$ watch -n 5 'echo "Pages sharing: $(cat /sys/kernel/mm/ksm/pages_sharing)"; \
             echo "Pages shared: $(cat /sys/kernel/mm/ksm/pages_shared)"; \
             echo "Saved: $(( ($(cat /sys/kernel/mm/ksm/pages_sharing) - \
                          $(cat /sys/kernel/mm/ksm/pages_shared)) * 4 / 1024 )) MB"'
@@ -423,8 +423,8 @@ watch -n 5 'echo "Pages sharing: $(cat /sys/kernel/mm/ksm/pages_sharing)"; \
 ### Cấu hình các máy ảo cho KSM
 Bật tính năng gộp bộ nhớ trong máy ảo
 
-```console
-virsh edit my-vm
+```bash
+$ virsh edit my-vm
 ```
 
 ```xml
@@ -443,29 +443,29 @@ Hoặc kích hoạt một cách tường minh (hành vi mặc định). Chỉ c�
 ### Tinh chỉnh hiệu suất KSM
 * Quét tích cực (tốn nhiều CPU hơn, hợp nhất tốt hơn)
 
-```console
-echo 500 | sudo tee /sys/kernel/mm/ksm/pages_to_scan
-echo 10 | sudo tee /sys/kernel/mm/ksm/sleep_millisecs
+```bash
+$ echo 500 | sudo tee /sys/kernel/mm/ksm/pages_to_scan
+$ echo 10 | sudo tee /sys/kernel/mm/ksm/sleep_millisecs
 ```
 
 * Quét thận trọng (ít sử dụng CPU hơn, ít thực hiện gộp hơn)
 
-```console
-echo 50 | sudo tee /sys/kernel/mm/ksm/pages_to_scan
-echo 100 | sudo tee /sys/kernel/mm/ksm/sleep_millisecs
+```bash
+$ echo 50 | sudo tee /sys/kernel/mm/ksm/pages_to_scan
+$ echo 100 | sudo tee /sys/kernel/mm/ksm/sleep_millisecs
 ```
 
 * Cân bằng (khuyên dùng)
 
-```console
-echo 100 | sudo tee /sys/kernel/mm/ksm/pages_to_scan
-echo 20 | sudo tee /sys/kernel/mm/ksm/sleep_millisecs
+```bash
+$ echo 100 | sudo tee /sys/kernel/mm/ksm/pages_to_scan
+$ echo 20 | sudo tee /sys/kernel/mm/ksm/sleep_millisecs
 ```
 
 * Theo dõi mức độ ảnh hưởng đến CPU
 
-```console
-top -d 1
+```bash
+$ top -d 1
 ```
 
 Tìm kiếm tiến trình [ksmd]
@@ -483,33 +483,34 @@ Trang thông thường: 4KB Trang dung lượng lớn: 2MB (lớn hơn 512 lần
 ### Bật THP cho các máy ảo
 * Kiểm tra trạng thái THP
 
-```console
-cat /sys/kernel/mm/transparent_hugepage/enabled
-# [always] madvise never
+```bash
+$ cat /sys/kernel/mm/transparent_hugepage/enabled
+[always] madvise never
 ```
 
 * Bật THP
 
-```console
-echo always | sudo tee /sys/kernel/mm/transparent_hugepage/enabled
+```bash
+$ echo always | sudo tee /sys/kernel/mm/transparent_hugepage/enabled
 ```
 
 * Cấu hình chống phân mảnh (nén dữ liệu)
 
-```console
-echo defer | sudo tee /sys/kernel/mm/transparent_hugepage/defrag
-# Tùy chọn: always defer defer+madvise madvise never
+```bash
+$ echo defer | sudo tee /sys/kernel/mm/transparent_hugepage/defrag
 ```
+
+Tùy chọn: always defer defer+madvise madvise never
 
 * Làm cho bền vững
 
-```console
-cat >> /etc/rc.local << 'EOF'
+```bash
+$ cat >> /etc/rc.local << 'EOF'
 echo always > /sys/kernel/mm/transparent_hugepage/enabled
 echo defer > /sys/kernel/mm/transparent_hugepage/defrag
 EOF
 
-chmod +x /etc/rc.local
+$ chmod +x /etc/rc.local
 ```
 
 ### Cấu hình các máy ảo cho THP
@@ -517,22 +518,22 @@ Các máy ảo tự động sử dụng THP nếu tính năng này được bậ
 
 * Kiểm tra bên trong máy ảo khách
 
-```console
-cat /proc/meminfo | grep Huge
+```bash
+$ cat /proc/meminfo | grep Huge
 ```
 
 AnonHugePages: 2097152 kB (2GB dưới dạng huge page)
 
 * Xác minh việc phân bổ THP
 
-```console
-cat /sys/kernel/mm/transparent_hugepage/khugepaged/pages_collapsed
+```bash
+$ cat /sys/kernel/mm/transparent_hugepage/khugepaged/pages_collapsed
 ```
 
 * Theo dõi hiệu quả của THP
 
-```console
-watch -n 1 'cat /proc/meminfo | grep Huge'
+```bash
+$ watch -n 1 'cat /proc/meminfo | grep Huge'
 ```
 
 ### THP so với Huge Pages thông thường
@@ -548,8 +549,8 @@ watch -n 1 'cat /proc/meminfo | grep Huge'
     - Không tốn chi phí xử lý cho việc nén/gom vùng nhớ
 
 * Cấu hình huge page thông thường cho máy ảo
-```console
-virsh edit my-vm
+```bash
+$ virsh edit my-vm
 ```
 
 ```xml
@@ -563,8 +564,8 @@ virsh edit my-vm
 
 * Phân bổ trước các trang bộ nhớ lớn trên máy chủ.
 
-```console
-echo 4096 > /proc/sys/vm/nr_hugepages
+```bash
+$ echo 4096 > /proc/sys/vm/nr_hugepages
 ```
 
 4096 trang * 2MB = 8GB
@@ -582,31 +583,31 @@ echo 4096 > /proc/sys/vm/nr_hugepages
 ### Cấu hình Swap cho Host
 * Kiểm tra swap hiện tại
 
-```console
-free -h
-swapon --show
+```bash
+$ free -h
+$ swapon --show
 ```
 
 * Tạo tệp hoán đổi nếu cần
 
-```console
-sudo fallocate -l 8G /swapfile
-sudo chmod 600 /swapfile
-sudo mkswap /swapfile
-sudo swapon /swapfile
+```bash
+$ sudo fallocate -l 8G /swapfile
+$ sudo chmod 600 /swapfile
+$ sudo mkswap /swapfile
+$ sudo swapon /swapfile
 ```
 
 * Làm cho bền vững
 
-```console
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```bash
+$ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
 
 * Cấu hình swappiness (mức độ tích cực thực hiện swap). Mặc định: 60, Phạm vi: 0-100. Thấp hơn = ít hoán đổi hơn
 
-```console
-sudo sysctl vm.swappiness=10
-echo "vm.swappiness=10" | sudo tee -a /etc/sysctl.conf
+```bash
+$ sudo sysctl vm.swappiness=10
+$ echo "vm.swappiness=10" | sudo tee -a /etc/sysctl.conf
 ```
 
 ### Bật zswap (Bộ nhớ đệm RAM nén)
@@ -614,36 +615,36 @@ zswap nén các trang dữ liệu trước khi ghi vào vùng swap. Nhanh hơn n
 
 * Bật zswap
 
-```console
-echo 1 | sudo tee /sys/module/zswap/parameters/enabled
+```bash
+$ echo 1 | sudo tee /sys/module/zswap/parameters/enabled
 ```
 
 * Cấu hình zswap
 
-```console
-echo 20 | sudo tee /sys/module/zswap/parameters/max_pool_percent
-echo lz4 | sudo tee /sys/module/zswap/parameters/compressor
-echo z3fold | sudo tee /sys/module/zswap/parameters/zpool
+```bash
+$ echo 20 | sudo tee /sys/module/zswap/parameters/max_pool_percent
+$ echo lz4 | sudo tee /sys/module/zswap/parameters/compressor
+$ echo z3fold | sudo tee /sys/module/zswap/parameters/zpool
 ```
 
 * Thiết lập vĩnh viễn (thêm vào tham số kernel)
 
-```console
-sudo vim /etc/default/grub
+```bash
+$ sudo vi /etc/default/grub
 ````
 
 ```
 GRUB_CMDLINE_LINUX="zswap.enabled=1 zswap.compressor=lz4 zswap.max_pool_percent=20"
 ```
 
-```console
-sudo update-grub
-sudo reboot
+```bash
+$ sudo update-grub
+$ sudo reboot
 ```
 
 * Kiểm tra số liệu thống kê zswap
-```console
-cat /sys/kernel/debug/zswap/*
+```bash
+$ cat /sys/kernel/debug/zswap/*
 ```
 
 ### Giải pháp thay thế: zram (Thiết bị khối nén)
@@ -651,40 +652,40 @@ zram tạo ra một thiết bị khối được nén trong RAM. Nó hoạt đ�
 
 * Cài đặt các công cụ zram
 
-```console
-apt install zram-config  # Debian/Ubuntu
-dnf install zram  # RHEL/CentOS
+```bash
+$ apt install zram-config  # Debian/Ubuntu
+$ dnf install zram  # RHEL/CentOS
 ```
 
 * Cấu hình thủ công
 
-```console
-modprobe zram
-echo lz4 > /sys/block/zram0/comp_algorithm
-echo 4G > /sys/block/zram0/disksize
-mkswap /dev/zram0
-swapon /dev/zram0 -p 10  # độ ưu tiên 10
+```bash
+$ modprobe zram
+$ echo lz4 > /sys/block/zram0/comp_algorithm
+$ echo 4G > /sys/block/zram0/disksize
+$ mkswap /dev/zram0
+$ swapon /dev/zram0 -p 10  # độ ưu tiên 10
 ```
 
 * Xác minh
 
-```console
-zramctl
-swapon --show
+```bash
+$ zramctl
+$ swapon --show
 ```
 
 * Theo dõi tỷ số nén
 
-```console
-cat /sys/block/zram0/mm_stat
+```bash
+$ cat /sys/block/zram0/mm_stat
 ```
 
 ## Theo dõi mức sử dụng bộ nhớ
 ### Giám sát bộ nhớ theo thời gian thực
 * Giám sát bộ nhớ trên toàn hệ thống
 
-```console
-free -h -s 1  # Cập nhật mỗi giây
+```bash
+$ free -h -s 1  # Cập nhật mỗi giây
 ```
 
 * Mức sử dụng bộ nhớ trên mỗi máy ảo
@@ -698,15 +699,15 @@ done
 
 * Theo dõi áp lực bộ nhớ
 
-```console
-watch -n 1 'free -h; echo ""; virsh list --name | while read vm; do \
+```bash
+$ watch -n 1 'free -h; echo ""; virsh list --name | while read vm; do \
     echo "$vm:"; virsh dommemstat $vm 2>/dev/null | grep -E "actual|rss|usable"; done'
 ```
 
 * Giám sát bằng virt-top
 
-```console
-virt-top
+```bash
+$ virt-top
 ```
 
 Nhấn phím 2 để xem bộ nhớ
@@ -841,25 +842,25 @@ Nhiều máy ảo sử dụng dưới 50% bộ nhớ được cấp phát. Đây
 3. **Bật tất cả các công nghệ:**
 * KSM
 
-```console
-echo 1 > /sys/kernel/mm/ksm/run
+```bash
+$ echo 1 > /sys/kernel/mm/ksm/run
 ```
 
 * THP
 
-```console
-echo always > /sys/kernel/mm/transparent_hugepage/enabled
+```bash
+$ echo always > /sys/kernel/mm/transparent_hugepage/enabled
 ```
 
 * Ballooning (trong cấu hình máy ảo)
 
-```console
-virsh edit vm-name  # Thêm thiết bị balloon
+```bash
+$ virsh edit vm-name  # Thêm thiết bị balloon
 ```
 
 * zswap
-```console
-echo 1 > /sys/module/zswap/parameters/enabled
+```bash
+$ echo 1 > /sys/module/zswap/parameters/enabled
 ```
 
 4. Giám sát liên tục:
@@ -889,34 +890,34 @@ Quy tắc: Không bao giờ cấp phát vượt quá 90% dung lượng, ngay c�
 ### Xác định áp lực bộ nhớ
 * Kiểm tra các dấu hiệu áp lực bộ nhớ
 
-```console
-free -h  # Bộ nhớ khả dụng thấp
+```bash
+$ free -h  # Bộ nhớ khả dụng thấp
 ```
 
 * Kiểm tra mức sử dụng swap
 
-```console
-swapon --show
-vmstat 1 10  # Theo dõi các cột si/so (hoán đổi vào/ra)
+```bash
+$ swapon --show
+$ vmstat 1 10  # Theo dõi các cột si/so (hoán đổi vào/ra)
 ```
 
 * Các sự kiện OOM
 
-```console
-dmesg | grep -i oom
-journalctl | grep -i "out of memory"
+```bash
+$ dmesg | grep -i oom
+$ journalctl | grep -i "out of memory"
 ```
 
 * Các lỗi trang nghiêm trọng trên mỗi máy ảo (cho biết có hiện tượng hoán đổi/swapping)
 
-```console
-virsh dommemstat my-vm | grep major_fault
+```bash
+$ virsh dommemstat my-vm | grep major_fault
 ```
 
 * Áp suất hệ thống
 
-```console
-cat /proc/pressure/memory
+```bash
+$ cat /proc/pressure/memory
 ```
 
 ### Giảm áp lực bộ nhớ
@@ -933,20 +934,20 @@ done
 
 * 2. Di trú các máy ảo sang các máy chủ khác
 
-```console
-virsh migrate --live vm-name qemu+ssh://other-host/system
+```bash
+$ virsh migrate --live vm-name qemu+ssh://other-host/system
 ```
 
 3. Tắt các máy ảo không quan trọng
 
-```console
-virsh shutdown dev-vm
+```bash
+$ virsh shutdown dev-vm
 ```
 
 4. Xóa bộ nhớ đệm (giải pháp tạm thời)
 
-```console
-sync; echo 3 > /proc/sys/vm/drop_caches
+```bash
+$ sync; echo 3 > /proc/sys/vm/drop_caches
 ```
 
 **Các giải pháp dài hạn:**
@@ -956,44 +957,48 @@ sync; echo 3 > /proc/sys/vm/drop_caches
 3. Tối ưu hóa việc cấp phát bộ nhớ cho máy ảo. Điều chỉnh quy mô máy ảo phù hợp với mức sử dụng thực tế
 4. Tinh chỉnh KSM mạnh mẽ hơn
 
-```console
-echo 500 > /sys/kernel/mm/ksm/pages_to_scan
-echo 10 > /sys/kernel/mm/ksm/sleep_millisecs
+```bash
+$ echo 500 > /sys/kernel/mm/ksm/pages_to_scan
+$ echo 10 > /sys/kernel/mm/ksm/sleep_millisecs
 ```
 
 5. Bật huge pages
 
-```console
-echo 4096 > /proc/sys/vm/nr_hugepages
+```bash
+$ echo 4096 > /proc/sys/vm/nr_hugepages
 ```
 
 ### Xử lý các tình huống OOM (Hết bộ nhớ)
 * Kiểm tra nhật ký OOM killer
 
-```console
-dmesg | grep -i "killed process"
+```bash
+$ dmesg | grep -i "killed process"
 journalctl -k | grep -i oom
 ```
 
 * Xác định các tiến trình bị chấm dứt do OOM
 
-```console
-grep -i "killed process" /var/log/kern.log
+```bash
+$ grep -i "killed process" /var/log/kern.log
 ```
 
 * Cấu hình độ ưu tiên OOM (cho mỗi máy ảo). Điểm số càng thấp = nguy cơ bị giết càng thấp.
 
-```console
-ps aux | grep qemu | grep vm-name
-# Lấy PID
+Lấy PID
 
-echo -17 > /proc/<PID>/oom_score_adj
-# Phạm vi: -1000 (không bao giờ giết) đến 1000 (giết trước)
+```bash
+$ ps aux | grep qemu | grep vm-name
 ```
 
+```bash
+$ echo -17 > /proc/<PID>/oom_score_adj
+```
+
+Phạm vi: -1000 (không bao giờ giết) đến 1000 (giết trước)
+
 # Thiết lập tính bền vững thông qua XML của máy ảo
-```console
-virsh edit my-vm
+```bash
+$ virsh edit my-vm
 ```
 
 * Việc này đòi hỏi các tập lệnh khởi động tùy chỉnh. Tạo tệp /etc/libvirt/hooks/qemu:
@@ -1016,29 +1021,31 @@ fi
 #### Chẩn đoán:
 1. Kiểm tra mức sử dụng swap
 
-```console
-free -h
-vmstat 1 10
+```bash
+$ free -h
+$ vmstat 1 10
 ```
 
 2. Kiểm tra các lỗi nghiêm trọng
 
-```console
-virsh dommemstat vm-name | grep major_fault
-# Cao và đang tăng = hoán đổi
+```bash
+$ virsh dommemstat vm-name | grep major_fault
 ```
+
+Cao và đang tăng = hoán đổi
 
 3. Kiểm tra tác động của KSM
 
-```console
-top | grep ksmd
-# Mức sử dụng CPU cao có thể cho thấy KSM đang hoạt động quá mức.
+```bash
+$ top | grep ksmd
 ```
+
+Mức sử dụng CPU cao có thể cho thấy KSM đang hoạt động quá mức.
 
 4. Kiểm tra tình trạng tắc nghẽn do áp lực bộ nhớ
 
-```console
-cat /proc/pressure/memory
+```bash
+$ cat /proc/pressure/memory
 ```
 
 * Các giải pháp:

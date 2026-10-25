@@ -74,8 +74,8 @@ CPU của bạn phải hỗ trợ các phần mở rộng ảo hóa phần cứn
 ### Kiểm tra hỗ trợ ảo hóa của CPU
 * Kiểm tra xem CPU có hỗ trợ ảo hóa hay không.
 
-```console
-egrep -c '(vmx|svm)' /proc/cpuinfo
+```bash
+$ egrep -c '(vmx|svm)' /proc/cpuinfo
 # Diễn giải kết quả đầu ra:  
 # 0 = Không hỗ trợ ảo hóa (hoặc đã bị vô hiệu hóa trong BIOS)  
 # >0 = Số lượng lõi hỗ trợ ảo hóa  
@@ -83,8 +83,8 @@ egrep -c '(vmx|svm)' /proc/cpuinfo
 
 * Thông tin chi tiết
 
-```console
-lscpu | grep Virtualization
+```bash
+$ lscpu | grep Virtualization
 # Thông số Intel: Virtualization: VT-x
 # Thông số Intel: Virtualization: AMD-V
 ```
@@ -122,8 +122,8 @@ Bật cài đặt và lưu các thay đổi.
 ### Kiểm tra hỗ trợ KVM của kernel
 * Kiểm tra xem các mô-đun KVM có sẵn hay không
 
-```console
-ls -l /dev/kvm
+```bash
+$ ls -l /dev/kvm
 
 # Kết quả mong đợi:
 # crw-rw----+ 1 root kvm 10, 232 Jan 11 10:00 /dev/kvm
@@ -131,38 +131,39 @@ ls -l /dev/kvm
 
 * Nếu `/dev/kvm` không tồn tại, hãy kiểm tra xem các mô-đun có sẵn hay không.
 
-```console
-modinfo kvm
-modinfo kvm_intel  # Cho Intel
-modinfo kvm_amd    # Cho AMD
+```bash
+$ modinfo kvm
+$ modinfo kvm_intel  # Cho Intel
+$ modinfo kvm_amd    # Cho AMD
 ```
 
 ## Cài đặt trên Ubuntu/Debian
 ### Bước 1: Cập nhật hệ thống
 * Cập nhật danh sách gói & nâng cấp các gói hiện có
-```console
-sudo apt update
-sudo apt upgrade -y
+
+```bash
+$ sudo apt update
+$ sudo apt upgrade -y
 ```
 
 ### Bước 2: Cài đặt KVM và các gói liên quan
 * Cài đặt KVM, QEMU và các công cụ cần thiết
 
-```console
-sudo apt install -y \
+```bash
+$ sudo apt install -y \
      qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
 ```
 
 * Cài đặt các công cụ quản lý
 
-```console
-sudo apt install -y virt-manager virt-viewer virtinst
+```bash
+$ sudo apt install -y virt-manager virt-viewer virtinst
 ```
 
 * Cài đặt thêm các tiện ích
 
-```console
-sudo apt install -y libguestfs-tools libosinfo-bin
+```bash
+$ sudo apt install -y libguestfs-tools libosinfo-bin
 ```
 
 Giải thích về gói dịch vụ:
@@ -180,8 +181,8 @@ Giải thích về gói dịch vụ:
 ### Bước 3: Xác minh việc cài đặt
 * Kiểm tra xem các mô-đun KVM đã được nạp chưa
 
-```console
-lsmod | grep kvm
+```bash
+$ lsmod | grep kvm
 
 # Kết quả đầu ra dự kiến cho Intel:
 # kvm_intel             311296  0
@@ -194,28 +195,28 @@ lsmod | grep kvm
 
 * Xác minh libvirt đang chạy
 
-```console
-sudo systemctl status libvirtd
+```bash
+$ sudo systemctl status libvirtd
 ```
 
 * Cho phép libvirt khởi động cùng hệ thống
 
-```console
-sudo systemctl enable libvirtd
+```bash
+$ sudo systemctl enable libvirtd
 ```
 
 ### Bước 4: Thêm người dùng vào các nhóm bắt buộc
 * Thêm người dùng của bạn vào các nhóm libvirt và kvm.
 
-```console
-sudo usermod -aG libvirt $USER
-sudo usermod -aG kvm $USER
+```bash
+$ sudo usermod -aG libvirt $USER
+$ sudo usermod -aG kvm $USER
 ```
 
 * Xác minh tư cách thành viên nhóm
 
-```console
-groups $USER
+```bash
+$ groups $USER
 ```
 
 Đăng xuất và đăng nhập lại để các thay đổi có hiệu lực. Hoặc sử dụng: `newgrp libvirt`
@@ -223,8 +224,8 @@ groups $USER
 ### Bước 5: Xác minh khả năng ảo hóa
 * Kiểm tra khả năng ảo hóa
 
-```console
-virt-host-validate
+```bash
+$ virt-host-validate
 
 # Kết quả đầu ra mong đợi phải hiển thị tất cả là PASS:
 # QEMU: Checking for hardware virtualization                 : PASS
@@ -238,75 +239,75 @@ virt-host-validate
 ## Cài đặt trên CentOS/RHEL/Rocky Linux
 ### Bước 1: Cập nhật hệ thống
 
-```console
-sudo dnf update -y
+```bash
+$ sudo dnf update -y
 ```
 
 ### Bước 2: Cài đặt KVM và các gói liên quan
 * Cài đặt nhóm ảo hóa (khuyên dùng)
 
-```console
-sudo dnf groupinstall "Virtualization Host" -y
+```bash
+$ sudo dnf groupinstall "Virtualization Host" -y
 ```
 
 * Hoặc cài đặt các gói riêng lẻ
 
-```console
-sudo dnf install -y \
+```bash
+$ sudo dnf install -y \
      qemu-kvm libvirt virt-install virt-manager virt-viewer
 ```
 
 * Cài đặt thêm công cụ
 
-```console
-sudo dnf install -y libguestfs-tools libvirt-client
+```bash
+$ sudo dnf install -y libguestfs-tools libvirt-client
 ```
 
 ### Bước 3: Khởi động và kích hoạt dịch vụ Libvirt
 * Khởi động dịch vụ libvirtd
 
-```console
-sudo systemctl start libvirtd
+```bash
+$ sudo systemctl start libvirtd
 ```
 
 * Cho phép libvirtd khởi động cùng hệ thống
 
-```console
-sudo systemctl enable libvirtd
+```bash
+$ sudo systemctl enable libvirtd
 ```
 
 * Xác minh trạng thái dịch vụ
 
-```console
-sudo systemctl status libvirtd
+```bash
+$ sudo systemctl status libvirtd
 ```
 
 ### Bước 4: Cấu hình tường lửa
 * Cho phép các dịch vụ libvirt đi qua tường lửa
 
-```console
-sudo firewall-cmd --permanent --add-service=libvirt
-sudo firewall-cmd --reload
+```bash
+$ sudo firewall-cmd --permanent --add-service=libvirt
+$ sudo firewall-cmd --reload
 ```
 
 * Để truy cập qua VNC (nếu cần)
 
-```console
-sudo firewall-cmd --permanent --add-port=5900-5999/tcp
-sudo firewall-cmd --reload
+```bash
+$ sudo firewall-cmd --permanent --add-port=5900-5999/tcp
+$ sudo firewall-cmd --reload
 ```
 
 ### Bước 5: Thêm người dùng vào các nhóm
 * Thêm người dùng vào nhóm libvirt
 
-```console
-sudo usermod -aG libvirt $USER
+```bash
+$ sudo usermod -aG libvirt $USER
 ```
 
 * Xác minh
 
-```console
-groups $USER
+```bash
+$ groups $USER
 ```
 
 Khởi động lại hoặc đăng xuất rồi đăng nhập lại để các thay đổi có hiệu lực.
@@ -314,63 +315,63 @@ Khởi động lại hoặc đăng xuất rồi đăng nhập lại để các t
 ### Bước 6: Xác minh việc cài đặt
 * Kiểm tra mô-đun KVM
 
-```console
-lsmod | grep kvm
+```bash
+$ lsmod | grep kvm
 ```
 
 * Xác thực cấu hình ảo hóa
 
-```console
-virt-host-validate
+```bash
+$ virt-host-validate
 ```
 
 ## Cài đặt trên Arch Linux
 ### Bước 1: Cập nhật hệ thống
 
-```console
-sudo pacman -Syu
+```bash
+$ sudo pacman -Syu
 ```
 
 ### Bước 2: Cài đặt các gói KVM
 * Cài đặt KVM và QEMU
 
-```console
-sudo pacman -S qemu-full virt-manager \
+```bash
+$ sudo pacman -S qemu-full virt-manager \
      virt-viewer libvirt bridge-utils dnsmasq
 ```
 
 * Cài đặt thêm công cụ
 
-```console
-sudo pacman -S ebtables iptables-nft
+```bash
+$ sudo pacman -S ebtables iptables-nft
 ```
 
 ### Bước 3: Kích hoạt dịch vụ Libvirt
 * Khởi động và kích hoạt libvirtd
 
-```console
-sudo systemctl enable libvirtd.service
-sudo systemctl start libvirtd.service
+```bash
+$ sudo systemctl enable libvirtd.service
+$ sudo systemctl start libvirtd.service
 ```
 
 * Bật mạng mặc định
 
-```console
-sudo virsh net-autostart default
-sudo virsh net-start default
+```bash
+$ sudo virsh net-autostart default
+$ sudo virsh net-start default
 ```
 
 ### Bước 4: Cấu hình quyền người dùng
 * Thêm người dùng vào nhóm libvirt
 
-```console
-sudo usermod -aG libvirt $USER
+```bash
+$ sudo usermod -aG libvirt $USER
 ```
 
 * Chỉnh sửa cấu hình libvirt (tùy chọn)
 
-```console
-sudo nvim /etc/libvirt/libvirtd.conf
+```bash
+$ sudo nvim /etc/libvirt/libvirtd.conf
 ```
 
 * Bỏ chú thích các dòng này:
@@ -383,40 +384,40 @@ unix_sock_rw_perms = "0770"
 ### Bước 5: Khởi động lại Libvirt
 * Khởi động lại dịch vụ libvirt
 
-```console
-sudo systemctl restart libvirtd.service
+```bash
+$ sudo systemctl restart libvirtd.service
 ```
 
 * Xác minh
 
-```console
-sudo systemctl status libvirtd.service
+```bash
+$ sudo systemctl status libvirtd.service
 ```
 
 ## Cấu hình sau khi cài đặt
 ### Cấu hình mạng mặc định
 * Kiểm tra trạng thái mạng mặc định
 
-```console
-sudo virsh net-list --all
+```bash
+$ sudo virsh net-list --all
 ```
 
 * Nếu mạng mặc định không hoạt động, hãy khởi động nó.
 
-```console
-sudo virsh net-start default
+```bash
+$ sudo virsh net-start default
 ```
 
 * Thiết lập để tự động khởi động.
 
-```console
-sudo virsh net-autostart default
+```bash
+$ sudo virsh net-autostart default
 ```
 
 * Xem cấu hình mạng
 
-```console
-sudo virsh net-dumpxml default
+```bash
+$ sudo virsh net-dumpxml default
 ```
 
 **Cấu hình XML mạng mặc định:**
@@ -437,82 +438,82 @@ sudo virsh net-dumpxml default
 ### Cấu hình nhóm lưu trữ
 * Liệt kê các nhóm lưu trữ
 
-```console
-sudo virsh pool-list --all
+```bash
+$ sudo virsh pool-list --all
 ```
 
 * Vị trí nhóm mặc định
 
-```console
-ls -la /var/lib/libvirt/images/
+```bash
+$ ls -la /var/lib/libvirt/images/
 ```
 
 * Tạo nhóm lưu trữ tùy chỉnh
 
-```console
-sudo virsh pool-define-as mypool dir --target /data/vms
+```bash
+$ sudo virsh pool-define-as mypool dir --target /data/vms
 ```
 
 * Build and start the pool
 
-```console
-sudo virsh pool-build mypool
-sudo virsh pool-start mypool
-sudo virsh pool-autostart mypool
+```bash
+$ sudo virsh pool-build mypool
+$ sudo virsh pool-start mypool
+$ sudo virsh pool-autostart mypool
 ```
 
 * Verify
 
-```console
-sudo virsh pool-info mypool
+```bash
+$ sudo virsh pool-info mypool
 ```
 
 ### Tối ưu hóa các thiết lập hiệu năng KVM
 * Bật ảo hóa lồng nhau (Intel)
 
-```console
-sudo modprobe -r kvm_intel
-sudo modprobe kvm_intel nested=1
+```bash
+$ sudo modprobe -r kvm_intel
+$ sudo modprobe kvm_intel nested=1
 ```
 
 * Làm cho bền vững
 
-```console
-echo "options kvm_intel nested=1" | sudo tee /etc/modprobe.d/kvm-intel.conf
+```bash
+$ echo "options kvm_intel nested=1" | $ sudo tee /etc/modprobe.d/kvm-intel.conf
 ```
 
 * Xác minh tính năng ảo hóa lồng nhau
 
-```console
-cat /sys/module/kvm_intel/parameters/nested
+```bash
+$ cat /sys/module/kvm_intel/parameters/nested
 # Kết quả đầu ra phải là: Y
 ```
 
 * Dành cho AMD
 
-```console
-echo "options kvm_amd nested=1" | sudo tee /etc/modprobe.d/kvm-amd.conf
-cat /sys/module/kvm_amd/parameters/nested
+```bash
+$ echo "options kvm_amd nested=1" | $ sudo tee /etc/modprobe.d/kvm-amd.conf
+$ cat /sys/module/kvm_amd/parameters/nested
 ```
 
 ### Cấu hình điều tiết CPU để tối ưu hiệu năng
 * Kiểm tra cơ chế điều tiết CPU hiện tại
 
-```console
-cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+```bash
+$ cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 ```
 
 * Chuyển sang chế độ hiệu năng cao
 
-```console
-echo performance | sudo tee \
+```bash
+$ echo performance | $ sudo tee \
      /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 ```
 
 * Thiết lập vĩnh viễn (dịch vụ systemd)
 
-```console
-sudo cat << 'EOF' > /etc/systemd/system/cpu-performance.service
+```bash
+$ sudo cat << 'EOF' > /etc/systemd/system/cpu-performance.service
 [Unit]
 Description=Set CPU governor to performance
 
@@ -524,15 +525,15 @@ ExecStart=/bin/bash -c 'echo performance | tee /sys/devices/system/cpu/cpu*/cpuf
 WantedBy=multi-user.target
 EOF
 
-sudo systemctl enable cpu-performance.service
-sudo systemctl start cpu-performance.service
+$ sudo systemctl enable cpu-performance.service
+$ sudo systemctl start cpu-performance.service
 ```
 
 ### Bật Huge Pages để cải thiện hiệu năng bộ nhớ
 * Kiểm tra cấu hình huge pages hiện tại
 
-```console
-cat /proc/meminfo | grep Huge
+```bash
+$ cat /proc/meminfo | grep Huge
 ```
 
 * Tính toán số lượng huge page cần thiết:
@@ -541,28 +542,28 @@ cat /proc/meminfo | grep Huge
 
 * Cấu hình huge page
 
-```console
-echo 1024 | sudo tee /proc/sys/vm/nr_hugepages
+```bash
+$ echo 1024 | $ sudo tee /proc/sys/vm/nr_hugepages
 ```
 
 * Thiết lập vĩnh viễn
 
-```console
-echo "vm.nr_hugepages=1024" | sudo tee -a /etc/sysctl.conf
-sudo sysctl -p
+```bash
+$ echo "vm.nr_hugepages=1024" | $ sudo tee -a /etc/sysctl.conf
+$ sudo sysctl -p
 ```
 
 * Xác minh
 
-```console
-cat /proc/meminfo | grep HugePages_Total
+```bash
+$ cat /proc/meminfo | grep HugePages_Total
 ```
 
 ### Định cấu hình IOMMU để truyền qua PCI
 * Bật IOMMU trong GRUB (Intel)
 
-```console
-sudo vim /etc/default/grub
+```bash
+$ sudo vim /etc/default/grub
 ```
 
 * Thêm vào GRUB_CMDLINE_LINUX:
@@ -573,36 +574,36 @@ Ví dụ: `GRUB_CMDLINE_LINUX="intel_iommu=on iommu=pt"`
 
 * Cập nhật GRUB
 
-```console
-sudo update-grub  # Ubuntu/rocky
-sudo grub2-mkconfig -o /boot/grub2/grub.cfg  # RHEL/CentOS
+```bash
+$ sudo update-grub  # Ubuntu/rocky
+$ sudo grub2-mkconfig -o /boot/grub2/grub.cfg  # RHEL/CentOS
 ```
 
 * Khởi động lại
 
-```console
-sudo reboot
+```bash
+$ sudo reboot
 ```
 
 * Sau khi khởi động lại, xác minh IOMMU.
 
-```console
-dmesg | grep -i iommu
+```bash
+$ dmesg | grep -i iommu
 ```
 
 ## Tạo máy ảo đầu tiên của bạn
 ### Cách 1: Sử dụng virt-install (Dòng lệnh)
 Tải xuống tệp ISO rocky (ví dụ)
 
-```console
-cd /var/lib/libvirt/images/
-sudo wget https://download.rockylinux.org/pub/rocky/10/isos/x86_64/Rocky-10.2-x86_64-minimal.iso
+```bash
+$ cd /var/lib/libvirt/images/
+$ sudo wget https://download.rockylinux.org/pub/rocky/10/isos/x86_64/Rocky-10.2-x86_64-minimal.iso
 ```
 
 Tạo máy ảo bằng virt-install
 
-```console
-sudo virt-install \
+```bash
+$ sudo virt-install \
   --name my-vm \
   --ram 2048 \
   --vcpus 2 \
@@ -628,8 +629,8 @@ Giải thích các tham số:
 ### Cách 2: Sử dụng virt-manager (Giao diện đồ họa)
 Khởi chạy virt-manager
 
-```console
-virt-manager
+```bash
+$ virt-manager
 ```
 
 **Các bước thực hiện trên giao diện đồ họa (GUI):**
@@ -645,20 +646,20 @@ virt-manager
 ### Xác minh việc tạo máy ảo
 * Liệt kê tất cả các máy ảo
 
-```console
-sudo virsh list --all
+```bash
+$ sudo virsh list --all
 ```
 
 * Hiển thị thông tin máy ảo
 
-```console
-sudo virsh dominfo my-vm
+```bash
+$ sudo virsh dominfo my-vm
 ```
 
 * Kiểm tra trạng thái máy ảo
 
-```console
-sudo virsh domstate my-vm
+```bash
+$ sudo virsh domstate my-vm
 ```
 
 ## Cấu hình nâng cao
@@ -667,8 +668,8 @@ Virtio cung cấp các trình điều khiển bán ảo hóa để đạt hiệu
 
 Tạo máy ảo với trình điều khiển virtio
 
-```console
-sudo virt-install \
+```bash
+$ sudo virt-install \
   --name my-vm \
   --ram 4096 \
   --vcpus 4 \
@@ -690,27 +691,27 @@ sudo virt-install \
 ### Cấu hình ghim CPU
 * Kiểm tra cấu trúc liên kết CPU của máy chủ
 
-```console
-lscpu
+```bash
+$ lscpu
 ```
 
 * Ghim CPU của máy ảo vào các CPU vật lý cụ thể của máy chủ.
 
-```console
-sudo virsh vcpupin my-vm 0 0
-sudo virsh vcpupin my-vm 1 1
+```bash
+$ sudo virsh vcpupin my-vm 0 0
+$ sudo virsh vcpupin my-vm 1 1
 ```
 
 * Xác minh việc ghim
 
-```console
-sudo virsh vcpupin my-vm --live
+```bash
+$ sudo virsh vcpupin my-vm --live
 ```
 
 * Thiết lập chế độ bền vững (chỉnh sửa XML của máy ảo)
 
-```console
-sudo virsh edit my-vm
+```bash
+$ sudo virsh edit my-vm
 ```
 
 Thêm vào phần `<vcpu>`:
@@ -728,14 +729,14 @@ Thêm vào phần `<vcpu>`:
 ### Cấu hình cấu trúc liên kết NUMA
 Kiểm tra bố cục NUMA của máy chủ
 
-```console
-numactl --hardware
+```bash
+$ numactl --hardware
 ```
 
 Tạo máy ảo có hỗ trợ NUMA
 
-```console
-sudo virsh edit my-vm
+```bash
+$ sudo virsh edit my-vm
 ```
 
 Thêm cấu hình NUMA:
@@ -755,46 +756,46 @@ KSM giảm mức sử dụng bộ nhớ bằng cách chia sẻ các trang giốn
 
 * Bật KSM
 
-```console
-echo 1 | sudo tee /sys/kernel/mm/ksm/run
+```bash
+$ echo 1 | $ sudo tee /sys/kernel/mm/ksm/run
 ```
 
 * Cấu hình các tham số quét
 
-```console
-echo 100 | sudo tee /sys/kernel/mm/ksm/pages_to_scan
-echo 20 | sudo tee /sys/kernel/mm/ksm/sleep_millisecs
+```bash
+$ echo 100 | $ sudo tee /sys/kernel/mm/ksm/pages_to_scan
+$ echo 20 | $ sudo tee /sys/kernel/mm/ksm/sleep_millisecs
 ```
 
 * Làm cho bền vững
 
-```console
-echo "w /sys/kernel/mm/ksm/run - - - - 1" | \
+```bash
+$ echo "w /sys/kernel/mm/ksm/run - - - - 1" | \
 sudo tee /etc/tmpfiles.d/ksm.conf
-echo "w /sys/kernel/mm/ksm/pages_to_scan - - - - 100" | \
+$ echo "w /sys/kernel/mm/ksm/pages_to_scan - - - - 100" | \
 sudo tee -a /etc/tmpfiles.d/ksm.conf
 ```
 
 * Kiểm tra số liệu thống kê KSM
 
-```console
-cat /sys/kernel/mm/ksm/pages_sharing
-cat /sys/kernel/mm/ksm/pages_shared
+```bash
+$ cat /sys/kernel/mm/ksm/pages_sharing
+$ cat /sys/kernel/mm/ksm/pages_shared
 ```
 
 ## Cấu hình mạng
 ### Tạo mạng cầu nối
 * Cài đặt các tiện ích bridge (nếu chưa được cài đặt)
 
-```console
-sudo apt install bridge-utils
+```bash
+$ sudo apt install bridge-utils
 ```
 
 * Tạo cấu hình cầu nối
 
-```console
-sudo apt install bridge-utils
-sudo cat << 'EOF' > /etc/netplan/01-netcfg.yaml
+```bash
+$ sudo apt install bridge-utils
+$ sudo cat << 'EOF' > /etc/netplan/01-netcfg.yaml
 network:
   version: 2
   ethernets:
@@ -809,22 +810,22 @@ EOF
 
 * Áp dụng cấu hình
 
-```console
-sudo netplan apply
+```bash
+$ sudo netplan apply
 ```
 
 * Xác minh cầu nối
 
-```console
-ip addr show br0
-brctl show
+```bash
+$ ip addr show br0
+$ brctl show
 ```
 
 ### Tạo mạng cầu nối cho Libvirt
 * Tạo XML cho mạng cầu nối
 
-```console
-cat << 'EOF' > bridge-net.xml
+```bash
+$ cat << 'EOF' > bridge-net.xml
 <network>
   <name>br0</name>
   <forward mode='bridge'/>
@@ -835,23 +836,23 @@ EOF
 
 * Định nghĩa và khởi động mạng
 
-```console
-sudo virsh net-define bridge-net.xml
-sudo virsh net-start br0
-sudo virsh net-autostart br0
+```bash
+$ sudo virsh net-define bridge-net.xml
+$ sudo virsh net-start br0
+$ sudo virsh net-autostart br0
 ```
 
 * Xác minh
 
-```console
-sudo virsh net-list --all
+```bash
+$ sudo virsh net-list --all
 ```
 
 ### Tạo mạng cô lập
 * Tạo mạng cô lập cho các máy ảo
 
-```console
-cat << 'EOF' > isolated-net.xml
+```bash
+$ cat << 'EOF' > isolated-net.xml
 <network>
   <name>isolated</name>
   <ip address='10.10.10.1' netmask='255.255.255.0'>
@@ -865,10 +866,10 @@ EOF
 
 * Xác định và bắt đầu
 
-```console
-sudo virsh net-define isolated-net.xml
-sudo virsh net-start isolated
-sudo virsh net-autostart isolated
+```bash
+$ sudo virsh net-define isolated-net.xml
+$ sudo virsh net-start isolated
+$ sudo virsh net-autostart isolated
 ```
 
 ## Tinh chỉnh hiệu năng
@@ -876,15 +877,15 @@ sudo virsh net-autostart isolated
 
 Sử dụng virtio-scsi để có hiệu năng tốt hơn.
 
-```console
-sudo virt-install \
+```bash
+$ sudo virt-install \
   --disk path=/var/lib/libvirt/images/vm.qcow2,bus=scsi,cache=none,io=native
 ```
 
 Hoặc chỉnh sửa máy ảo hiện có
 
-```console
-sudo virsh edit vm-name
+```bash
+$ sudo virsh edit vm-name
 ```
 
 Thay đổi cấu hình ổ đĩa:
@@ -900,26 +901,26 @@ Thay đổi cấu hình ổ đĩa:
 ### Tối ưu hóa bộ lập lịch I/O
 * Kiểm tra bộ lập lịch hiện tại
 
-```console
-cat /sys/block/sda/queue/scheduler
+```bash
+$ cat /sys/block/sda/queue/scheduler
 ```
 
 * Đặt thành "none" cho NVMe (tốt nhất cho SSD)
 
-```console
-echo none | sudo tee /sys/block/nvme0n1/queue/scheduler
+```bash
+$ echo none | sudo tee /sys/block/nvme0n1/queue/scheduler
 ```
 
 * Thiết lập thành mq-deadline cho các ổ SSD SATA.
 
-```console
-echo mq-deadline | sudo tee /sys/block/sda/queue/scheduler
+```bash
+$ echo mq-deadline | sudo tee /sys/block/sda/queue/scheduler
 ```
 
 **Làm cho bền vững**
 
-```console
-sudo vi /etc/udev/rules.d/60-scheduler.rules
+```bash
+$ sudo vi /etc/udev/rules.d/60-scheduler.rules
 ```
 
 * Thiết lập bộ lập lịch cho NVMe  
@@ -930,8 +931,8 @@ sudo vi /etc/udev/rules.d/60-scheduler.rules
 ### Tinh chỉnh hiệu năng mạng
 Bật virtio-net đa hàng đợi
 
-```console
-sudo virsh edit vm-name
+```bash
+$ sudo virsh edit vm-name
 ```
 
 Chỉnh sửa giao diện mạng:
@@ -946,130 +947,130 @@ Chỉnh sửa giao diện mạng:
 
 Bên trong máy ảo khách
 
-```console
-sudo ethtool -L eth0 combined 4
+```bash
+$ sudo ethtool -L eth0 combined 4
 ```
 
 ## Giám sát và Quản lý
 ### Theo dõi hiệu năng máy ảo
 * Mức sử dụng tài nguyên máy ảo
 
-```console
-sudo virt-top
+```bash
+$ sudo virt-top
 ```
 
 * Số liệu thống kê chi tiết về máy ảo
 
-```console
-sudo virsh domstats my-vm
+```bash
+$ sudo virsh domstats my-vm
 ```
 
 * Số liệu thống kê CPU
 
-```console
-sudo virsh cpu-stats my-vm
+```bash
+$ sudo virsh cpu-stats my-vm
 ```
 
 * Số liệu thống kê bộ nhớ
 
-```console
-sudo virsh dommemstat my-vm
+```bash
+$ sudo virsh dommemstat my-vm
 ```
 
 * Số liệu thống kê thiết bị khối
 
-```console
-sudo virsh domblkstat my-vm vda
+```bash
+$ sudo virsh domblkstat my-vm vda
 ```
 
 * Số liệu thống kê mạng
 
-```console
-sudo virsh domifstat my-vm vnet0
+```bash
+$ sudo virsh domifstat my-vm vnet0
 ```
 
 ### Quản lý vòng đời máy ảo
 * Khởi động máy ảo
 
-```console
-sudo virsh start my-vm
+```bash
+$ sudo virsh start my-vm
 ```
 
 * Tắt máy ảo một cách an toàn
 
-```console
-sudo virsh shutdown my-vm
+```bash
+$ sudo virsh shutdown my-vm
 ```
 
 * Buộc tắt nguồn
 
-```console
-sudo virsh destroy my-vm
+```bash
+$ sudo virsh destroy my-vm
 ```
 
 * Khởi động lại máy ảo
 
-```console
-sudo virsh reboot my-vm
+```bash
+$ sudo virsh reboot my-vm
 ```
 
 * Tạm dừng máy ảo
 
-```console
-sudo virsh suspend my-vm
+```bash
+$ sudo virsh suspend my-vm
 ```
 
 * Tiếp tục máy ảo
 
-```console
-sudo virsh resume my-vm
+```bash
+$ sudo virsh resume my-vm
 ```
 
 * Tự động khởi động máy ảo khi máy chủ khởi động
 
-```console
-sudo virsh autostart my-vm
+```bash
+$ sudo virsh autostart my-vm
 ```
 
 * Tắt tự động khởi động
 
-```console
-sudo virsh autostart --disable my-vm
+```bash
+$ sudo virsh autostart --disable my-vm
 ```
 
 ### Quản lý bản chụp nhanh
 * Tạo bản chụp nhanh
 
-```console
-sudo virsh snapshot-create-as my-vm \
+```bash
+$ sudo virsh snapshot-create-as my-vm \
   --name "snapshot1" \
   --description "Clean installation"
 ```
 
 * Liệt kê các bản chụp nhanh
 
-```console
-sudo virsh snapshot-list my-vm
+```bash
+$ sudo virsh snapshot-list my-vm
 ```
 
 * Khôi phục về bản chụp nhanh
 
-```console
-sudo virsh snapshot-revert my-vm snapshot1
+```bash
+$ sudo virsh snapshot-revert my-vm snapshot1
 ```
 
 * Xóa bản chụp nhanh
 
-```console
-sudo virsh snapshot-delete my-vm snapshot1
+```bash
+$ sudo virsh snapshot-delete my-vm snapshot1
 ```
 
 ## Sao lưu và nhân bản
 ### Nhân bản máy ảo
 * Nhân bản máy ảo (khi đã tắt nguồn)
 
-```console
-sudo virt-clone \
+```bash
+$ sudo virt-clone \
   --original my-vm \
   --name my-vm-clone \
   --file /var/lib/libvirt/images/my-vm-clone.qcow2
@@ -1077,46 +1078,46 @@ sudo virt-clone \
 
 * Xác minh bản sao
 
-```console
-sudo virsh list --all
+```bash
+$ sudo virsh list --all
 ```
 
 ### Sao lưu đĩa máy ảo
 * Sao lưu tệp ảnh đĩa máy ảo
 
-```console
-sudo cp /var/lib/libvirt/images/my-vm.qcow2 \
+```bash
+$ sudo cp /var/lib/libvirt/images/my-vm.qcow2 \
        /backup/my-vm-$(date +%Y%m%d).qcow2
 ```
 
 * Nén bản sao lưu
 
-```console
-sudo qemu-img convert -O qcow2 -c \
+```bash
+$ sudo qemu-img convert -O qcow2 -c \
   /var/lib/libvirt/images/my-vm.qcow2 \
   /backup/my-vm-$(date +%Y%m%d).qcow2
 ```
 
 * Sao lưu cấu hình máy ảo
 
-```console
-sudo virsh dumpxml my-vm > /backup/my-vm.xml
+```bash
+$ sudo virsh dumpxml my-vm > /backup/my-vm.xml
 ```
 
 ### Xuất và nhập máy ảo
 * Xuất máy ảo
 
-```console
-sudo virsh dumpxml my-vm > my-vm.xml
-sudo cp /var/lib/libvirt/images/my-vm.qcow2 /export/
+```bash
+$ sudo virsh dumpxml my-vm > my-vm.xml
+$ sudo cp /var/lib/libvirt/images/my-vm.qcow2 /export/
 ```
 
 * Nhập máy ảo trên máy chủ khác
 
-```console
-sudo cp /export/my-vm.qcow2 /var/lib/libvirt/images/
-sudo virsh define my-vm.xml
-sudo virsh start my-vm
+```bash
+$ sudo cp /export/my-vm.qcow2 /var/lib/libvirt/images/
+$ sudo virsh define my-vm.xml
+$ sudo virsh start my-vm
 ```
 
 ## Khắc phục sự cố
@@ -1125,75 +1126,75 @@ sudo virsh start my-vm
 
 * Kiểm tra xem tính năng ảo hóa đã được bật hay chưa.
 
-```console
-egrep -c '(vmx|svm)' /proc/cpuinfo
+```bash
+$ egrep -c '(vmx|svm)' /proc/cpuinfo
 ```
 
  Nếu là 0, hãy kích hoạt trong BIOS.
 
 * Kiểm tra xung đột
 
-```console
-dmesg | grep kvm
-lsmod | grep kvm
+```bash
+$ dmesg | grep kvm
+$ lsmod | grep kvm
 ```
 
 * Tải lại mô-đun
 
-```console
-sudo modprobe -r kvm_intel  # hoặc kvm_amd
-sudo modprobe kvm_intel
+```bash
+$ sudo modprobe -r kvm_intel  # hoặc kvm_amd
+$ sudo modprobe kvm_intel
 ```
 
 #### Lỗi: Không được phép truy cập vào /dev/kvm
 * Kiểm tra quyền
 
-```console
-ls -l /dev/kvm
+```bash
+$ ls -l /dev/kvm
 ```
 
 * Thêm người dùng vào nhóm kvm
 
-```console
-sudo usermod -aG kvm $USER
+```bash
+$ sudo usermod -aG kvm $USER
 ```
 
 * Khởi động lại phiên
 
-```console
-newgrp kvm
+```bash
+$ newgrp kvm
 ```
 
 #### Sự cố: Mạng mặc định không khởi động
 * Kiểm tra trạng thái mạng
 
-```console
-sudo virsh net-list --all
+```bash
+$ sudo virsh net-list --all
 ```
 
 * Khởi động mạng
 
-```console
-sudo virsh net-start default
+```bash
+$ sudo virsh net-start default
 ```
 
 * Kiểm tra lỗi
 
-```console
-sudo journalctl -u libvirtd
+```bash
+$ sudo journalctl -u libvirtd
 ```
 
 * Tạo lại mạng mặc định
 
-```console
-sudo virsh net-destroy default
-sudo virsh net-undefine default
+```bash
+$ sudo virsh net-destroy default
+$ sudo virsh net-undefine default
 ```
 
 * Định nghĩa lại `default-net.xml`
 
-```console
-vi default-net.xml
+```bash
+$ vi default-net.xml
 ```
 
 ```xml
@@ -1209,17 +1210,17 @@ vi default-net.xml
 </network>
 ```
 
-```console
-sudo virsh net-define default-net.xml
-sudo virsh net-start default
-sudo virsh net-autostart default
+```bash
+$ sudo virsh net-define default-net.xml
+$ sudo virsh net-start default
+$ sudo virsh net-autostart default
 ```
 
 #### Vấn đề: Hiệu năng máy ảo kém
 * Bật trình điều khiển virtio
 
-```console
-sudo virsh edit vm-name
+```bash
+$ sudo virsh edit vm-name
 # Thay đổi bus='ide' thành bus='virtio'
 # Thay đổi model='e1000' thành model='virtio'
 
@@ -1229,48 +1230,48 @@ sudo virsh edit vm-name
 
 * Phân bổ thêm nguồn lực
 
-```console
-sudo virsh setmem vm-name 4G --config
-sudo virsh setvcpus vm-name 4 --config
+```bash
+$ sudo virsh setmem vm-name 4G --config
+$ sudo virsh setvcpus vm-name 4 --config
 ```
 
 * Kiểm tra bộ lập lịch I/O
 
-```console
-cat /sys/block/sda/queue/scheduler
+```bash
+$ cat /sys/block/sda/queue/scheduler
 ```
 
 #### Sự cố: Không thể kết nối với bảng điều khiển máy ảo (VM console)
 * Kiểm tra xem máy ảo có đang chạy hay không
 
-```console
-sudo virsh list
+```bash
+$ sudo virsh list
 ```
 
 * Hãy thử dùng console nối tiếp (serial console).
 
-```console
-sudo virsh console vm-name
+```bash
+$ sudo virsh console vm-name
 ```
 
 * Kiểm tra cấu hình VNC
 
-```console
-sudo virsh vncdisplay vm-name
+```bash
+$ sudo virsh vncdisplay vm-name
 ```
 
 * Kết nối bằng virt-viewer
 
-```console
-virt-viewer vm-name
+```bash
+$ virt-viewer vm-name
 ```
 
 ## Các biện pháp bảo mật tốt nhất
 ### Bảo mật quyền truy cập Libvirt
 * Cấu hình xác thực libvirt
 
-```console
-sudo vim /etc/libvirt/libvirtd.conf
+```bash
+$ sudo vim /etc/libvirt/libvirtd.conf
 ```
 
 * Bỏ chú thích và thiết lập:
@@ -1285,36 +1286,36 @@ auth_unix_rw = "none"
 
 * Khởi động lại libvirtd
 
-```console
-sudo systemctl restart libvirtd
+```bash
+$ sudo systemctl restart libvirtd
 ```
 
 ### Bật SELinux/AppArmor cho các máy ảo
 * Ubuntu/Debian (AppArmor)
 
-```console
-sudo apt install apparmor-utils
-sudo aa-enforce /etc/apparmor.d/usr.sbin.libvirtd
+```bash
+$ sudo apt install apparmor-utils
+$ sudo aa-enforce /etc/apparmor.d/usr.sbin.libvirtd
 ```
 
 * CentOS/RHEL (SELinux)
 
-```console
-sudo setsebool -P virt_use_nfs 1
-sudo setsebool -P virt_use_samba 1
+```bash
+$ sudo setsebool -P virt_use_nfs 1
+$ sudo setsebool -P virt_use_samba 1
 ```
 
 * Kiểm tra ngữ cảnh SELinux
 
-```console
-ls -Z /var/lib/libvirt/images/
+```bash
+$ ls -Z /var/lib/libvirt/images/
 ```
 
 ### Cô lập mạng máy ảo
 * Tạo mạng cô lập không sử dụng NAT hoặc chuyển tiếp.
 
-```console
-cat << 'EOF' > secure-net.xml
+```bash
+$ cat << 'EOF' > secure-net.xml
 <network>
   <name>secure</name>
   <bridge name='virbr-secure'/>
@@ -1322,8 +1323,8 @@ cat << 'EOF' > secure-net.xml
 </network>
 EOF
 
-sudo virsh net-define secure-net.xml
-sudo virsh net-start secure
+$ sudo virsh net-define secure-net.xml
+$ sudo virsh net-start secure
 ```
 
 ## Kết luận
