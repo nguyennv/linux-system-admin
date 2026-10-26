@@ -3756,3 +3756,470 @@ $ oc get managedcluster
 NAME            HUB ACCEPTED   MANAGED CLUSTER URLS             JOINED   AVAILABLE  AGE
 local-cluster   true           https://<your cluster url>:6443   True     True       77m
 ```
+
+## IX. Các tham số cấu hình cài đặt cho trình cài đặt dựa trên tác nhân (Agent-based Installer)
+Trước khi triển khai cụm OpenShift Container Platform bằng trình cài đặt dựa trên tác nhân (Agent-based Installer), bạn cần cung cấp các tham số để tùy chỉnh cụm của mình cũng như nền tảng lưu trữ cụm đó.
+
+Khi tạo các tệp `install-config.yaml` và `agent-config.yaml`, bạn phải nhập giá trị cho các tham số bắt buộc; ngoài ra, bạn có thể sử dụng các tham số tùy chọn để tùy chỉnh thêm cho cụm của mình.
+
+### IX.1. Các tham số cấu hình cài đặt khả dụng
+Để tùy chỉnh quá trình cài đặt cụm (cluster), bạn có thể sử dụng các tham số cấu hình trong tệp `install-config.yaml`.
+
+Các bảng dưới đây liệt kê những tham số cấu hình cài đặt bắt buộc và tùy chọn mà bạn có thể thiết lập trong quy trình cài đặt dựa trên tác nhân (Agent-based installation).
+
+Các giá trị này được chỉ định trong tệp `install-config.yaml`.
+
+> **Quan trọng:** Các thiết lập này chỉ được sử dụng cho quá trình cài đặt và không thể thay đổi sau khi quá trình cài đặt hoàn tất.
+
+#### IX.1.1. Các tham số cấu hình bắt buộc
+Các tham số cấu hình cài đặt bắt buộc được mô tả trong bảng dưới đây:
+
+**Bảng 9.1. Các tham số bắt buộc**
+
+| Tham số           | Mô tả                                                                                                                                                                                                                                                                                                                                                                                           | Giá trị                                                                                                                                        |
+|-------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| `apiVersion:`     | Phiên bản API cho nội dung tệp `install-config.yaml`. Phiên bản hiện tại là `v1`. Chương trình cài đặt cũng có thể hỗ trợ các phiên bản API cũ hơn.                                                                                                                                                                                                                                             | Chuỗi                                                                                                                                          |
+| `baseDomain:`     | Tên miền cơ sở của nhà cung cấp dịch vụ đám mây của bạn. Tên miền cơ sở này được sử dụng để tạo các tuyến đường (route) dẫn đến các thành phần trong cụm OpenShift Container Platform của bạn. Tên DNS đầy đủ cho cụm của bạn là sự kết hợp giữa các giá trị của tham số `baseDomain` và `metadata.name`, theo định dạng `<metadata.name>.<baseDomain>`.                                        | Một tên miền hoặc tên miền phụ đầy đủ, chẳng hạn như `example.com`.                                                                            |
+| `metadata:`       | Đối tượng tài nguyên Kubernetes ObjectMeta, trong đó chỉ tham số name được sử dụng.                                                                                                                                                                                                                                                                                                             | Đối tượng                                                                                                                                      |
+| `metadata: name:` | Tên của cụm (cluster). Các bản ghi DNS cho cụm này đều là các tên miền phụ (subdomain) của {{.metadata.name}}.{{.baseDomain}}. Tên cụm sẽ được đặt là `agent-cluster` nếu bạn không cung cấp tham số `metadata.name` thông qua tệp `install-config.yaml` hoặc `agent-config.yaml`. Chẳng hạn, các quy trình cài đặt chỉ sử dụng các tệp manifest ZTP sẽ không cung cấp tham số `metadata.name`. | Chuỗi gồm các chữ cái viết thường, dấu gạch ngang (`-`) và dấu chấm (`.`), chẳng hạn như `dev`.                                                |
+| `platform:`       | Cấu hình cho nền tảng cụ thể mà trên đó quá trình cài đặt sẽ được thực hiện: `baremetal`, `external`, `none`, `vsphere` hoặc `nutanix`.                                                                                                                                                                                                                                                         | Đối tượng                                                                                                                                      |
+| `pullSecret:`     | Lấy một "pull secret" (bí mật kéo ảnh) từ [Red Hat OpenShift Cluster Manager](https://console.redhat.com/openshift/install/pull-secret) để xác thực việc tải xuống các ảnh container cho các thành phần của OpenShift Container Platform từ các dịch vụ như Quay.io.                                                                                                                            | { "auths":{ "cloud.openshift.com":{ "auth":"b3Blb=", "email":"you@example.com" }, "quay.io":{ "auth":"b3Blb=", "email":"you@example.com" } } } |
+
+
+#### IX.1.2. Các tham số cấu hình mạng
+Bạn có thể tùy chỉnh cấu hình cài đặt dựa trên các yêu cầu của cơ sở hạ tầng mạng hiện có. Ví dụ: bạn có thể mở rộng dải địa chỉ IP cho mạng cụm (cluster network) hoặc cấu hình các dải địa chỉ IP khác với các giá trị mặc định.
+
+Hãy cân nhắc các thông tin sau trước khi cấu hình các tham số mạng cho cụm của bạn:
+
+* Nếu sử dụng plugin mạng OVN-Kubernetes của Red Hat OpenShift, hệ thống sẽ hỗ trợ cả hai loại địa chỉ là IPv4 và IPv6. 
+* Nếu bạn đã triển khai các nút (node) trong cụm OpenShift Container Platform trên một mạng hỗ trợ cả địa chỉ IPv4 và địa chỉ IPv6 không thuộc loại link-local (non-link-local IPv6), hãy cấu hình cụm của bạn để sử dụng mạng dual-stack (mạng hỗ trợ cả hai loại địa chỉ). 
+    * Đối với các cụm được cấu hình sử dụng mạng dual-stack, lưu lượng truy cập IPv4 và IPv6 phải sử dụng cùng một giao diện mạng làm cổng mặc định (default gateway). Điều này đảm bảo rằng trong môi trường có nhiều bộ điều khiển giao diện mạng (NIC), cụm có thể xác định NIC nào cần sử dụng dựa trên giao diện mạng khả dụng. Để biết thêm thông tin, hãy xem phần "Các hạn chế về IPv6 và dual-stack trong OVN-Kubernetes" trong tài liệu về plugin mạng OVN-Kubernetes. 
+    * Để tránh các sự cố kết nối mạng, không nên cài đặt cụm chỉ sử dụng một loại địa chỉ (single-stack IPv4) trên một máy chủ hỗ trợ mạng dual-stack.
+
+Nếu bạn cấu hình cụm của mình để sử dụng cả hai loại địa chỉ IP, hãy lưu ý các yêu cầu sau:
+
+* Cả hai loại địa chỉ IP phải sử dụng cùng một giao diện mạng làm cổng mặc định. 
+* Cả hai loại địa chỉ IP đều phải có cổng mặc định. 
+* Bạn phải chỉ định các địa chỉ IPv4 và IPv6 theo cùng một thứ tự cho tất cả các tham số cấu hình mạng. Ví dụ: trong cấu hình dưới đây, các địa chỉ IPv4 được liệt kê trước các địa chỉ IPv6:
+
+```yaml
+networking:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  - cidr: fd00:10:128::/56
+    hostPrefix: 64
+  serviceNetwork:
+  - 172.30.0.0/16
+  - fd00:172:16::/112
+```
+
+Nếu bạn đang cài đặt cụm (cluster) của mình trên AWS, thứ tự của các họ địa chỉ (address families) phải khớp với tham số `platform.aws.ipFamily`. Ví dụ: nếu bạn đã chỉ định tham số `DualStackIPv6Primary`, bạn phải liệt kê địa chỉ IPv6 trước.
+
+##### Các tham số mạng
+
+* `networking:` Cấu hình cho mạng cụm (cluster network).
+
+**Giá trị:** Đối tượng (Object)
+
+> **Lưu ý:** Bạn không thể thay đổi các tham số được quy định trong đối tượng mạng sau khi đã hoàn tất quá trình cài đặt.
+
+* `networking: networkType:` Plugin mạng của Red Hat OpenShift Networking cần cài đặt.
+
+**Giá trị:** OVNKubernetes. OVNKubernetes là một plugin Giao diện Mạng Container (CNI) dành cho các mạng Linux và mạng lai bao gồm cả máy chủ Linux lẫn Windows. Giá trị mặc định là OVNKubernetes.
+
+* `networking: clusterNetwork:` Các khối địa chỉ IP dành cho các pod. Giá trị mặc định là 10.128.0.0/14 với tiền tố host là /23. Nếu bạn chỉ định nhiều khối địa chỉ IP, các khối này không được phép chồng chéo lên nhau.
+
+**Giá trị:** Một mảng các đối tượng. Ví dụ:
+
+```yaml
+networking:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  - cidr: fd01::/48
+    hostPrefix: 64
+```
+
+* `networking: clusterNetwork: cidr:` Bắt buộc nếu bạn sử dụng `networking.clusterNetwork`. Đây là một khối địa chỉ IP. Nếu sử dụng plugin mạng OVN-Kubernetes, bạn có thể chỉ định các mạng IPv4 và IPv6.
+
+**Giá trị:** Một khối địa chỉ IP theo ký hiệu Định tuyến liên miền không phân lớp (CIDR). Độ dài tiền tố cho một khối IPv4 nằm trong khoảng từ 0 đến 32. Độ dài tiền tố cho một khối IPv6 nằm trong khoảng từ `0` đến `128`. Ví dụ: `10.128.0.0/14 `hoặc `fd01::/48`.
+
+* `networking: clusterNetwork: hostPrefix:` Độ dài tiền tố mạng con (subnet prefix length) được chỉ định cho mỗi nút riêng lẻ. Ví dụ: nếu `hostPrefix` được đặt là 23, thì mỗi nút sẽ được cấp một mạng con /23 từ dải CIDR đã cho. Giá trị `hostPrefix` bằng 23 cung cấp 510 (2^(32 - 23) - 2) địa chỉ IP cho các pod.
+
+**Giá trị:** Một tiền tố mạng con (subnet prefix). Đối với mạng IPv4, giá trị mặc định là 23. Đối với mạng IPv6, hostPrefix phải được đặt thành 64; đây cũng là giá trị mặc định.
+
+* `networking: serviceNetwork:` Khối địa chỉ IP dành cho các dịch vụ. Giá trị mặc định là `172.30.0.0/16`. Nếu sử dụng plugin mạng OVN-Kubernetes, bạn có thể chỉ định khối địa chỉ IP cho cả hai họ địa chỉ IPv4 và IPv6.
+
+**Giá trị:** Một mảng chứa khối địa chỉ IP ở định dạng CIDR. Ví dụ:
+
+```yaml
+ networking:
+  serviceNetwork:
+  - 172.30.0.0/16
+  - fd02::/112 
+```
+
+* `networking: machineNetwork:` Các khối địa chỉ IP dành cho các máy. Nếu bạn chỉ định nhiều khối địa chỉ IP, các khối này không được chồng chéo lên nhau.
+
+**Giá trị:** Một mảng các đối tượng. Ví dụ:
+
+```yaml
+ networking:
+  machineNetwork:
+  - cidr: 10.0.0.0/16 
+```
+
+* `networking: machineNetwork: cidr:` Bắt buộc nếu bạn sử dụng `networking.machineNetwork`. Đây là một khối địa chỉ IP. Giá trị mặc định là `10.0.0.0/16` đối với tất cả các nền tảng, ngoại trừ libvirt và IBM Power® Virtual Server. Đối với libvirt, giá trị mặc định là `192.168.126.0/24`. Đối với IBM Power® Virtual Server, giá trị mặc định là `192.168.0.0/24`.
+
+**Giá trị:** Một khối mạng IP theo ký hiệu CIDR. Ví dụ: 10.0.0.0/16 hoặc fd00::/48.
+
+> **Lưu ý:** Hãy thiết lập `networking.machineNetwork` sao cho khớp với CIDR của giao diện mạng (NIC) mà bạn muốn sử dụng. Nếu bạn đang cài đặt cụm (cluster) trên AWS với hệ thống mạng hỗ trợ cả IPv4 và IPv6 (dual-stack), hãy lưu ý các điểm khác biệt sau:  
+> * Nếu chương trình cài đặt tự tạo VPC, bạn không cần chỉ định mục IPv6 trong `networking.machineNetwork`. Chương trình cài đặt sẽ tự động gán địa chỉ IPv6 cho VPC đó.  
+> * Nếu bạn sử dụng các mạng con (subnet) dual-stack đã có sẵn thông qua tham số `platform.aws.vpc.subnets`, bạn bắt buộc phải chỉ định các mục IPv6 tương ứng với CIDR của VPC hoặc CIDR của các mạng con đó.  
+> * Trong cả hai trường hợp, bạn đều phải cung cấp một mục CIDR cho IPv4.
+
+* `networking: ovnKubernetesConfig: ipv4: internalJoinSubnet:` Cấu hình mạng con (subnet) kết nối IPv4 được ovn-kubernetes sử dụng ở cấp độ nội bộ. Mạng con này không được trùng lặp với bất kỳ mạng con nào khác đang được OpenShift Container Platform sử dụng, bao gồm cả mạng của các nút (node). Kích thước của mạng con phải lớn hơn tổng số lượng các nút. Bạn không thể thay đổi giá trị này sau khi quá trình cài đặt hoàn tất.
+
+**Giá trị:** Một khối mạng IP theo ký hiệu CIDR. Giá trị mặc định là 100.64.0.0/16.
+
+#### IX.1.3. Các tham số cấu hình tùy chọn
+Các tham số cấu hình cài đặt tùy chọn được mô tả dưới đây:
+
+##### Các tham số tùy chọn
+
+* `additionalTrustBundle:` Một tập hợp chứng chỉ X.509 được mã hóa theo định dạng PEM, được thêm vào kho lưu trữ chứng chỉ tin cậy của các nút (node). Tập hợp chứng chỉ tin cậy này cũng có thể được sử dụng trong trường hợp đã cấu hình proxy.
+
+**Giá trị:** Chuỗi (String)
+
+* `capabilities:` Kiểm soát việc cài đặt các thành phần cốt lõi tùy chọn của cụm (cluster). Bạn có thể giảm quy mô cụm OpenShift Container Platform của mình bằng cách vô hiệu hóa các thành phần tùy chọn này. Để biết thêm thông tin, hãy xem trang "Các khả năng của cụm" (Cluster capabilities) trong phần Cài đặt (Installing).
+
+**Giá trị:** Mảng chuỗi (String array)
+
+* `capabilities: baselineCapabilitySet:` Chọn một tập hợp các tính năng tùy chọn ban đầu để kích hoạt. Các giá trị hợp lệ bao gồm `None`, `v4.11`, `v4.12` và `vCurrent`. Giá trị mặc định là `vCurrent`.
+
+**Giá trị:** Chuỗi (String)
+
+* `capabilities: additionalEnabledCapabilities:` Mở rộng tập hợp các khả năng tùy chọn ngoài những gì bạn đã chỉ định trong `baselineCapabilitySet`. Bạn có thể chỉ định nhiều khả năng trong tham số này.
+
+**Giá trị:** Mảng chuỗi
+
+* `cpuPartitioningMode:` Cho phép phân tách khối lượng công việc (workload partitioning), giúp cô lập các dịch vụ của OpenShift Container Platform, các tác vụ quản lý cụm (cluster management workloads) và các pod hạ tầng để chạy trên một tập hợp CPU dành riêng. Bạn chỉ có thể bật tính năng phân tách khối lượng công việc trong quá trình cài đặt và không thể tắt tính năng này sau khi đã cài đặt xong. Mặc dù tùy chọn này cho phép phân tách khối lượng công việc, nhưng nó không tự động cấu hình để các khối lượng công việc đó sử dụng những CPU cụ thể. Để biết thêm thông tin, hãy xem trang "Phân tách khối lượng công việc" (Workload partitioning) trong phần "Khả năng mở rộng và Hiệu năng" (Scalability and Performance).
+
+**Giá trị:** `None` hoặc `AllNodes`. Giá trị mặc định là `None`.
+
+* `compute:` Cấu hình cho các máy đóng vai trò là các nút tính toán (compute node).
+
+**Giá trị:** Mảng các đối tượng `MachinePool`.
+
+* `compute: architecture:` Xác định kiến trúc tập lệnh của các máy trong nhóm (pool). Hiện tại, các cụm (cluster) có kiến trúc khác nhau không được hỗ trợ. Tất cả các nhóm phải chỉ định cùng một kiến trúc. Các giá trị hợp lệ bao gồm: `amd64`, `arm64`, `ppc64le` và `s390x`.
+
+**Giá trị:** Chuỗi (String)
+
+* `compute: hyperthreading:` Việc quyết định bật hay tắt tính năng đa luồng đồng thời (simultaneous multithreading) – hay còn gọi là siêu phân luồng (`hyperthreading`) – trên các máy tính. Theo mặc định, tính năng đa luồng đồng thời được bật để tăng hiệu suất cho các nhân (core) của máy tính.
+
+> **Quan trọng:** Nếu bạn tắt tính năng đa luồng đồng thời, hãy đảm bảo rằng kế hoạch phân bổ năng lực (capacity planning) của bạn đã tính đến việc hiệu suất máy tính sẽ sụt giảm đáng kể.
+
+Giá trị: `Enabled` hoặc `Disabled`
+
+* `compute: name:` Bắt buộc nếu bạn sử dụng `compute`. Tên của nhóm máy (machine pool).
+
+**Giá trị:** worker
+
+* `compute: platform:` Bắt buộc nếu bạn sử dụng thành phần tính toán (compute). Hãy sử dụng tham số này để chỉ định nhà cung cấp dịch vụ đám mây sẽ lưu trữ các máy worker. Giá trị của tham số này phải khớp với giá trị của tham số `controlPlane.platform`.
+
+**Giá trị:** `baremetal`, `vsphere` hoặc `{}`
+
+* `compute: replicas:` Số lượng máy tính (còn được gọi là máy thực thi - worker machine) cần cung cấp.
+
+**Giá trị:** Một số nguyên dương lớn hơn hoặc bằng `2`. Giá trị mặc định là `3`.
+
+* `featureSet:` Kích hoạt cụm (cluster) cho một tập hợp tính năng (feature set). Tập hợp tính năng là tập hợp các tính năng của OpenShift Container Platform không được bật theo mặc định. Để biết thêm thông tin về cách kích hoạt tập hợp tính năng trong quá trình cài đặt, hãy xem phần "Kích hoạt các tính năng bằng cách sử dụng feature gate".
+
+**Giá trị:** Chuỗi (String). Tên của tập hợp tính năng cần kích hoạt, chẳng hạn như `TechPreviewNoUpgrade`.
+
+* `controlPlane:` Cấu hình cho các máy tạo nên mặt phẳng điều khiển (control plane).
+
+**Giá trị:** Mảng các đối tượng `MachinePool`.
+
+* `controlPlane: architecture:` Xác định kiến trúc tập lệnh của các máy trong nhóm (pool). Hiện tại, các cụm (cluster) có kiến trúc khác nhau không được hỗ trợ. Tất cả các nhóm phải chỉ định cùng một kiến trúc. Các giá trị hợp lệ bao gồm: `amd64`, `arm64`, `ppc64le` và `s390x`.
+
+**Giá trị:** Chuỗi (String)
+
+* `controlPlane: hyperthreading:` Quyết định bật hay tắt tính năng đa luồng đồng thời (simultaneous multithreading) – hay còn gọi là siêu phân luồng (`hyperthreading`) – trên các máy thuộc mặt phẳng điều khiển (control plane). Theo mặc định, tính năng đa luồng đồng thời được bật để tăng hiệu suất cho các nhân (core) của máy.
+
+> **Quan trọng:** Nếu bạn tắt tính năng đa luồng đồng thời, hãy đảm bảo rằng kế hoạch hoạch định năng lực (capacity planning) của bạn đã tính đến việc hiệu suất máy sẽ sụt giảm đáng kể.
+
+**Giá trị:** `Enabled` hoặc `Disabled`
+
+* `controlPlane: name:` Bắt buộc nếu bạn sử dụng `controlPlane`. Tên của nhóm máy (machine pool).
+
+**Giá trị:** `master`
+
+* `controlPlane: platform:` Bắt buộc nếu bạn sử dụng `controlPlane`. Hãy dùng tham số này để chỉ định nhà cung cấp dịch vụ đám mây lưu trữ các máy thuộc mặt phẳng điều khiển (control plane). Giá trị của tham số này phải khớp với giá trị của tham số `compute.platform`.
+
+**Giá trị:** `baremetal`, `vsphere` hoặc `{}`
+
+* `controlPlane: replicas:` Số lượng máy thuộc mặt phẳng điều khiển (control plane) cần cung cấp.
+
+**Giá trị:** Các giá trị được hỗ trợ bao gồm `3`, `4`, `5`, hoặc `1` (khi triển khai OpenShift trên một nút duy nhất).
+
+* `arbiter: name:` Cụm OpenShift Container Platform yêu cầu một tên cho các nút trọng tài (arbiter nodes). Ví dụ: arbiter.
+
+* `arbiter: replicas:` Tham số replicas thiết lập số lượng nút trọng tài (arbiter node) cho cụm OpenShift Container Platform. Bạn không thể đặt giá trị cho trường này lớn hơn 1.
+
+* `credentialsMode:` Chế độ Cloud Credential Operator (CCO). Nếu không chỉ định chế độ nào, CCO sẽ tự động xác định các khả năng của thông tin xác thực được cung cấp; trong đó, chế độ "mint" sẽ được ưu tiên trên các nền tảng hỗ trợ nhiều chế độ.
+
+> **Lưu ý:** Không phải tất cả các chế độ CCO đều được hỗ trợ cho mọi nhà cung cấp dịch vụ đám mây. Để biết thêm thông tin về các chế độ CCO, hãy xem mục "Quản lý thông tin xác thực của nhà cung cấp dịch vụ đám mây" (Managing cloud provider credentials) trong phần nội dung về Xác thực và ủy quyền (Authentication and authorization).
+
+**Giá trị:** `Mint`, `Passthrough`, `Manual` hoặc một chuỗi trống (`""`).
+
+* `fips:` Bật hoặc tắt chế độ FIPS. Giá trị mặc định là false (tắt). Nếu bạn bật chế độ FIPS, các máy chạy hệ điều hành Red Hat Enterprise Linux CoreOS (RHCOS) – nền tảng mà OpenShift Container Platform vận hành trên đó – sẽ bỏ qua bộ mật mã mặc định của Kubernetes và thay vào đó sử dụng các mô-đun mật mã do RHCOS cung cấp.
+
+> **Quan trọng:** Để bật chế độ FIPS cho cụm (cluster) của mình, bạn phải chạy chương trình cài đặt từ một máy tính sử dụng hệ điều hành Red Hat Enterprise Linux (RHEL) đã được cấu hình để hoạt động ở chế độ FIPS. Để biết thêm thông tin về cách cấu hình chế độ FIPS trên RHEL, hãy xem phần Chuyển đổi RHEL sang chế độ FIPS.  
+> Khi chạy Red Hat Enterprise Linux (RHEL) hoặc Red Hat Enterprise Linux CoreOS (RHCOS) ở chế độ FIPS, các thành phần cốt lõi của OpenShift Container Platform sẽ sử dụng các thư viện mật mã của RHEL – vốn đã được gửi tới NIST để thực hiện quy trình xác thực FIPS 140-2/140-3 – trên các kiến trúc x86_64, ppc64le và s390x.
+
+> **Quan trọng:** Nếu bạn đang sử dụng dịch vụ lưu trữ Azure File, bạn không thể bật chế độ FIPS.
+
+**Giá trị:** `false` hoặc `true`
+
+* `endpoint: name: <endpoint_name> clusterUseOnly: true hoặc false` Tham số `name` chứa tên của các điểm cuối (endpoint) Private Service Connect (PSC).
+
+> **Quan trọng:** Khi `clusterUseOnly` được đặt là `false` (giá trị mặc định), bạn phải chạy chương trình cài đặt từ một máy chủ trung gian (bastion host) nằm trong cùng VPC nơi bạn muốn triển khai cụm (cluster).
+
+Nếu bạn muốn chương trình cài đặt sử dụng các điểm cuối API công khai (public API endpoints) và các toán tử cụm (cluster Operators) sử dụng các điểm cuối API thay thế (API endpoint overrides), hãy đặt `clusterUseOnly` thành `true`. Nếu bạn muốn cả chương trình cài đặt và các toán tử cụm đều sử dụng các điểm cuối API thay thế — chẳng hạn như khi bạn chạy chương trình cài đặt từ một máy chủ trung gian nằm trong cùng VPC nơi bạn muốn triển khai cụm — hãy đặt `clusterUseOnly` thành `false`. Tham số này là tùy chọn và có giá trị mặc định là `false`.
+
+**Giá trị:** Chuỗi (String) hoặc giá trị boolean
+
+* `imageContentSources:` Các nguồn và kho lưu trữ cho nội dung của ảnh phát hành (release-image).
+
+**Giá trị:** Mảng các đối tượng. Bao gồm một nguồn và tùy chọn các bản sao (mirror), như được mô tả trong các hàng tiếp theo của bảng này.
+
+* `imageContentSources: source:` Bắt buộc nếu bạn sử dụng `imageContentSources`. Hãy chỉ định kho lưu trữ mà người dùng tham chiếu đến, chẳng hạn như trong các thông số kỹ thuật dùng để kéo hình ảnh (image pull specifications).
+
+**Giá trị:** Chuỗi (String)
+
+* `imageContentSources: mirrors:` Chỉ định một hoặc nhiều kho lưu trữ có thể chứa các hình ảnh tương tự.
+
+**Giá trị:** Mảng các chuỗi ký tự
+
+* `osImageStream:` Xác định luồng hình ảnh (image stream) sẽ được sử dụng cho tất cả các máy trong cụm. `osImageStream` là một tính năng ở giai đoạn "Xem trước công nghệ" (Technology Preview). Các tính năng dạng này không được hỗ trợ theo các thỏa thuận cấp độ dịch vụ (SLA) dành cho môi trường sản xuất của Red Hat và có thể chưa hoàn thiện về mặt chức năng. Red Hat khuyến cáo không nên sử dụng các tính năng này trong môi trường sản xuất. Những tính năng này cung cấp quyền truy cập sớm vào các chức năng sản phẩm sắp ra mắt, cho phép khách hàng thử nghiệm và đưa ra phản hồi trong suốt quá trình phát triển.
+
+**Giá trị:** Chuỗi (String). Các giá trị hợp lệ bao gồm `rhel-9` hoặc `rhel-10`.
+
+* `publish:` Cách công bố hoặc hiển thị các điểm cuối (endpoint) hướng tới người dùng trong cụm (cluster) của bạn, chẳng hạn như Kubernetes API hoặc các tuyến đường (route) trong OpenShift.
+
+**Giá trị:** `Internal` (nội bộ) hoặc `External` (bên ngoài). Giá trị mặc định là `External`.
+
+Việc thiết lập trường này thành `Internal` không được hỗ trợ trên các nền tảng không thuộc môi trường đám mây (non-cloud platforms).
+
+* `sshKey:` Khóa SSH dùng để xác thực quyền truy cập vào các máy trong cụm (cluster) của bạn.
+
+> **Lưu ý:** Đối với các cụm OpenShift Container Platform trong môi trường thực tế (production) mà bạn dự định thực hiện các thao tác gỡ lỗi cài đặt hoặc khôi phục sau sự cố, hãy chỉ định khóa SSH mà tiến trình `ssh-agent` của bạn đang sử dụng.
+
+**Giá trị:** Ví dụ: `sshKey: ssh-ed25519 AAAA...`
+
+#### IX.1.4. Các tham số cấu hình bổ sung cho môi trường bare metal (phần cứng vật lý) đối với trình cài đặt dựa trên tác nhân (Agent-based Installer)
+Các tham số cấu hình cài đặt bổ sung cho môi trường bare metal dành cho trình cài đặt dựa trên tác nhân (Agent-based Installer) được mô tả trong bảng dưới đây:
+
+> **Lưu ý:** Các trường này không được sử dụng trong quá trình cung cấp (provisioning) cụm ban đầu, nhưng có thể được sử dụng sau khi cụm đã được cài đặt xong. Việc cấu hình các trường này ngay tại thời điểm cài đặt giúp loại bỏ nhu cầu phải thiết lập chúng như một thao tác vận hành giai đoạn sau (Day 2 operation).
+
+##### Các thông số phần cứng bổ sung
+
+* `platform: baremetal: clusterProvisioningIP:` Địa chỉ IP trong cụm nơi các dịch vụ cung cấp (provisioning services) hoạt động. Giá trị mặc định là địa chỉ IP thứ ba của mạng con cung cấp (provisioning subnet). Ví dụ: 172.22.0.3 hoặc 2620:52:0:1307::3.
+
+**Giá trị:** Địa chỉ IPv4 hoặc IPv6.
+
+* `platform: baremetal: provisioningNetwork:` Thiết lập cấu hình `provisioningNetwork` xác định xem cụm (cluster) có sử dụng mạng cung cấp (provisioning network) hay không. Nếu có, thiết lập này cũng xác định liệu cụm đó có quản lý mạng này hay không.
+    * `Managed` (Được quản lý): Mặc định. Hãy đặt tham số này thành `Managed` để quản lý toàn diện mạng cung cấp, bao gồm DHCP, TFTP, v.v.
+    * `Disabled` (Đã vô hiệu hóa): Hãy đặt tham số này thành `Disabled` để loại bỏ yêu cầu về mạng cung cấp. Khi được đặt thành `Disabled`, bạn chỉ có thể sử dụng phương thức cung cấp dựa trên phương tiện ảo (virtual media) trong giai đoạn vận hành (Day 2). Nếu chọn `Disabled` và có sử dụng tính năng quản lý nguồn (power management), thì các bộ điều khiển quản lý cơ sở (BMC) phải có thể truy cập được từ mạng dành cho thiết bị vật lý (bare-metal network). Nếu chọn `Disabled`, bạn phải cung cấp hai địa chỉ IP trên mạng dành cho thiết bị vật lý để sử dụng cho các dịch vụ cung cấp.
+
+**Giá trị:** `Managed` hoặc `Disabled`.
+
+* `platform: baremetal: provisioningMACAddress:` Địa chỉ MAC trong cụm nơi các dịch vụ cung cấp (provisioning services) hoạt động.
+
+**Giá trị:** Địa chỉ MAC.
+
+* `platform: baremetal: provisioningNetworkCIDR:` CIDR của mạng được sử dụng cho quá trình cung cấp (provisioning). Tùy chọn này là bắt buộc khi không sử dụng dải địa chỉ mặc định trên mạng cung cấp.
+
+**Giá trị:** CIDR hợp lệ, ví dụ: `10.0.0.0/16`.
+
+* `platform: baremetal: provisioningNetworkInterface:` Tên của giao diện mạng trên các nút được kết nối với mạng cung cấp (provisioning network). Hãy sử dụng thiết lập cấu hình `bootMACAddress` để cho phép Ironic xác định địa chỉ IP của card mạng (NIC), thay vì sử dụng thiết lập cấu hình `provisioningNetworkInterface` để xác định tên của card mạng đó.
+
+**Giá trị:** Chuỗi (String).
+
+* `platform: baremetal: provisioningDHCPRange:` Xác định dải IP cho các nút trên mạng cung cấp (provisioning network), ví dụ: 172.22.0.10,172.22.0.254.
+
+**Giá trị:** Dải địa chỉ IP.
+
+* `platform: baremetal: hosts:` Cấu hình cho các máy chủ vật lý (bare metal host).
+
+**Giá trị:** Mảng các đối tượng cấu hình máy chủ.
+
+* `platform: baremetal: hosts: name:` Tên của máy chủ.
+
+**Giá trị:** Chuỗi ký tự.
+
+* `platform: baremetal: hosts: bootMACAddress:` Địa chỉ MAC của card mạng (NIC) được sử dụng để cung cấp cấu hình cho máy chủ.
+
+**Giá trị:** Địa chỉ MAC.
+
+* `platform: baremetal: hosts: bmc:` Cấu hình để máy chủ kết nối với bộ điều khiển quản lý bo mạch chủ (BMC).
+
+**Giá trị:** Tập hợp các đối tượng cấu hình BMC (dưới dạng từ điển).
+
+* `platform: baremetal: hosts: bmc: username:` Tên người dùng cho BMC.
+
+**Giá trị:** Chuỗi ký tự.
+
+* `platform: baremetal: hosts: bmc: password:` Mật khẩu cho BMC.
+
+**Giá trị:** Chuỗi ký tự.
+
+* `platform: baremetal: hosts: bmc: address:` URL dùng để giao tiếp với bộ điều khiển BMC của máy chủ. Cấu hình địa chỉ sẽ xác định giao thức được sử dụng. Ví dụ: `redfish+http://10.10.10.1:8000/redfish/v1/Systems/1234` cho phép sử dụng giao thức Redfish. Để biết thêm thông tin, hãy xem phần "Địa chỉ BMC" (BMC addressing) trong mục "Triển khai các cụm do trình cài đặt cung cấp trên phần cứng vật lý" (Deploying installer-provisioned clusters on bare metal).
+
+**Giá trị:** URL.
+
+* `platform: baremetal: hosts: bmc: disableCertificateVerification:` `redfish` và `redfish-virtualmedia` cần tham số này để quản lý các địa chỉ BMC. Giá trị cần được đặt là `True` khi sử dụng chứng chỉ tự ký cho các địa chỉ BMC.
+
+**Giá trị:** Kiểu Boolean.
+
+#### IX.1.5. Các tham số cấu hình VMware vSphere bổ sung
+Các tham số cấu hình VMware vSphere bổ sung được mô tả dưới đây:
+
+##### Các tham số bổ sung cho cụm VMware vSphere
+
+* `platform: vsphere:` Mô tả tài khoản của bạn trên nền tảng đám mây lưu trữ cụm (cluster) của bạn. Bạn có thể sử dụng tham số này để tùy chỉnh nền tảng. Nếu bạn cung cấp các thiết lập cấu hình bổ sung cho các máy tính toán (compute machines) và máy điều khiển (control plane machines) trong nhóm máy (machine pool), thì tham số này là không bắt buộc.
+
+**Giá trị:** Một tập hợp (dictionary) các đối tượng cấu hình vSphere.
+
+* `platform: vsphere: failureDomains:` Thiết lập các mối quan hệ giữa một vùng (region) và một khu vực (zone). Bạn xác định một miền lỗi (failure domain) bằng cách sử dụng các đối tượng vCenter, chẳng hạn như đối tượng kho lưu trữ dữ liệu (datastore). Miền lỗi xác định vị trí trong vCenter dành cho các nút (node) của cụm OpenShift Container Platform.
+
+**Giá trị:** Một mảng các đối tượng cấu hình miền lỗi.
+
+* `platform: vsphere: failureDomains: name:` Tên của miền lỗi (failure domain).
+
+**Giá trị:** Chuỗi (String)
+
+* `platform: vsphere: failureDomains: region:` Nếu bạn xác định nhiều miền lỗi (failure domain) cho cụm (cluster) của mình, bạn phải gắn thẻ (tag) vào từng trung tâm dữ liệu (data center) trong vCenter. Để xác định một vùng (region), hãy sử dụng thẻ từ danh mục thẻ `openshift-region`. Đối với môi trường chỉ có một trung tâm dữ liệu vSphere, bạn không cần gắn thẻ, nhưng vẫn phải nhập một giá trị gồm các ký tự chữ và số (ví dụ: `datacenter`) cho tham số này. Nếu bạn muốn thiết lập các miền lỗi dựa trên các nhóm máy chủ (host group), hãy gắn các thẻ này vào các cụm vSphere thay vì vào các trung tâm dữ liệu.
+
+*Giá trị:* Chuỗi (String)
+
+* `platform: vsphere: failureDomains: regionType:` Chỉ định loại vùng `ComputeCluster` để kích hoạt các nhóm máy chủ (host group).
+
+**Giá trị:** Chuỗi (String)
+
+* `platform: vsphere: failureDomains: server:` Chỉ định tên máy chủ (hostname) đầy đủ hoặc địa chỉ IP của máy chủ VMware vCenter, nhờ đó máy khách có thể truy cập các tài nguyên trong miền lỗi (failure domain). Bạn phải áp dụng vai trò máy chủ (server role) cho vị trí của máy chủ vSphere vCenter đó.
+
+**Giá trị:** Chuỗi (String)
+
+* `platform: vsphere: failureDomains: zone:` Nếu bạn xác định nhiều miền lỗi (failure domain) cho cụm (cluster) của mình, bạn phải gắn một thẻ (tag) vào mỗi cụm vCenter. Để xác định một vùng (zone), hãy sử dụng thẻ từ danh mục thẻ `openshift-zone`. Đối với môi trường trung tâm dữ liệu vSphere đơn lẻ, bạn không cần gắn thẻ, nhưng vẫn phải nhập một giá trị gồm các ký tự chữ và số (ví dụ: `cluster`) cho tham số này. Nếu bạn muốn thiết lập các miền lỗi dựa trên các nhóm máy chủ (host group), hãy xác định các vùng tương ứng với các nhóm máy chủ đó thay vì các cụm. Hãy sử dụng các thẻ này để liên kết từng máy chủ ESXi với nhóm máy chủ tương ứng của nó.
+
+**Giá trị:** Chuỗi (String)
+
+* `platform: vsphere: failureDomains: zoneType:` Chỉ định loại vùng `HostGroup` để kích hoạt các nhóm máy chủ (host group).
+
+**Giá trị:** Chuỗi (String)
+
+* `platform: vsphere: failureDomains: topology: computeCluster:` Đường dẫn đến cụm tài nguyên tính toán vSphere.
+
+**Giá trị:** Chuỗi
+
+* `platform: vsphere: failureDomains: topology: datacenter:` Liệt kê và định nghĩa các trung tâm dữ liệu nơi các máy ảo (VM) của OpenShift Container Platform hoạt động. Danh sách các trung tâm dữ liệu này phải khớp với danh sách các trung tâm dữ liệu được chỉ định trong trường `vcenters`.
+
+**Giá trị:** Chuỗi (String)
+
+* `platform: vsphere: failureDomains: topology: datastore:` Đường dẫn đến vSphere datastore (kho lưu trữ dữ liệu) chứa các tệp máy ảo, mẫu (template) và tệp ảnh ISO.
+
+> **Quan trọng:** Bạn có thể chỉ định đường dẫn của bất kỳ datastore nào nằm trong một cụm datastore (datastore cluster). Theo mặc định, tính năng Storage vMotion được tự động bật cho các cụm datastore. Red Hat không hỗ trợ Storage vMotion; do đó, bạn phải tắt tính năng này để tránh nguy cơ mất dữ liệu đối với cụm OpenShift Container Platform của mình.  
+> Nếu bạn cần chỉ định các máy ảo (VM) nằm trên nhiều datastore khác nhau, hãy sử dụng đối tượng datastore để xác định miền lỗi (failure domain) trong tệp cấu hình `install-config.yaml` của cụm. Để biết thêm thông tin, hãy xem phần "Kích hoạt vùng (region) và khu vực (zone) trên VMware vSphere".
+
+**Giá trị:** Chuỗi (String)
+
+* `platform: vsphere: failureDomains: topology: folder:` Tùy chọn: Đường dẫn tuyệt đối đến một thư mục hiện có, nơi người dùng tạo các máy ảo; ví dụ: `/<data_center_name>/vm/<folder_name>/<subfolder_name>`.
+
+**Giá trị:** Chuỗi (String)
+
+* `platform: vsphere: failureDomains: topology: hostGroup:` Chỉ định nhóm máy chủ vSphere cần liên kết với miền lỗi (failure domain).
+
+**Giá trị:** Chuỗi (String)
+
+* `platform: vsphere: failureDomains: topology: networks:` Liệt kê bất kỳ mạng nào trong phiên bản vCenter có chứa các địa chỉ IP ảo và bản ghi DNS mà bạn đã định cấu hình.
+
+**Giá trị:** Chuỗi (String)
+
+* `platform: vsphere: failureDomains: topology: resourcePool:` Tùy chọn: Đường dẫn tuyệt đối đến một nhóm tài nguyên (resource pool) hiện có, nơi chương trình cài đặt sẽ tạo các máy ảo; ví dụ: `/<data_center_name>/host/<cluster_name>/Resources/<resource_pool_name>/<optional_nested_resource_pool_name>`.
+
+**Giá trị:** Chuỗi (String)
+
+* `platform: vsphere: failureDomains: topology: tagIDs:` Tùy chọn: Chỉ định ID của thẻ (tag) sẽ được chương trình cài đặt liên kết với các máy ảo (VM). Mỗi máy ảo do OpenShift Container Platform tạo ra đều được gán một thẻ duy nhất, dành riêng cho cụm (cluster) đó. Thẻ này cho phép chương trình cài đặt xác định và xóa các máy ảo liên quan khi cụm bị loại bỏ. Bạn có thể liệt kê tối đa mười ID thẻ bổ sung để gắn vào các máy ảo do chương trình cài đặt cung cấp. Để biết thêm thông tin về cách xác định ID thẻ, hãy xem tài liệu về [Thẻ và Thuộc tính (Tags and Attributes) trong vSphere](https://docs.vmware.com/en/VMware-vSphere/7.0/com.vmware.vsphere.vcenterhost.doc/GUID-E8E854DD-AA97-4E0C-8419-CE84F93C4058.html).
+
+**Giá trị:** Chuỗi (string), ví dụ: `urn:vmomi:InventoryServiceTag:208e713c-cae3-4b7f-918e-4051ca7d1f97:GLOBAL`.
+
+* `platform: vsphere: failureDomains: topology: template:` Chỉ định đường dẫn tuyệt đối đến một mẫu hình ảnh (image template) hoặc máy ảo Red Hat Enterprise Linux CoreOS (RHCOS) đã tồn tại từ trước. Chương trình cài đặt có thể sử dụng mẫu hình ảnh hoặc máy ảo này để nhanh chóng cài đặt RHCOS trên các máy chủ vSphere. Bạn có thể cân nhắc sử dụng tham số này như một giải pháp thay thế cho việc tải lên một hình ảnh RHCOS trên các máy chủ vSphere. Tham số này chỉ khả dụng khi sử dụng cơ sở hạ tầng do trình cài đặt cung cấp (installer-provisioned infrastructure).
+
+**Giá trị:** Chuỗi (String)
+
+* `platform: vsphere: vcenters:` Cấu hình các thông tin kết nối để các dịch vụ có thể giao tiếp với máy chủ vCenter.
+
+**Giá trị:** Một mảng các đối tượng cấu hình vCenter.
+
+* `platform: vsphere: vcenters: datacenters:` Liệt kê và định nghĩa các trung tâm dữ liệu nơi các máy ảo (VM) của OpenShift Container Platform hoạt động. Danh sách các trung tâm dữ liệu này phải khớp với danh sách các trung tâm dữ liệu được chỉ định trong trường `failureDomains`.
+
+**Giá trị:** Chuỗi (String)
+
+* `platform: vsphere: vcenters: password:` Mật khẩu gắn với người dùng vSphere.
+
+**Giá trị:** Chuỗi
+
+* `platform: vsphere: vcenters: port:` Số cổng được sử dụng để giao tiếp với máy chủ vCenter.
+
+**Giá trị:** Số nguyên
+
+* `platform: vsphere: vcenters: server:` Tên máy chủ đủ điều kiện (FQHN) hoặc địa chỉ IP của máy chủ vCenter.
+
+**Giá trị:** Chuỗi
+
+* `platform: vsphere: vcenters: user:` Tên người dùng gắn với người dùng vSphere.
+
+**Giá trị:** Chuỗi
+
+### IX.2. Các tham số cấu hình Agent khả dụng
+Để tùy chỉnh quá trình cài đặt cụm (cluster), bạn có thể sử dụng các tham số cấu hình trong tệp `agent-config.yaml`.
+
+Các bảng dưới đây liệt kê những tham số cấu hình Agent bắt buộc và tùy chọn mà bạn có thể thiết lập trong quy trình cài đặt dựa trên Agent (Agent-based installation).
+
+> **Lưu ý:** Các thiết lập này chỉ được sử dụng cho quá trình cài đặt và không thể thay đổi sau khi quá trình cài đặt hoàn tất.
+
+#### IX.2.1. Các tham số cấu hình bắt buộc
+Các tham số cấu hình bắt buộc cho Agent được mô tả trong bảng dưới đây:
+
+**Bảng 9.2. Các tham số bắt buộc**
+
+| Tham số           | Mô tả                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Giá trị                                                                         |
+|-------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| `apiVersion:`     | Phiên bản API cho nội dung trong tệp `agent-config.yaml`. Phiên bản hiện tại là `v1beta1`. Chương trình cài đặt cũng có thể hỗ trợ các phiên bản API cũ hơn.                                                                                                                                                                                                                                                                                                                                                        | Chuỗi                                                                           |
+| `metadata:`       | Đối tượng tài nguyên Kubernetes `ObjectMeta`, trong đó chỉ tham số `name` được sử dụng.                                                                                                                                                                                                                                                                                                                                                                                                                             | Đối tượng                                                                       |
+| `metadata: name:` | Tên của cụm (cluster). Các bản ghi DNS cho cụm này đều là các tên miền phụ (subdomain) của `{{.metadata.name}}.{{.baseDomain}}`. Giá trị được nhập trong tệp `agent-config.yaml` sẽ bị bỏ qua; thay vào đó, hệ thống sẽ sử dụng giá trị được chỉ định trong tệp `install-config.yaml`. Trong trường hợp bạn không cung cấp `metadata.name` thông qua tệp `install-config.yaml` hoặc `agent-config.yaml` — chẳng hạn như khi chỉ sử dụng các tệp manifest ZTP — thì tên cụm sẽ được đặt mặc định là `agent-cluster`. | Chuỗi gồm các chữ cái viết thường và dấu gạch ngang (`-`), chẳng hạn như `dev`. |
+
+#### IX.2.2. Các tham số cấu hình tùy chọn
+Các tham số cấu hình tùy chọn cho Agent được mô tả trong bảng dưới đây:
+
+**Bảng 9.3. Các tham số tùy chọn**
+
+| Tham số                               | Mô tả                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Giá trị                                                                                                                                                                      |
+|---------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `rendezvousIP:`                       | Địa chỉ IP của nút thực hiện quy trình khởi động (bootstrapping) cũng như chạy thành phần `assisted-service` (dịch vụ hỗ trợ). Bạn bắt buộc phải cung cấp địa chỉ IP điểm tập hợp (rendezvous IP address) nếu không chỉ định địa chỉ IP của ít nhất một máy chủ trong tham số `networkConfig`. Nếu địa chỉ này không được cung cấp, một địa chỉ IP sẽ được chọn từ danh sách các máy chủ trong `networkConfig`.                                                                                                                               | Địa chỉ IPv4 hoặc IPv6.                                                                                                                                                      |
+| `bootArtifactsBaseURL:`               | Khi bạn sử dụng Agent-based Installer để tạo tệp ảnh ISO tối giản, tham số này chỉ định một URL để truy xuất tệp ảnh rootfs trong quá trình cài đặt cụm (cluster). Tham số này là tùy chọn khi khởi động các tệp ảnh ISO tối giản trong môi trường có kết nối mạng. Khi bạn sử dụng Agent-based Installer để tạo tập lệnh iPXE, tham số này chỉ định URL của máy chủ dùng để tải lên các tài nguyên Preboot Execution Environment (PXE). Để biết thêm thông tin, hãy xem phần "Chuẩn bị các tài nguyên PXE cho OpenShift Container Platform". | Chuỗi                                                                                                                                                                        |
+| `additionalNTPSources:`               | Danh sách các nguồn Giao thức Thời gian Mạng (NTP) cần được thêm vào tất cả các máy chủ trong cụm; danh sách này sẽ bổ sung vào bất kỳ nguồn NTP nào đã được cấu hình thông qua các phương thức khác.                                                                                                                                                                                                                                                                                                                                         | Danh sách các tên máy chủ hoặc địa chỉ IP.                                                                                                                                   |
+| `hosts:`                              | Cấu hình máy chủ. Một danh sách tùy chọn các máy chủ. Số lượng máy chủ được xác định không được vượt quá tổng số máy chủ được quy định trong tệp `install-config.yaml`; con số này chính là tổng các giá trị của các tham số `compute.replicas` và `controlPlane.replicas`.                                                                                                                                                                                                                                                                   | Một mảng các đối tượng cấu hình máy chủ.                                                                                                                                     |
+| `hosts: hostname:`                    | Tên máy chủ (Hostname). Ghi đè lên tên máy chủ nhận được từ Giao thức Cấu hình Máy chủ Động (DHCP) hoặc từ truy vấn DNS ngược (reverse DNS lookup). Mỗi máy chủ phải có một tên máy chủ duy nhất được cung cấp thông qua một trong các phương thức này, mặc dù việc cấu hình tên máy chủ bằng tham số này là tùy chọn.                                                                                                                                                                                                                        | Chuỗi                                                                                                                                                                        |
+| `hosts: interfaces:`                  | Cung cấp bảng ánh xạ giữa tên và địa chỉ MAC cho các giao diện trên máy chủ. Nếu phần `NetworkConfig` được thiết lập trong tệp `agent-config.yaml`, thì bảng này phải được bao gồm và các giá trị trong đó phải khớp với các ánh xạ được quy định tại phần `NetworkConfig`.                                                                                                                                                                                                                                                                   | Một mảng các đối tượng cấu hình máy chủ.Chuỗi                                                                                                                                |
+| `hosts: interfaces: name:`            | Tên của một giao diện trên máy chủ. **Lưu ý:** Giá trị này không nhất thiết phải khớp với tên thiết bị.                                                                                                                                                                                                                                                                                                                                                                                                                                       | Chuỗi                                                                                                                                                                        |
+| `hosts: interfaces: macAddress:`      | Địa chỉ MAC của một giao diện trên máy chủ.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Một địa chỉ MAC, chẳng hạn như ví dụ sau:  `00-B0-D0-63-C2-26`.                                                                                                              |
+| `hosts: role:`                        | Xác định xem máy chủ là nút `master` hay nút `worker`. Nếu không có vai trò nào được xác định trong tệp `agent-config.yaml`, các vai trò sẽ được chỉ định ngẫu nhiên trong quá trình cài đặt cụm.                                                                                                                                                                                                                                                                                                                                             | `master` hoặc  `worker`.                                                                                                                                                     |
+| `hosts: rootDeviceHints:`             | Cho phép cung cấp (provision) ảnh hệ điều hành Red Hat Enterprise Linux CoreOS (RHCOS) cho một thiết bị cụ thể. Chương trình cài đặt sẽ kiểm tra các thiết bị theo thứ tự phát hiện được, rồi so sánh các giá trị thu thập từ thiết bị với các giá trị gợi ý (hint values). Chương trình sẽ chọn thiết bị đầu tiên khớp với giá trị gợi ý đó; đây chính là thiết bị mà hệ điều hành sẽ được ghi vào trong quá trình cài đặt.                                                                                                                  | Một từ điển gồm các cặp khóa-giá trị. Để biết thêm thông tin, hãy xem phần "Gợi ý thiết bị gốc" (Root device hints) trong trang "Thiết lập môi trường để cài đặt OpenShift". |
+| `hosts: rootDeviceHints: deviceName:` | Tên của thiết bị mà hình ảnh RHCOS được cung cấp cho.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Chuỗi                                                                                                                                                                        |
+| `hosts: networkConfig:`               | Định nghĩa mạng máy chủ (host network). Cấu hình này phải khớp với API Quản lý Mạng Máy chủ (Host Network Management API) được quy định trong "API Mạng Khai báo (tài liệu nmstate)".                                                                                                                                                                                                                                                                                                                                                         | Một từ điển các đối tượng cấu hình mạng máy chủ.                                                                                                                             |
+| `minimalISO:`                         | Xác định xem Agent-based Installer sẽ tạo tệp ISO đầy đủ hay tệp ISO tối giản. Khi tham số này được đặt là `True`, Agent-based Installer sẽ tạo một tệp ISO không bao gồm tệp hình ảnh rootfs; thay vào đó, nó chứa thông tin về vị trí để tải tệp rootfs về. Khi tạo tệp ISO tối giản, nếu bạn không chỉ định URL cho rootfs thông qua tham số `bootArtifactsBaseURL`, Agent-based Installer sẽ tự động nhúng một URL mặc định có thể truy cập được trong các môi trường có kết nối internet. Giá trị mặc định là `False`.                   | Boolean                                                                                                                                                                      |
+
