@@ -4223,3 +4223,108 @@ Các tham số cấu hình tùy chọn cho Agent được mô tả trong bảng 
 | `hosts: networkConfig:`               | Định nghĩa mạng máy chủ (host network). Cấu hình này phải khớp với API Quản lý Mạng Máy chủ (Host Network Management API) được quy định trong "API Mạng Khai báo (tài liệu nmstate)".                                                                                                                                                                                                                                                                                                                                                         | Một từ điển các đối tượng cấu hình mạng máy chủ.                                                                                                                             |
 | `minimalISO:`                         | Xác định xem Agent-based Installer sẽ tạo tệp ISO đầy đủ hay tệp ISO tối giản. Khi tham số này được đặt là `True`, Agent-based Installer sẽ tạo một tệp ISO không bao gồm tệp hình ảnh rootfs; thay vào đó, nó chứa thông tin về vị trí để tải tệp rootfs về. Khi tạo tệp ISO tối giản, nếu bạn không chỉ định URL cho rootfs thông qua tham số `bootArtifactsBaseURL`, Agent-based Installer sẽ tự động nhúng một URL mặc định có thể truy cập được trong các môi trường có kết nối internet. Giá trị mặc định là `False`.                   | Boolean                                                                                                                                                                      |
 
+## 10. Các tác vụ sau cài đặt
+Sau khi sử dụng trình cài đặt dựa trên tác nhân (Agent-based Installer) để triển khai cụm (cluster) của mình, bạn có thể thực hiện các quy trình sau cài đặt, chẳng hạn như tùy chỉnh cầu nối `br-ex` cho các nút (node) trong cụm. Việc tùy chỉnh cụm giúp chuẩn bị sẵn sàng hệ thống cho các khối lượng công việc (workload) cụ thể và các yêu cầu triển khai đặc thù.
+
+### 10.1. Tạo đối tượng manifest bao gồm cầu nối br-ex tùy chỉnh
+Đối với các môi trường tiêu chuẩn, hãy sử dụng cấu hình cầu nối OVS `br-ex` mặc định. Cấu hình này áp dụng khi bạn có một bộ điều khiển giao diện mạng (NIC) duy nhất và các thiết lập OVS tiêu chuẩn.
+
+Theo mặc định, OpenShift Container Platform sẽ tự động cấu hình cầu nối Open vSwitch (OVS) `br-ex` trên các nút bare-metal (máy chủ vật lý). Đối với các yêu cầu mạng nâng cao, bạn có thể ghi đè hành vi mặc định này trên các nền tảng bare-metal. Để thực hiện việc này, hãy tạo một tài nguyên tùy chỉnh (Custom Resource - CR) có tên là `NodeNetworkConfigurationPolicy` (NNCP), trong đó bao gồm một tệp cấu hình NMState.
+
+Kubernetes NMState Operator sử dụng tệp cấu hình NMState để tạo cấu hình mạng cho cầu nối `br-ex` tùy chỉnh. Cấu hình này sẽ được áp dụng cho từng nút trong cụm (cluster) của bạn.
+
+> **Quan trọng:** Sau khi tạo CR `NodeNetworkConfigurationPolicy`, hãy sao chép nội dung từ tệp cấu hình NMState dùng cho cài đặt vào CR NNCP này. Một CR NNCP không đầy đủ có thể dẫn đến mất kết nối mạng, vì NNCP sẽ ghi đè lên tất cả các chính sách hiện có.
+
+Hãy cân nhắc sử dụng cấu hình cầu nối `br-ex` tùy chỉnh cho các trường hợp sau:
+
+* Bạn cần sửa đổi cầu nối `br-ex` sau khi đã cài đặt cụm. 
+* Bạn cần sửa đổi đơn vị truyền tải tối đa (MTU) cho cụm của mình. 
+* Bạn cần cập nhật các giá trị DNS. 
+* Bạn cần sửa đổi các thuộc tính cho một giao diện liên kết (bond interface) khác, chẳng hạn như MIImon (Media Independent Interface Monitor), chế độ liên kết (bonding mode), hoặc Chất lượng dịch vụ (QoS). 
+* Bạn cần bật Giao thức khám phá lớp liên kết (Link Layer Discovery Protocol - LLDP) để phát hiện và khắc phục sự cố kết nối với thiết bị chuyển mạch (switch).
+
+> **Cảnh báo:** Danh sách tên giao diện dưới đây đã được dành riêng; bạn không được phép sử dụng các tên này trong cấu hình NMstate:
+> 
+> `br-ext`, `br-int`, `br-local`, `br-nexthop`, `br0`, `ext-vxlan`, `ext`, `genev_sys_*`, `int`, `k8s-*`, `ovn-k8s-*`, `patch-br-*`, `tun0`, `vxlan_sys_*`
+
+**Điều kiện tiên quyết**
+
+* Bạn đã cài đặt Kubernetes NMState Operator. 
+* Bạn đã xác định các nút (node) cụ thể mà bạn muốn áp dụng chính sách.
+
+**Quy trình**
+
+* Tạo một đối tượng tùy chỉnh (CR) NodeNetworkConfigurationPolicy (NNCP) và xác định cấu hình mạng cho cầu nối (bridge) `br-ex` tùy chỉnh. NNCP CR cho `br-ex` phải bao gồm địa chỉ IP masquerade của OVN-Kubernetes cùng với mạng con (subnet) tương ứng. Ví dụ về NNCP CR bao gồm các giá trị mặc định trong các tham số `ipv4.address.ip` và `ipv6.address.ip`. Bạn có thể thiết lập địa chỉ IP masquerade trong tham số `ipv4.address.ip`, `ipv6.address.ip` hoặc cả hai. 
+
+> **Quan trọng:** Sau khi hoàn tất cài đặt, bạn không thể thay đổi địa chỉ IP chính của cầu nối `br-ex` đã tùy chỉnh. Nếu muốn chuyển đổi mạng cụm (cluster network) từ đơn ngăn xếp (single-stack) sang ngăn xếp kép (dual-stack), bạn có thể thêm hoặc thay đổi địa chỉ IPv6 phụ trong NNCP CR, nhưng địa chỉ IP chính hiện tại thì không thể thay đổi.
+
+```yaml
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: worker-0-br-ex
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: worker-0
+  desiredState:
+    interfaces:
+    - name: enp2s0
+      type: ethernet
+      state: up
+      mtu: 9000
+      ipv4:
+        enabled: false
+      ipv6:
+        enabled: false
+    - name: br-ex
+      type: ovs-bridge
+      state: up
+      ipv4:
+        enabled: false
+        dhcp: false
+      ipv6:
+        enabled: false
+        dhcp: false
+      bridge:
+        options:
+          mcast-snooping-enable: true
+        port:
+        - name: enp2s0
+        - name: br-ex
+    - name: br-ex
+      type: ovs-interface
+      state: up
+      copy-mac-from: enp2s0
+      mtu: 9000
+      ipv4:
+        enabled: true
+        dhcp: true
+        auto-route-metric: 48
+        address:
+        - ip: "169.254.0.2"
+          prefix-length: 17
+      ipv6:
+        enabled: true
+        dhcp: true
+        auto-route-metric: 48
+        address:
+        - ip: "fd69::2"
+        prefix-length: 112
+# ...
+```
+
+Trong đó:
+
+* `metadata.name`: Xác định tên của chính sách (policy). 
+* `interfaces.name`: Xác định tên của giao diện (interface). 
+* `interfaces.type`: Xác định loại giao diện ethernet. 
+* `interfaces.state`: Xác định trạng thái mong muốn cho giao diện sau khi được tạo. 
+* `mtu`: Để đảm bảo tính ổn định và hiệu suất mạng, bạn phải khai báo rõ ràng giá trị MTU trong tệp manifest cho mọi giao diện. Không nên dựa vào cấu hình MTU tự động. Giá trị MTU được cấu hình trên một cổng bridge hoặc giao diện có gắn thẻ VLAN không được vượt quá kích thước khung hình (frame size) tối đa mà phương tiện vật lý kết nối hỗ trợ. Sự không khớp về giá trị này sẽ dẫn đến tình trạng phân mảnh gói tin hoặc mất kết nối. 
+* `ipv4.enabled`: Trong ví dụ này, tham số này dùng để vô hiệu hóa IPv4 và IPv6. 
+* `port.name`: Xác định card mạng (NIC) của nút (node) mà bridge được gắn vào. 
+* `address.ip`: Hiển thị các địa chỉ IP IPv4 và IPv6 mặc định. Hãy đảm bảo rằng bạn đã thiết lập các địa chỉ IP IPv4 và IPv6 theo cơ chế masquerade cho mạng của mình. 
+* `auto-route-metric`: Đặt tham số này thành 48 để đảm bảo tuyến đường mặc định (default route) của br-ex luôn có mức ưu tiên cao nhất (giá trị metric thấp nhất). Cấu hình này giúp ngăn ngừa xung đột định tuyến với bất kỳ giao diện nào khác được dịch vụ NetworkManager tự động cấu hình.
+
+**Các bước tiếp theo**
+
+Mở rộng quy mô các nút tính toán (compute node) bằng cách áp dụng đối tượng manifest — bao gồm một bridge `br-ex` tùy chỉnh — cho từng nút tính toán hiện có trong cụm (cluster) của bạn.
