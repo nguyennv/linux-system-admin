@@ -3401,12 +3401,12 @@ sanboot --keep iscsi:192.168.45.1::::iqn.2023-01.com.example:\${hostname}
 EOF
 ```
 
-## 8. Chuẩn bị một cụm được cài đặt dựa trên tác nhân (agent-based) cho Operator multicluster engine dành cho Kubernetes
+## VIII. Chuẩn bị một cụm được cài đặt dựa trên tác nhân (agent-based) cho Operator multicluster engine dành cho Kubernetes
 Bạn có thể cài đặt Operator của multicluster engine và triển khai một cụm hub (hub cluster) bằng trình cài đặt dựa trên tác nhân (Agent-based Installer).
 
 Quy trình dưới đây được tự động hóa một phần và đòi hỏi các thao tác thủ công sau khi cụm ban đầu đã được triển khai.
 
-### 8.1. Các điều kiện tiên quyết
+### VIII.1. Các điều kiện tiên quyết
 Trước khi cài đặt Operator cho multicluster engine (công cụ quản lý đa cụm) và triển khai cụm trung tâm (hub cluster) bằng trình cài đặt dựa trên tác nhân (Agent-based Installer), bạn cần hoàn tất một số điều kiện tiên quyết.
 
 Các điều kiện tiên quyết sau đây phải được đáp ứng:
@@ -3421,7 +3421,7 @@ Các điều kiện tiên quyết sau đây phải được đáp ứng:
 * Bạn đã cài đặt công cụ dòng lệnh OpenShift (oc). 
 * Nếu thực hiện cài đặt trong môi trường không kết nối internet, bạn phải thiết lập một registry sao chép cục bộ (local mirror registry) để phục vụ quá trình cài đặt này.
 
-### 8.2. Chuẩn bị triển khai cụm dựa trên tác nhân (Agent-based cluster) cho multicluster engine dành cho Kubernetes Operator trong môi trường không kết nối internet (disconnected environment)
+### VIII.2. Chuẩn bị triển khai cụm dựa trên tác nhân (Agent-based cluster) cho multicluster engine dành cho Kubernetes Operator trong môi trường không kết nối internet (disconnected environment)
 Bạn có thể sao chép (mirror) các image container cần thiết của OpenShift Container Platform, multicluster engine Operator và Local Storage Operator (LSO) vào registry cục bộ của mình trong môi trường không kết nối internet. Hãy đảm bảo ghi lại tên máy chủ DNS cục bộ và cổng (port) của registry đó.
 
 > **Lưu ý:** Để sao chép kho lưu trữ image của OpenShift Container Platform vào registry cục bộ, bạn có thể sử dụng lệnh `oc adm release image` hoặc `oc mirror`. Trong quy trình này, lệnh `oc mirror` được sử dụng làm ví dụ.
@@ -3521,7 +3521,7 @@ $ openshift-install agent create cluster-manifests
 
 Lệnh này cập nhật thư mục tệp cấu hình (manifest) của cụm để bổ sung một thư mục bản sao (mirror folder) chứa cấu hình bản sao của bạn.
 
-### 8.3. Chuẩn bị triển khai cụm dựa trên tác nhân (agent-based cluster) cho Operator "multicluster engine" dành cho Kubernetes trong môi trường có kết nối mạng
+### VIII.3. Chuẩn bị triển khai cụm dựa trên tác nhân (agent-based cluster) cho Operator "multicluster engine" dành cho Kubernetes trong môi trường có kết nối mạng
 Tạo các tệp cấu hình (manifest) cần thiết cho Operator "multicluster engine", Operator lưu trữ cục bộ (Local Storage Operator - LSO), và để triển khai một cụm OpenShift Container Platform dựa trên tác nhân (agent-based) đóng vai trò là cụm trung tâm (hub cluster).
 
 **Quy trình**
