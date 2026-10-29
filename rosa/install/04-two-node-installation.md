@@ -15,8 +15,8 @@ Sau khi cài đặt, bạn có thể thêm các nút worker vào cụm này, nh�
 
 Tham khảo tại **"I.7. Giới thiệu về nút trọng tài (arbiter node)"** tại tài liệu **Cài đặt cụm tại chỗ (on-premise) bằng trình cài đặt dựa trên tác nhân (Agent-based Installer)**
 
-## 2. Cấu hình hai nút với cơ chế cách ly (fencing)
-### 2.1. Chuẩn bị cài đặt cụm OpenShift hai nút với cơ chế cách ly (fencing)
+## II. Cấu hình hai nút với cơ chế cách ly (fencing)
+### II.1. Chuẩn bị cài đặt cụm OpenShift hai nút với cơ chế cách ly (fencing)
 Cụm OpenShift Container Platform gồm hai nút với cơ chế cách ly (fencing) mang lại khả năng sẵn sàng cao (HA) trong khi vẫn tiết kiệm tài nguyên phần cứng. Cấu hình này được thiết kế cho các môi trường phân tán hoặc môi trường biên (edge), nơi việc triển khai cụm với mặt phẳng điều khiển (control plane) gồm ba nút là không khả thi.
 
 Cụm hai nút không bao gồm các nút tính toán (compute node) riêng biệt. Hai máy chủ thuộc mặt phẳng điều khiển sẽ vừa thực hiện quản lý cụm, vừa chạy các khối lượng công việc (workload) của người dùng.
@@ -38,7 +38,7 @@ Các máy bootstrap và control plane phải sử dụng Red Hat Enterprise Linu
 
 > **Lưu ý:** Yêu cầu sử dụng RHCOS chỉ áp dụng cho các mô hình triển khai trên cơ sở hạ tầng do người dùng cung cấp (user-provisioned infrastructure). Đối với các mô hình triển khai trên cơ sở hạ tầng do trình cài đặt cung cấp (installer-provisioned infrastructure), các máy bootstrap và control plane sẽ được trình cài đặt tự động thiết lập, vì vậy bạn không cần phải cài đặt RHCOS theo cách thủ công.
 
-#### 2.1.1. Các yêu cầu tối thiểu về tài nguyên để cài đặt cụm OpenShift hai nút có sử dụng cơ chế cách ly (fencing)
+#### II.1.1. Các yêu cầu tối thiểu về tài nguyên để cài đặt cụm OpenShift hai nút có sử dụng cơ chế cách ly (fencing)
 Mỗi cụm phải đáp ứng các yêu cầu tối thiểu để có thể vận hành đúng như mong đợi.
 
 Mỗi máy trong cụm phải đáp ứng các yêu cầu tối thiểu sau đây:
@@ -55,7 +55,7 @@ Mỗi máy trong cụm phải đáp ứng các yêu cầu tối thiểu sau đâ
 1. Một CPU tương đương với một nhân vật lý khi tính năng đa luồng đồng thời (SMT) – hay còn gọi là Hyper-Threading – không được kích hoạt. Khi tính năng này được bật, hãy sử dụng công thức sau để tính toán tỷ lệ tương ứng: (số luồng trên mỗi nhân × số nhân) × số socket = số CPU.
 2. OpenShift Container Platform và Kubernetes rất nhạy cảm với hiệu năng ổ đĩa; do đó, bạn nên sử dụng hệ thống lưu trữ có tốc độ cao, đặc biệt là đối với etcd trên các nút điều khiển (control plane nodes). Cần lưu ý rằng trên nhiều nền tảng đám mây, dung lượng lưu trữ và chỉ số IOPS thường tỷ lệ thuận với nhau; vì vậy, có thể bạn sẽ cần phân bổ dung lượng lưu trữ lớn hơn mức thực tế cần thiết để đạt được hiệu năng như mong muốn.
 
-#### 2.1.2. Các yêu cầu về DNS do người dùng cung cấp
+#### II.1.2. Các yêu cầu về DNS do người dùng cung cấp
 Trong các triển khai OpenShift Container Platform, bạn phải đảm bảo rằng các thành phần của cụm (cluster) đáp ứng những tiêu chí nhất định về phân giải tên DNS, phục vụ cho các mục đích như giao tiếp nội bộ, xác thực chứng chỉ và tự động phát hiện nút (node).
 
 Dưới đây là danh sách các thành phần cụm bắt buộc:
@@ -86,7 +86,7 @@ Các bản ghi DNS dưới đây là bắt buộc đối với cụm OpenShift C
 
 > **Mẹo:** Bạn có thể sử dụng lệnh `dig` để xác minh quá trình phân giải tên miền và phân giải ngược. Hãy xem phần "Xác thực phân giải DNS cho cơ sở hạ tầng do người dùng cung cấp" để biết các bước xác thực chi tiết.
 
-##### 2.1.2.1. Ví dụ về cấu hình DNS cho các cụm do người dùng cung cấp (user-provisioned clusters)
+##### II.1.2.1. Ví dụ về cấu hình DNS cho các cụm do người dùng cung cấp (user-provisioned clusters)
 Hãy tham khảo các ví dụ về cấu hình DNS để hiểu cách thiết lập các bản ghi A và PTR nhằm đáp ứng các yêu cầu DNS khi triển khai OpenShift Container Platform trên cơ sở hạ tầng do người dùng cung cấp.
 
 Các ví dụ về cấu hình DNS được cung cấp tại đây chỉ mang tính chất tham khảo và không nhằm mục đích đưa ra lời khuyên về việc lựa chọn giải pháp DNS này thay vì giải pháp khác.
@@ -172,7 +172,7 @@ Trong đó:
 
 > **Lưu ý:** Không bắt buộc phải có bản ghi PTR cho tên miền đại diện (wildcard) của ứng dụng trên OpenShift Container Platform.
 
-#### 2.1.3. Các yêu cầu về DNS do trình cài đặt cung cấp
+#### II.1.3. Các yêu cầu về DNS do trình cài đặt cung cấp
 Trong các triển khai OpenShift Container Platform, bạn phải đảm bảo rằng các thành phần của cụm (cluster) đáp ứng những tiêu chí nhất định về phân giải tên DNS, phục vụ cho các mục đích như giao tiếp nội bộ, xác thực chứng chỉ và tự động phát hiện nút (node).
 
 Các máy khách (client) truy cập vào các nút của cụm OpenShift Container Platform thông qua mạng bare-metal (mạng vật lý). Quản trị viên mạng cần cấu hình một tên miền phụ (subdomain) hoặc vùng phụ (subzone), trong đó phần mở rộng tên chuẩn (canonical name extension) chính là tên của cụm.
@@ -205,12 +205,12 @@ Quy trình cài đặt do trình cài đặt tự động cung cấp (installer-
 
 > **Mẹo:** Bạn có thể sử dụng lệnh dig để kiểm tra quá trình phân giải DNS.
 
-#### 2.1.4. Tạo đối tượng manifest cho cầu nối br-ex tùy chỉnh
+#### II.1.4. Tạo đối tượng manifest cho cầu nối br-ex tùy chỉnh
 Bạn cần tạo một đối tượng manifest để sửa đổi cấu hình mạng của cụm (cluster) sau khi cài đặt. Đối tượng manifest này cấu hình cầu nối `br-ex`, vốn đảm nhiệm việc quản lý kết nối mạng bên ngoài cho cụm.
 
 Để biết hướng dẫn về cách tạo manifest này, hãy xem phần "Tạo tệp manifest cho cầu nối br-ex tùy chỉnh" thuộc tài liệu **Cài đặt trên phần cứng vật lý**.
 
-### 2.2. Cài đặt cụm OpenShift hai nút với cơ chế cách ly (fencing)
+### II.2. Cài đặt cụm OpenShift hai nút với cơ chế cách ly (fencing)
 Đối với nền tảng container có tính sẵn sàng cao và chiếm ít tài nguyên tại các vị trí biên (edge sites) hoặc các môi trường hạn chế về tài nguyên, bạn có thể triển khai cụm OpenShift hai nút với cơ chế cách ly (Two-Node Fencing - TNF). Cơ chế này bảo vệ các ứng dụng và dữ liệu của bạn khỏi tình trạng "split-brain" (xung đột trạng thái do mất kết nối) bằng cách cách ly an toàn một nút khi xảy ra lỗi giao tiếp. Để phù hợp với môi trường hiện có, bạn có thể triển khai cụm này thông qua các phương thức hạ tầng tự động, thủ công hoặc dựa trên tác nhân (agent-based).
 
 **Hạ tầng tự động (do trình cài đặt cung cấp - installer-provisioned)**  
@@ -224,7 +224,7 @@ Bạn sử dụng một image ISO có khả năng khởi động (bootable ISO),
 
 > **Quan trọng:** Hãy cấu hình quyền truy cập vào các nút trong quá trình cài đặt, chẳng hạn như bằng cách thêm các khóa SSH vào tệp `install-config.yaml`. Các cụm sử dụng cơ chế cách ly (TNF) có thể đòi hỏi sự can thiệp thủ công trong một số tình huống lỗi cụ thể mà chỉ có thể giải quyết thông qua việc truy cập trực tiếp vào nút đó.
 
-#### 2.2.1. Tệp install-config.yaml mẫu cho cụm gồm hai nút với cơ chế cách ly (fencing) trên hạ tầng do trình cài đặt cung cấp
+#### II.2.1. Tệp install-config.yaml mẫu cho cụm gồm hai nút với cơ chế cách ly (fencing) trên hạ tầng do trình cài đặt cung cấp
 Bạn có thể sử dụng tệp cấu hình install-config.yaml dưới đây làm mẫu để triển khai cụm OpenShift gồm hai nút với cơ chế cách ly (fencing) thông qua phương thức hạ tầng do trình cài đặt cung cấp (installer-provisioned infrastructure):
 
 > **Lưu ý:** Hãy sao lưu etcd trước khi tiếp tục để đảm bảo rằng bạn có thể khôi phục cụm nếu xảy ra sự cố.
@@ -288,7 +288,7 @@ sshKey: '<ssh_public_key>'
 * `pullSecret`: Chứa thông tin xác thực cần thiết để tải (pull) các hình ảnh container (container image) cho các thành phần của cụm.
 * `sshKey`: Khóa công khai SSH (SSH public key) dùng để truy cập vào các nút trong cụm sau khi hoàn tất quá trình cài đặt.
 
-#### 2.2.2. Tệp install-config.yaml mẫu cho cụm gồm hai nút trên cơ sở hạ tầng do người dùng cung cấp (UPI) với cơ chế cách ly nút (fencing)
+#### II.2.2. Tệp install-config.yaml mẫu cho cụm gồm hai nút trên cơ sở hạ tầng do người dùng cung cấp (UPI) với cơ chế cách ly nút (fencing)
 Bạn có thể sử dụng tệp cấu hình install-config.yaml dưới đây làm mẫu để triển khai cụm OpenShift Container Platform gồm hai nút với cơ chế cách ly nút (fencing), thông qua phương pháp sử dụng cơ sở hạ tầng do người dùng cung cấp (user-provisioned infrastructure):
 
 > **Lưu ý:** Hãy sao lưu etcd trước khi tiếp tục để đảm bảo rằng bạn có thể khôi phục cụm nếu xảy ra sự cố.
@@ -330,7 +330,7 @@ sshKey: '<ssh_public_key>'
 * `pullSecret`: Chứa thông tin xác thực cần thiết để tải (pull) các hình ảnh container (container image) cho các thành phần của cụm.
 * `sshKey`: Khóa công khai SSH dùng để truy cập vào các nút của cụm sau khi cài đặt.
 
-#### 2.2.3. Tệp install-config.yaml mẫu cho cụm hai nút có cơ chế cách ly (fencing) dành cho trình cài đặt dựa trên tác nhân (Agent-based Installer)
+#### II.2.3. Tệp install-config.yaml mẫu cho cụm hai nút có cơ chế cách ly (fencing) dành cho trình cài đặt dựa trên tác nhân (Agent-based Installer)
 Bạn có thể sử dụng tệp cấu hình install-config.yaml dưới đây làm mẫu để triển khai cụm OpenShift Container Platform gồm hai nút với cơ chế cách ly (fencing), thông qua phương thức cài đặt dựa trên tác nhân (Agent-based Installer).
 
 Xem tệp cấu hình install-config.yaml mẫu dành cho môi trường bare-metal (phần cứng vật lý) dưới đây:
@@ -432,7 +432,7 @@ sshKey: '<ssh_public_key>'
 * `fencing.credentials[].password`: Mật khẩu BMC cho nút đó.
 * `fencing.credentials[].certificateVerification`: Tùy chọn. Đặt là `Disabled` nếu BMC của bạn sử dụng chứng chỉ tự ký (thường gặp đối với các điểm cuối được lưu trữ nội bộ). Đặt là `Enabled` (mặc định) đối với các BMC sử dụng chứng chỉ hợp lệ được ký bởi cơ quan cấp chứng chỉ (CA).
 
-#### 2.2.4. Tệp agent-config.yaml mẫu cho cụm gồm hai nút có cơ chế cách ly (fencing) dành cho trình cài đặt dựa trên tác nhân (Agent-based Installer)
+#### II.2.4. Tệp agent-config.yaml mẫu cho cụm gồm hai nút có cơ chế cách ly (fencing) dành cho trình cài đặt dựa trên tác nhân (Agent-based Installer)
 Bạn có thể sử dụng tệp cấu hình agent-config.yaml dưới đây làm mẫu để triển khai cụm OpenShift Container Platform gồm hai nút với cơ chế cách ly (fencing) thông qua phương thức cài đặt dựa trên tác nhân (Agent-based Installer):
 
 Xem tệp agent-config.yaml mẫu với cấu hình tối thiểu dưới đây:
@@ -517,14 +517,14 @@ hosts:
         table-id: 254
 ```
 
-### 2.3. Vận hành cụm OpenShift hai nút ở trạng thái suy giảm (degraded) với cơ chế cách ly (fencing)
+### II.3. Vận hành cụm OpenShift hai nút ở trạng thái suy giảm (degraded) với cơ chế cách ly (fencing)
 Một cụm OpenShift Container Platform gồm hai nút với cơ chế cách ly (TNF) sẽ chuyển sang trạng thái suy giảm (degraded) khi một trong hai nút thuộc mặt phẳng điều khiển (control plane) không còn khả dụng. Nút còn lại sẽ tiếp tục duy trì mặt phẳng điều khiển đang hoạt động. Tuy nhiên, cụm này sẽ mất khả năng dự phòng theo cơ chế sẵn sàng cao (HA) cho đến khi nút bị lỗi được khôi phục.
 
 Trạng thái suy giảm là một trạng thái được thiết kế có chủ đích chứ không phải là một lỗi hệ thống. Ở trạng thái này, cụm vẫn duy trì được chức năng và các dịch vụ cốt lõi vẫn tiếp tục hoạt động. Chỉ một số tính năng cụ thể yêu cầu bắt buộc phải có sự dự phòng giữa hai nút mới tạm thời không khả dụng.
 
 > **Quan trọng:** Một cụm ở trạng thái suy giảm hoàn toàn không có khả năng chịu lỗi. Nếu nút còn lại cũng gặp sự cố, toàn bộ cụm sẽ ngừng hoạt động. Hãy khôi phục nút thứ hai càng sớm càng tốt. Trạng thái suy giảm chỉ là một khoảng thời gian tạm thời để phục hồi, không phải là trạng thái vận hành ổn định lâu dài.
 
-#### 2.3.1. Các nguyên nhân gây suy giảm trạng thái cụm TNF
+#### II.3.1. Các nguyên nhân gây suy giảm trạng thái cụm TNF
 Một cụm OpenShift gồm hai nút có sử dụng cơ chế cách ly (TNF - Two-Node Fencing) sẽ rơi vào trạng thái suy giảm (degraded) khi một nút gặp sự cố hoặc mất kết nối với cụm. Việc xác định nguyên nhân cụ thể gây ra tình trạng này là rất quan trọng, vì nó quyết định liệu cụm có thể tự động khôi phục hay cần sự can thiệp thủ công (như thực hiện cách ly nút hoặc sửa chữa phần cứng) để ngăn ngừa hỏng dữ liệu và duy trì tính khả dụng của dịch vụ.
 
 Một số nguyên nhân phổ biến dẫn đến tình trạng suy giảm trạng thái cụm bao gồm:
@@ -547,7 +547,7 @@ Tình trạng nút bị treo xảy ra khi phần cứng vẫn được cấp ngu
 **Lỗi Kubelet hoặc cạn kiệt tài nguyên**  
 Một node sẽ trở nên không ổn định nếu Kubelet gặp sự cố hoặc nếu node đó rơi vào tình trạng cạn kiệt tài nguyên nghiêm trọng, chẳng hạn như hết bộ nhớ RAM (OOM) hoặc hết dung lượng ổ đĩa. Khi Kubelet không thể gửi tín hiệu "nhịp tim" (heartbeat) tới control plane, cụm (cluster) sẽ đánh dấu node đó là "NotReady" (không sẵn sàng) và cố gắng di chuyển các khối lượng công việc (workload) đang chạy trên node đó sang nơi khác.
 
-#### 2.3.2. Trình tự xử lý lỗi nút trong cụm TNF
+#### II.3.2. Trình tự xử lý lỗi nút trong cụm TNF
 Một cụm OpenShift gồm hai nút với cơ chế cách ly nút (TNF - Two-Node Fencing) sẽ chuyển sang trạng thái suy giảm hiệu năng (degraded) khi một trong hai nút thuộc mặt phẳng điều khiển (control plane) không còn khả dụng. Mặt phẳng điều khiển vẫn tiếp tục hoạt động trên nút còn lại, cho phép cụm duy trì chức năng trong các giới hạn nhất định.
 
 Quy trình xử lý lỗi tự động diễn ra theo các bước sau:
@@ -570,7 +570,7 @@ etcd Operator hạ cấp thành viên etcd trên nút bị lỗi thành một "l
 
 Khi một nút gặp sự cố, Kubernetes cập nhật trạng thái của nó, khiến các khối lượng công việc bị ảnh hưởng mất đi tính dự phòng. Trong một cụm đang hoạt động, các pod thuộc DaemonSet vẫn ở trạng thái "Running" (Đang chạy), trong khi các pod thuộc Deployment hiển thị trạng thái "Terminating" (Đang chấm dứt). Tuy nhiên, do kubelet trên nút bị lỗi không thể phản hồi để thực hiện xóa, các pod Deployment này về mặt kỹ thuật vẫn nằm trong giai đoạn "Running" trên API. Chúng chỉ được lập lịch lại sang các nút khác nếu các nút đó còn đủ tài nguyên và tuân thủ các quy tắc chống phân bổ (anti-affinity rules).
 
-#### 2.3.3. Hành vi của Pacemaker và cơ chế cách ly (fencing) trong quá trình vận hành ở trạng thái suy giảm
+#### II.3.3. Hành vi của Pacemaker và cơ chế cách ly (fencing) trong quá trình vận hành ở trạng thái suy giảm
 Trong quá trình vận hành ở trạng thái suy giảm (degraded operation), trình quản lý cụm Pacemaker chuyển đổi từ mô hình điều phối phân tán sang cấu trúc thực thi cục bộ trên nút (node) còn hoạt động.
 
 Các hoạt động của cụm ở trạng thái suy giảm bao gồm những đặc điểm cấu trúc sau:
@@ -582,7 +582,7 @@ Các hoạt động của cụm ở trạng thái suy giảm bao gồm những �
 
 > **Lưu ý quan trọng:** Cơ chế bảo vệ bằng cách ly lẫn nhau (mutual fencing) sẽ không khả dụng khi hệ thống vận hành ở trạng thái suy giảm. Các thao tác cách ly không thể thực hiện đối với nút còn hoạt động, do các kênh giao tiếp và đường dẫn thực thi từ nút đối tác hiện đã ngừng hoạt động.
 
-#### 2.3.4. Tự động gắn "taint" (dấu hiệu) cho node trong cụm OpenShift hai node có cơ chế fencing
+#### II.3.4. Tự động gắn "taint" (dấu hiệu) cho node trong cụm OpenShift hai node có cơ chế fencing
 Trong cụm OpenShift Container Platform gồm hai node với cơ chế fencing (TNF), các ứng dụng của bạn có thể phục hồi nhanh chóng sau sự cố node mà không cần sự can thiệp thủ công, nhờ vào cơ chế tự động gắn "taint" cho node.
 
 Khi một node gặp sự cố, cơ chế tự động gắn "taint" sẽ ngay lập tức di chuyển (evict) các khối lượng công việc (workload) sang node còn lại, giúp giảm đáng kể thời gian chuyển đổi dự phòng (failover).
@@ -604,7 +604,7 @@ Bạn có thể kiểm tra nhật ký (log) cục bộ trên mỗi nút control 
 * `tnf-taint-alert`
 * `tnf-untaint-alert`
 
-#### 2.3.5. Độ ổn định của các Operator trong cụm (cluster Operator) khi hệ thống ở trạng thái suy giảm hiệu năng
+#### II.3.5. Độ ổn định của các Operator trong cụm (cluster Operator) khi hệ thống ở trạng thái suy giảm hiệu năng
 Trong một cụm OpenShift gồm hai nút có cơ chế cách ly nút (fencing), các Operator trong cụm (cluster Operator) vẫn duy trì sự ổn định của mặt phẳng điều khiển (control plane) và khả năng truy cập API ngay cả khi hệ thống rơi vào trạng thái suy giảm hiệu năng (degraded state).
 
 Khi hệ thống ở trạng thái suy giảm hiệu năng, các trạng thái (conditions) của các Operator trong cụm sẽ biểu hiện như sau:
@@ -623,7 +623,7 @@ Một số Operator cụ thể có thể hiển thị trạng thái `Progressing
 
 > **Lưu ý:** Không được phép xảy ra tình trạng các Operator gặp lỗi bất ngờ hoặc lỗi dây chuyền (cascading failures) khi hệ thống đang ở trạng thái suy giảm hiệu năng. Nếu điều này xảy ra, hãy xem xét vấn đề như một lỗi tiềm ẩn (bug) cần được điều tra.
 
-#### 2.3.6. Các khả năng trong quá trình vận hành cụm TNF ở trạng thái suy giảm
+#### II.3.6. Các khả năng trong quá trình vận hành cụm TNF ở trạng thái suy giảm
 Khi một cụm OpenShift gồm hai nút có sử dụng cơ chế cách ly (TNF) vận hành ở trạng thái suy giảm, một số khả năng của cụm vẫn có thể được sử dụng.
 
 **Bảng 2.5. Các khả năng của cụm trong quá trình vận hành ở trạng thái suy giảm hiệu năng**
@@ -645,7 +645,7 @@ Khi một cụm OpenShift gồm hai nút có sử dụng cơ chế cách ly (TNF
 | Các thay đổi đối với đối tượng `MachineConfig` yêu cầu khởi động lại nút   | Không  |
 | Các khối lượng công việc hoặc dữ liệu lưu trữ gắn độc quyền với nút bị lỗi | Không  |
 
-#### 2.3.7. Các thao tác bị cấm khi cụm OpenShift hai nút với cơ chế cách ly (TNF) ở trạng thái suy giảm
+#### II.3.7. Các thao tác bị cấm khi cụm OpenShift hai nút với cơ chế cách ly (TNF) ở trạng thái suy giảm
 Bạn không được thực hiện một số thao tác quản trị nhất định khi cụm OpenShift hai nút sử dụng cơ chế cách ly (TNF - Two-Node Fencing) đang ở trạng thái suy giảm (degraded). Việc cố gắng thực hiện các thao tác này có thể khiến cụm rơi vào trạng thái khó phục hồi hơn so với trạng thái suy giảm ban đầu.
 
 Không thực hiện các thao tác sau đây khi cụm đang ở trạng thái suy giảm:
@@ -677,7 +677,7 @@ Việc thực thi `PodDisruptionBudget` (PDB) vẫn tiếp tục trong trạng t
 
 Không nên bỏ qua các PDB khi hệ thống đang ở trạng thái vận hành suy giảm. Việc ép buộc loại bỏ pod có thể dẫn đến tình trạng mất đi phiên bản (instance) cuối cùng đang chạy của các dịch vụ quan trọng.
 
-#### 2.3.8. Khôi phục nút TNF bị lỗi
+#### II.3.8. Khôi phục nút TNF bị lỗi
 Quá trình khôi phục diễn ra tự động khi nút bị lỗi được bật nguồn và kết nối lại với mạng. Trạng thái hoạt động suy giảm (degraded) chỉ là tạm thời. Hãy khôi phục nút bị lỗi càng sớm càng tốt để khôi phục khả năng chịu lỗi, cơ chế cách ly (fencing), cũng như khả năng thực hiện các tác vụ nâng cấp và bảo trì. Nếu không thể khôi phục nút ban đầu, hãy thay thế nút đó.
 
 > **Quan trọng:** Một cụm OpenShift gồm hai nút sử dụng cơ chế cách ly (TNF) mà chỉ còn một nút hoạt động trong thời gian dài sẽ đối mặt với các rủi ro sau:
@@ -742,7 +742,7 @@ $ oc get co
   * Xác minh rằng cả hai thiết bị cách ly (fencing device) đều đang hoạt động.
   * Các thay đổi MachineConfig, các bản nâng cấp và quy trình xoay vòng chứng chỉ đang chờ xử lý có thể được tiếp tục thực hiện.
 
-#### 2.3.9. Xác minh trạng thái cụm TNF
+#### II.3.9. Xác minh trạng thái cụm TNF
 Bạn có thể chẩn đoán và giải quyết các vấn đề thường gặp trong quá trình vận hành ở trạng thái suy giảm (degraded operation) của cụm TNF (Two-Node with Fencing - cụm hai nút có cơ chế cách ly/fencing) bằng cách đánh giá tình trạng của Pacemaker, etcd và trạng thái các nút.
 
 **Quy trình**
@@ -771,7 +771,7 @@ $ oc get nodes
 $ oc get co
 ```
 
-#### 2.3.10. Xử lý lỗi fencing trong TNF
+#### II.3.10. Xử lý lỗi fencing trong TNF
 Bạn cần can thiệp thủ công khi cụm máy chủ (cluster) không thể tự động thực hiện fencing (cô lập) một nút bị lỗi. Hãy thực hiện quy trình dưới đây để tắt nguồn phần cứng không phản hồi một cách an toàn, đồng thời xóa trạng thái UNCLEAN (ngoại tuyến), từ đó cho phép nút còn lại tiếp tục các hoạt động của cụm.
 
 Nếu lệnh `pcs status` hiển thị nút bị lỗi ở trạng thái UNCLEAN (ngoại tuyến), nghĩa là quy trình fencing tự động đã không thành công và cần phải thực hiện khôi phục thủ công.
@@ -785,7 +785,7 @@ Nếu lệnh `pcs status` hiển thị nút bị lỗi ở trạng thái UNCLEAN
 $ oc debug node/<surviving-node> -- chroot /host pcs stonith confirm <failed_node_name> --force
 ```
 
-#### 2.3.11. Khắc phục tình trạng etcd không tự khôi phục trên nút còn lại
+#### II.3.11. Khắc phục tình trạng etcd không tự khôi phục trên nút còn lại
 Nếu nút còn lại không tự động khởi động lại etcd sau khi thao tác cách ly (fencing) hoàn tất, hãy đặt lại trạng thái tài nguyên để khôi phục dịch vụ. .Điều kiện tiên quyết
 
 Đảm bảo rằng bạn thực hiện các lệnh `oc debug` dưới đây trong cụm OpenShift hai nút có áp dụng cơ chế cách ly (fencing).
@@ -874,7 +874,7 @@ pacemaker: active/enabled
 pcsd: active/enabled
 ```
 
-#### 2.3.12. Khắc phục sự cố nút bị lỗi không tham gia lại cụm sau khi bật nguồn
+#### II.3.12. Khắc phục sự cố nút bị lỗi không tham gia lại cụm sau khi bật nguồn
 Nếu nút bị lỗi không tham gia lại cụm sau khi được bật nguồn, hãy kiểm tra kết nối Corosync và trạng thái hoạt động của dịch vụ.
 
 **Quy trình**
@@ -937,10 +937,10 @@ $ oc debug node/<returning-node> -- chroot /host bash -c '\
    $ podman exec etcd etcdctl endpoint health --cluster
    ```
 
-### 2.4. Khắc phục sự cố và khôi phục sau khi cài đặt
+### II.4. Khắc phục sự cố và khôi phục sau khi cài đặt
 Bạn có thể khắc phục sự cố và khôi phục cụm OpenShift Container Platform gồm hai nút với cơ chế cách ly nút (fencing - TNF) sau khi xảy ra sự cố gián đoạn. Trong trường hợp không thể khôi phục tự động, bạn có thể thực hiện khôi phục thủ công các dịch vụ, thay thế các nút trong mặt phẳng điều khiển (control plane) bị suy giảm hiệu năng, đồng thời sử dụng tập lệnh `fencing_validator` để kiểm tra tình trạng của cụm.
 
-#### 2.4.1. Khôi phục thủ công sau sự cố khi không thể thực hiện khôi phục tự động
+#### II.4.1. Khôi phục thủ công sau sự cố khi không thể thực hiện khôi phục tự động
 Bạn có thể cần thực hiện các bước khôi phục thủ công nếu một sự cố ngăn cản cơ chế cách ly (fencing) hoạt động bình thường. Trong trường hợp này, bạn có thể chạy các lệnh trực tiếp trên các nút thuộc mặt phẳng điều khiển (control plane nodes) để khôi phục cụm (cluster). Có năm kịch bản khôi phục chính, nên được thực hiện theo thứ tự sau:
 
 1. Cập nhật thông tin xác thực cho cơ chế cách ly (fencing secrets): Làm mới thông tin đăng nhập của Baseboard Management Console (BMC) nếu chúng không chính xác hoặc đã lỗi thời. 
@@ -1312,7 +1312,7 @@ Nếu vẫn cần thực hiện khôi phục thủ công nhưng không thành c�
 
 Để biết thông tin về cách xác minh rằng cả các nút mặt phẳng điều khiển (control plane nodes) và etcd đều đang hoạt động bình thường, hãy xem phần "Xác minh tình trạng của etcd trong cụm OpenShift gồm hai nút với cơ chế cách ly (fencing)".
 
-#### 2.4.2. Thay thế các nút control plane trong cụm OpenShift Container Platform gồm hai nút bằng phương pháp cách ly (fencing)
+#### II.4.2. Thay thế các nút control plane trong cụm OpenShift Container Platform gồm hai nút bằng phương pháp cách ly (fencing)
 Bạn có thể thay thế một nút control plane bị lỗi trong cụm OpenShift Container Platform gồm hai nút. Nút thay thế phải sử dụng cùng tên máy chủ (host name) và địa chỉ IP với nút đã bị lỗi.
 
 ##### Điều kiện tiên quyết
@@ -1625,7 +1625,7 @@ $ oc delete job tnf-after-setup-job-<node_name>
 ##### Xác minh
 Để biết thông tin về cách xác minh rằng cả các nút mặt phẳng điều khiển (control plane nodes) và etcd đều đang hoạt động bình thường, hãy xem phần "Xác minh tình trạng của etcd trong cụm OpenShift gồm hai nút với cơ chế cách ly (fencing)".
 
-#### 2.4.3. Xác minh trạng thái hoạt động của etcd trong cụm OpenShift hai nút có sử dụng cơ chế cách ly (fencing)
+#### II.4.3. Xác minh trạng thái hoạt động của etcd trong cụm OpenShift hai nút có sử dụng cơ chế cách ly (fencing)
 Sau khi hoàn tất các quy trình khôi phục hoặc bảo trì nút, hãy xác minh rằng cả các nút mặt phẳng điều khiển (control plane node) và etcd đều đang hoạt động bình thường.
 
 ##### Điều kiện tiên quyết
@@ -1669,7 +1669,7 @@ Lệnh này cung cấp cái nhìn tổng quan chi tiết về tất cả các t�
   * Các tài nguyên kubelet và etcd đang chạy. 
   * Cơ chế cách ly (fencing) đã được cấu hình chính xác cho cả hai nút.
 
-#### 2.4.4. Tổng quan về tập lệnh kiểm tra fencing (fencing validator)
+#### II.4.4. Tổng quan về tập lệnh kiểm tra fencing (fencing validator)
 Cụm OpenShift Container Platform gồm hai nút có sử dụng cơ chế fencing (TNF) dựa trên phương thức STONITH (Shoot The Other Node In The Head - tạm dịch: "vô hiệu hóa nút còn lại") để đảm bảo tính toàn vẹn của dữ liệu khi xảy ra lỗi nút. Nếu hệ thống con fencing được cấu hình sai, cụm có thể không phục hồi một cách an toàn, dẫn đến tình trạng hỏng dữ liệu hoặc kịch bản "split-brain" (phân tách hệ thống, nơi các nút không còn đồng bộ với nhau).
 
 Trước khi có tiện ích này, các quản trị viên hoặc kỹ sư hỗ trợ phải thực hiện kiểm tra thủ công nhiều hệ thống con, bao gồm:
@@ -1697,7 +1697,7 @@ Bạn có thể sử dụng tập lệnh này cho các mục đích sau:
 * Xác thực trước khi nâng cấp: Kiểm tra trạng thái của ngăn xếp cơ chế cách ly (fencing stack) để đảm bảo cụm (cluster) đủ ổn định cho việc thực hiện nâng cấp phiên bản. 
 * Hỗ trợ kỹ thuật: Chạy tập lệnh và cung cấp kết quả đầu ra cho các kỹ sư hỗ trợ nhằm giúp giải quyết nhanh chóng các vấn đề kỹ thuật.
 
-##### 2.4.4.1. Các yêu cầu tiên quyết đối với tập lệnh kiểm tra fencing (fencing validator)
+##### II.4.4.1. Các yêu cầu tiên quyết đối với tập lệnh kiểm tra fencing (fencing validator)
 Hãy sử dụng tập lệnh `fencing_validator` để xác minh cấu hình fencing trên cụm OpenShift Container Platform gồm hai nút (node). Tập lệnh này, được triển khai tự động bởi Machine Config Operator, đảm bảo rằng các giao diện quản lý nguồn điện (power management interfaces) được cấu hình chính xác nhằm ngăn ngừa tình trạng hỏng dữ liệu khi một nút gặp sự cố. Để chạy tập lệnh, hãy đảm bảo rằng tiện ích `jq` đã được cài đặt, đồng thời bạn có quyền truy cập vào Kubernetes API (thông qua lệnh `oc`) và quyền truy cập SSH vào các nút điều khiển (control-plane nodes).
 
 Bạn có thể xem các thao tác mà tập lệnh sẽ thực hiện — mà không cần thực sự tiến hành kiểm tra cho TNF — bằng cách chạy lệnh sau:
@@ -1706,7 +1706,7 @@ Bạn có thể xem các thao tác mà tập lệnh sẽ thực hiện — mà k
 $ oc debug node/<node_name> --chroot /host /usr/local/bin/fencing_validator --dry-run
 ```
 
-##### 2.4.4.2. Các tùy chọn dòng lệnh cho tập lệnh kiểm chứng cơ chế cách ly (fencing validator)
+##### II.4.4.2. Các tùy chọn dòng lệnh cho tập lệnh kiểm chứng cơ chế cách ly (fencing validator)
 Để nhanh chóng xác minh cấu hình tính sẵn sàng cao (high-availability) cho cụm OpenShift Container Platform gồm hai nút của bạn với cơ chế cách ly (fencing), bạn có thể xem qua các tùy chọn dòng lệnh và biến môi trường khả dụng cho tập lệnh `fencing_validator`. Tài liệu tham khảo này giúp bạn tùy chỉnh các phương thức kết nối, thiết lập thời gian chờ (timeout) khi thực thi và kiểm tra an toàn việc khởi động lại nút, từ đó đảm bảo cơ chế cách ly của bạn hoạt động tin cậy trước khi đưa hệ thống vào môi trường thực tế (production).
 
 Bạn có thể xem các tùy chọn dòng lệnh khác nhau cho tập lệnh `fencing_validator` bằng cách chạy lệnh sau:
@@ -1738,7 +1738,7 @@ Bạn có thể thiết lập tất cả các cờ (flag) bằng cách sử dụ
 * `OC_REQ_TIMEOUT`: thời gian chờ (timeout) cho mỗi lệnh gọi API. Giá trị mặc định là 10 giây. 
 * `CMD_EXEC_TIMEOUT_SECS`: thời gian chờ (timeout) cho mỗi lệnh thực thi. Giá trị mặc định là 60 giây.
 
-##### 2.4.4.3. Tập lệnh kiểm chứng cơ chế cách ly (fencing validator) cho các kiểm tra không gây gián đoạn
+##### II.4.4.3. Tập lệnh kiểm chứng cơ chế cách ly (fencing validator) cho các kiểm tra không gây gián đoạn
 Để đảm bảo cụm OpenShift Container Platform gồm hai nút với cơ chế cách ly (fencing - TNF) duy trì tính sẵn sàng cao mà không gây nguy cơ ngừng hoạt động, bạn có thể chạy tập lệnh `fencing_validator` ở chế độ kiểm chứng (validation mode). Tập lệnh này thực hiện một loạt các kiểm tra trạng thái ở chế độ chỉ đọc (read-only) nhằm xác minh hạn ngạch cụm (quorum), trạng thái của các tiến trình nền (daemon) và trạng thái của thiết bị STONITH mà không làm gián đoạn các dịch vụ đang hoạt động.
 
 Cách đơn giản nhất để chạy tập lệnh này là thông qua một phiên gỡ lỗi (debug session) trên một trong các nút thuộc mặt phẳng điều khiển (control plane node) bằng cách thực thi lệnh sau:
@@ -1776,7 +1776,7 @@ OpenShift version: 4.20.0 - OK [INFO]  Detected 2 control-plane nodes [INFO]  Tr
 ====
 ```
 
-##### 2.4.4.4. Tập lệnh kiểm chứng cơ chế cách ly (fencing validator) cho các kiểm tra gây gián đoạn
+##### II.4.4.4. Tập lệnh kiểm chứng cơ chế cách ly (fencing validator) cho các kiểm tra gây gián đoạn
 Bạn có thể kiểm chứng khả năng chống chịu của cụm (cluster) và thực hiện các kiểm tra gây gián đoạn từ một nút ngang hàng (peer node) bằng cách sử dụng tập lệnh `fencing_validator`. Thông qua việc mô phỏng các lỗi này, bạn có thể đảm bảo rằng môi trường có tính sẵn sàng cao (high-availability) của mình thực hiện đúng quy trình cách ly và phục hồi sau sự cố.
 
 Bạn có thể kích hoạt cơ chế STONITH (viết tắt của "Shoot The Other Node In The Head" – tạm dịch: "vô hiệu hóa hoàn toàn nút khác") đối với nút gặp lỗi, nhằm cắt quyền truy cập của nút đó vào các tài nguyên dùng chung, từ đó ngăn ngừa tình trạng hỏng dữ liệu bằng cách chạy lệnh sau:
@@ -1804,7 +1804,7 @@ Khi sử dụng tham số `--disruptive`, tập lệnh kiểm chứng cơ chế 
 7. Xác minh quá trình khôi phục – Chờ Nút B quay trở lại trạng thái `Ready`, tham gia lại cụm Pacemaker với trạng thái `ONLINE`, đồng thời chờ etcd thiết lập lại cơ chế đa số (quorum). 
 8. Kiểm tra daemon sau khôi phục – Kiểm tra lại để đảm bảo tất cả các daemon đều hoạt động bình thường sau khi khôi phục.
 
-##### 2.4.4.5. Các mã thoát (exit code) cho tập lệnh fencing-validator
+##### II.4.4.5. Các mã thoát (exit code) cho tập lệnh fencing-validator
 Tập lệnh `fencing_validator` sử dụng các mã thoát cụ thể, cho phép các công cụ tự động hóa và hỗ trợ xác định vấn đề đã xảy ra thông qua lập trình.
 
 Bảng dưới đây liệt kê các mã thoát cụ thể mà tập lệnh `fencing_validator` trả về, trong đó mỗi giá trị số tương ứng với một trạng thái chẩn đoán nhất định nhằm hỗ trợ quá trình khắc phục sự cố tự động.
@@ -1819,7 +1819,7 @@ Bảng dưới đây liệt kê các mã thoát cụ thể mà tập lệnh `fen
 | 23       | etcd không đạt đủ số phiếu cần thiết (quorum) hoặc không phải tất cả các thành viên đều ở trạng thái khỏe mạnh |
 | 26       | Các bí mật về hàng rào (fencing secrets) bị thiếu hoặc không khớp với các nút (nodes) dự kiến.                 |
 
-##### 2.4.4.6. Chế độ truyền tải (transport mode) cho tập lệnh kiểm chứng hàng rào (fencing validator)
+##### II.4.4.6. Chế độ truyền tải (transport mode) cho tập lệnh kiểm chứng hàng rào (fencing validator)
 Tập lệnh `fencing_validator` kết nối với các nút trong mặt phẳng điều khiển (control-plane nodes) để thực thi các lệnh kiểm chứng. Hãy sử dụng cờ `--transport` hoặc biến môi trường `TRANSPORT` để xác định phương thức kết nối.
 
 Cờ `--transport` hỗ trợ các tùy chọn sau:
