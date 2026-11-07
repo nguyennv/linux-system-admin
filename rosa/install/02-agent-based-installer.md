@@ -992,7 +992,7 @@ Thay vào đó, hãy sử dụng plugin `oc-mirror` phiên bản 2 (v2).
 
 Ví dụ dưới đây hiển thị kết quả đầu ra của lệnh `oc adm release mirror`.
 
-```bash
+```shell
 $ oc adm release mirror
 ```
 
@@ -1101,12 +1101,12 @@ Tạo các tệp cấu hình được chương trình cài đặt sử dụng đ
 1. Đặt tệp nhị phân `openshift-install` vào một thư mục nằm trong biến môi trường PATH của bạn. 
 2. Tạo một thư mục để lưu trữ cấu hình cài đặt bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ mkdir ~/<directory_name>
 ```
 
 3. Tạo tệp `install-config.yaml` bằng cách chạy lệnh sau với nội dung:
-```bash
+```shell
 $ vi ./my-cluster/install-config.yaml
 ```
 
@@ -1171,7 +1171,7 @@ Nếu sử dụng image phát hành (release image) có chứa nhiều payload (
 
 4. Tạo tệp `agent-config.yaml` bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ cat > agent-config.yaml << EOF
 apiVersion: v1beta1
 kind: AgentConfig
@@ -1196,7 +1196,7 @@ Nếu bạn dự định khởi động ảnh agent từ ổ đĩa USB, hãy đ�
 
 1. Tạo ảnh agent bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ openshift-install --dir <install_directory> agent create image
 ```
 
@@ -1204,13 +1204,13 @@ $ openshift-install --dir <install_directory> agent create image
 
 2. Nếu bạn dự định khởi động tệp ảnh ISO từ ổ đĩa USB, hãy thêm bản ghi khởi động chính (master boot record) vào tệp ảnh đó bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ isohybrid --uefi <agent_iso_image>
 ```
 
 Ví dụ về lệnh
 
-```bash
+```shell
 $ isohybrid --uefi agent.x86_64.iso
 ```
 
@@ -1258,7 +1258,7 @@ Bạn đã định cấu hình bản ghi DNS cho máy chủ API Kubernetes.
 
 1. Tùy chọn: Để biết khi nào máy chủ khởi động (máy chủ rendezvous) khởi động lại, hãy chạy lệnh sau:
 
-```bash
+```shell
 $ ./openshift-install --dir <install_directory> agent wait-for bootstrap-complete \
     --log-level=info
 ```
@@ -1281,7 +1281,7 @@ Lệnh này hoàn tất thành công khi Kubernetes API server báo hiệu rằn
 
 2. Theo dõi tiến trình và xác minh quá trình cài đặt đã hoàn tất thành công bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ openshift-install --dir <install_directory> agent wait-for install-complete
 ```
 
@@ -1310,7 +1310,7 @@ Bạn đã định cấu hình bản ghi DNS cho máy chủ API Kubernetes.
 
 1. Chạy lệnh sau và thu thập kết quả đầu ra:
 
-```bash
+```shell
 $ ./openshift-install --dir <installation_directory> agent wait-for bootstrap-complete --log-level=debug
 ```
 
@@ -1323,7 +1323,7 @@ ERROR Bootstrap failed to complete: : bootstrap process timed out: context deadl
 
 2. Nếu kết quả từ lệnh trước đó cho thấy lỗi, hoặc nếu quá trình khởi động (bootstrap) không tiến triển, hãy chạy lệnh sau để kết nối với máy chủ điều phối (rendezvous host) và thu thập kết quả đầu ra:
 
-```bash
+```shell
 $ ssh core@<node-ip> agent-gather -O >agent-gather.tar.xz
 ```
 
@@ -1331,26 +1331,26 @@ $ ssh core@<node-ip> agent-gather -O >agent-gather.tar.xz
 
 3. Nếu quá trình khởi động ban đầu (bootstrap) hoàn tất và các nút trong cụm (cluster nodes) khởi động lại, hãy chạy lệnh sau và thu thập kết quả đầu ra:
 
-```bash
+```shell
 $ ./openshift-install --dir <install_directory> agent wait-for install-complete --log-level=debug
 ```
 
 4. Nếu kết quả từ lệnh trước đó cho thấy lỗi, hãy thực hiện các bước sau:
     * Xuất tệp `kubeconfig` vào môi trường của bạn bằng cách chạy lệnh sau:
 
-    ```bash
+    ```shell
     $ export KUBECONFIG=<install_directory>/auth/kubeconfig
     ```
 
     * Thu thập thông tin phục vụ việc gỡ lỗi bằng cách chạy lệnh sau:
 
-    ```bash
+    ```shell
     $ oc adm must-gather
     ```
 
     * Hãy tạo một tệp nén từ thư mục `must-gather` vừa được tạo trong thư mục làm việc của bạn bằng cách chạy lệnh sau:
 
-    ```bash
+    ```shell
     $ tar cvaf must-gather.tar.gz <must_gather_directory>
     ```
 
@@ -1397,13 +1397,13 @@ Trước khi cài đặt cụm OpenShift Container Platform bằng trình cài �
 1. Đăng nhập vào giao diện dòng lệnh OpenShift (OpenShift CLI - `oc`). 
 2. Kiểm tra gói phát hành (release payload) bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ ./openshift-install version
 ```
 
 Ví dụ đầu ra
 
-```bash
+```shell
 $ ./openshift-install 4.22.0
 built from commit abc123def456
 release image quay.io/openshift-release-dev/ocp-release@sha256:123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz0
@@ -1414,7 +1414,7 @@ Nếu bạn đang sử dụng `release image` với gói dữ liệu `multi`, th
 
 3. Để kiểm tra kiến trúc của payload, hãy chạy lệnh sau:
 
-```bash
+```shell
 $ oc adm release info <release_image> -o jsonpath="{ .metadata.metadata}"
 ```
 
@@ -1468,13 +1468,13 @@ Trước khi cài đặt cụm OpenShift Container Platform bằng trình cài �
 1. Đăng nhập vào giao diện dòng lệnh OpenShift (OpenShift CLI - `oc`). 
 2. Kiểm tra gói phát hành (release payload) bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ ./openshift-install version
 ```
 
 Ví dụ đầu ra
 
-```bash
+```shell
 $ ./openshift-install 4.22.0
 built from commit abc123def456
 release image quay.io/openshift-release-dev/ocp-release@sha256:123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz0
@@ -1485,7 +1485,7 @@ Nếu bạn đang sử dụng `release image` với payload `multi`, thì `relea
 
 3. Để kiểm tra kiến trúc của payload, hãy chạy lệnh sau:
 
-```bash
+```shell
 $ oc adm release info <release_image> -o jsonpath="{ .metadata.metadata}"
 ```
 
@@ -1508,20 +1508,20 @@ Tạo các dữ liệu đầu vào cấu hình ưu tiên được sử dụng đ
 
 1. Cài đặt thành phần phụ thuộc `nmstate` bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ sudo dnf install /usr/bin/nmstatectl -y
 ```
 
 3. Đặt tệp nhị phân `openshift-install` vào một thư mục nằm trong PATH của bạn.
 4. Tạo một thư mục để lưu trữ cấu hình cài đặt bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ mkdir ~/<directory_name>
 ```
 
 5. Tạo tệp `install-config.yaml` bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ vi ./<directory_name>/install-config.yaml
 ```
 
@@ -1615,7 +1615,7 @@ platform:
 
 5. Tạo tệp `agent-config.yaml` bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ vi agent-config.yaml
 ```
 
@@ -1678,7 +1678,7 @@ Tất cả các cấu hình máy (machine configuration) bổ sung của bạn �
 
 **Quy trình:** Trên máy chủ thực hiện cài đặt, hãy tạo một thư mục con tên là `openshift` bên trong thư mục cài đặt bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $mkdir <installation_directory>/openshift
 ```
 
@@ -1782,7 +1782,7 @@ Trong đó:
 
 2. Sử dụng lệnh cat để mã hóa nội dung cấu hình NMState sang định dạng base64:
 
-```bash
+```shell
 $ cat <nmstate_configuration>.yml | base64
 ```
 
@@ -1899,7 +1899,7 @@ Trong đó:
 
 2. Tạo tệp manifest từ cấu hình Butane và lưu tệp đó vào thư mục `clusterconfig/openshift`. Chẳng hạn, hãy chạy lệnh sau:
 
-```bash
+```shell
 $ butane $HOME/clusterconfig/98-var-partition.bu -o $HOME/clusterconfig/openshift/98-var-partition.yaml
 ```
 
@@ -1921,7 +1921,7 @@ Tùy chọn: Bạn đã tạo và định cấu hình các tệp `install-config
 
 1. Tạo các tệp manifest cụm ZTP bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ openshift-install agent create cluster-manifests --dir <installation_directory>
 ```
 
@@ -1929,7 +1929,7 @@ $ openshift-install agent create cluster-manifests --dir <installation_directory
 
 2. Hãy truy cập vào thư mục cluster-manifests bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ cd <installation_directory>/cluster-manifests
 ```
 
@@ -1952,7 +1952,7 @@ Bạn đã đặt tệp thực thi `openshift-install` vào một thư mục n�
 
 1. Tạo các tệp cấu hình cụm ZTP bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ openshift-install agent create cluster-manifests --dir <installation_directory>
 ```
 
@@ -1964,7 +1964,7 @@ Mọi cấu hình đã thực hiện trong các tệp `install-config.yaml` và 
 
 2. Hãy truy cập vào thư mục `cluster-manifests` bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ cd <installation_directory>/cluster-manifests
 ```
 
@@ -2073,7 +2073,7 @@ Trong quá trình cài đặt cụm (cluster), chương trình cài đặt sẽ 
 
 Sau khi quá trình cài đặt cụm hoàn tất, hãy xác minh MTU của mạng cụm bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc get networks.operator.openshift.io cluster -o yaml
 ```
 
@@ -2104,7 +2104,7 @@ Nếu bạn dự định khởi động ảnh agent từ ổ đĩa USB, hãy đ�
 
 1. Tạo ảnh agent bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ openshift-install --dir <install_directory> agent create image
 ```
 
@@ -2112,13 +2112,13 @@ $ openshift-install --dir <install_directory> agent create image
 
 2. Nếu bạn dự định khởi động tệp ảnh ISO từ ổ đĩa USB, hãy thêm bản ghi khởi động chính (master boot record) vào tệp ảnh đó bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ isohybrid --uefi <agent_iso_image>
 ```
 
 Ví dụ về lệnh
 
-```bash
+```shell
 $ isohybrid --uefi agent.x86_64.iso
 ```
 
@@ -2138,7 +2138,7 @@ Chỉ sử dụng quy trình này cho các cụm (cluster) IBM Z® sử dụng R
 
 Khởi động từ ISO
 
-```bash
+```shell
 $ virt-install
     --name <vm_name> \
     --autostart \
@@ -2164,7 +2164,7 @@ $ virt-install
 
 Khởi động qua PXE
 
-```bash
+```shell
 $ virt-install \
    --name <vm_name> \
    --autostart \
@@ -2235,7 +2235,7 @@ Bạn đã định cấu hình bản ghi DNS cho máy chủ API Kubernetes.
 
 1. Tùy chọn: Để biết khi nào máy chủ khởi động (bootstrap host/rendezvous host) khởi động lại, hãy chạy lệnh sau:
 
-```bash
+```shell
 $ ./openshift-install --dir <install_directory> agent wait-for bootstrap-complete \
     --log-level=info
 ```
@@ -2258,7 +2258,7 @@ Lệnh này hoàn tất thành công khi Kubernetes API server báo hiệu rằn
 
 2. Theo dõi tiến trình và xác minh quá trình cài đặt đã hoàn tất thành công bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ openshift-install --dir <install_directory> agent wait-for install-complete
 ```
 
@@ -2460,7 +2460,7 @@ Bạn đã cấu hình bản ghi DNS cho máy chủ API Kubernetes.
 
 1. Chạy lệnh sau và thu thập kết quả đầu ra:
 
-```bash
+```shell
 $ ./openshift-install --dir <installation_directory> agent wait-for bootstrap-complete --log-level=debug
 ```
 
@@ -2473,7 +2473,7 @@ ERROR Bootstrap failed to complete: : bootstrap process timed out: context deadl
 
 2. Nếu kết quả từ lệnh trước đó cho thấy lỗi, hoặc nếu quá trình khởi động (bootstrap) không tiến triển, hãy chạy lệnh sau để kết nối với máy chủ điều phối (rendezvous host) và thu thập kết quả đầu ra:
 
-```bash
+```shell
 $ ssh core@<node-ip> agent-gather -O >agent-gather.tar.xz
 ```
 
@@ -2481,26 +2481,26 @@ $ ssh core@<node-ip> agent-gather -O >agent-gather.tar.xz
 
 3. Nếu quá trình khởi động ban đầu (bootstrap) hoàn tất và các nút trong cụm (cluster nodes) khởi động lại, hãy chạy lệnh sau và thu thập kết quả đầu ra:
 
-```bash
+```shell
 $ ./openshift-install --dir <install_directory> agent wait-for install-complete --log-level=debug
 ```
 
 4. Nếu kết quả từ lệnh trước đó cho thấy lỗi, hãy thực hiện các bước sau:
     * Xuất tệp kubeconfig vào môi trường của bạn bằng cách chạy lệnh sau:
 
-    ```bash
+    ```shell
     $ export KUBECONFIG=<install_directory>/auth/kubeconfig
     ```
 
     * Thu thập thông tin phục vụ việc gỡ lỗi bằng cách chạy lệnh sau:
 
-    ```bash
+    ```shell
     $ oc adm must-gather
     ```
 
     * Hãy tạo một tệp nén từ thư mục "must-gather" vừa được tạo trong thư mục làm việc của bạn bằng cách chạy lệnh sau:
 
-    ```bash
+    ```shell
     $ tar cvaf must-gather.tar.gz <must_gather_directory>
     ```
 
@@ -2679,19 +2679,19 @@ Tạo các tệp cấu hình đầu vào được sử dụng để tạo các t
 
 1. Cài đặt thành phần phụ thuộc `nmstate` bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ sudo dnf install /usr/bin/nmstatectl -y
 ```
 2. Đặt tệp nhị phân openshift-install vào một thư mục nằm trong PATH của bạn.
 3. Tạo một thư mục để lưu trữ cấu hình cài đặt bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ mkdir ~/<directory_name>
 ```
 
 4. Tạo tệp install-config.yaml bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ vi ./<directory_name>/install-config.yaml
 ```
 
@@ -2784,7 +2784,7 @@ platform:
 
 5. Tạo tệp agent-config.yaml bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ vi agent-config.yaml
 ```
 
@@ -2853,7 +2853,7 @@ Tạo các tài nguyên và tập lệnh tùy chọn để triển khai trong c�
 
 1. Tạo các tài nguyên PXE bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ openshift-install agent create pxe-files
 ```
 
@@ -3015,7 +3015,7 @@ Giữ nguyên tất cả các tham số khác.
 3. Đăng nhập vào hệ thống giám sát hội thoại (Conversational Monitor System - CMS) trên máy khởi động (bootstrap machine).
 4. Thực hiện IPL (Initial Program Load) cho máy khởi động từ thiết bị đọc (reader) bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ ipl c
 ```
 
@@ -3033,7 +3033,7 @@ Chỉ sử dụng quy trình này cho các cụm (cluster) IBM Z® sử dụng R
 1. Khởi động máy RHEL KVM của bạn. 
 2. Để triển khai máy chủ ảo, hãy chạy lệnh `virt-install` với các tham số sau:
 
-```bash
+```shell
 $ virt-install \
    --name <vm_name> \
    --autostart \
@@ -3064,7 +3064,7 @@ $ virt-install \
 
 Khởi động qua PXE
 
-```bash
+```shell
 $ virt-install \
    --name <vm_name> \
    --autostart \
@@ -3207,20 +3207,20 @@ Tạo các dữ liệu cấu hình ưu tiên được sử dụng để xây d�
 
 1. Cài đặt thành phần phụ thuộc `nmstate` bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ sudo dnf install /usr/bin/nmstatectl -y
 ```
 
 2. Đặt tệp nhị phân `openshift-install` vào một thư mục nằm trong `PATH` của bạn.
 3. Tạo một thư mục để lưu trữ cấu hình cài đặt bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ mkdir ~/<directory_name>
 ```
 
 4. Tạo tệp install-config.yaml bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ vi ./<directory_name>/install-config.yaml
 ```
 
@@ -3313,7 +3313,7 @@ platform:
 
 5. Tạo tệp `agent-config.yaml` bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ vi agent-config.yaml
 ```
 
@@ -3371,13 +3371,13 @@ Tạo tệp ảnh ISO và lập một tập lệnh iPXE để tải lên đích 
 
 1. Tạo tệp ảnh tác nhân (agent image) bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ openshift-install --dir <install_directory> agent create image
 ```
 
 2. Tạo tập lệnh iPXE bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ cat << EOF > agent.ipxe
 !ipxe
 set initiator-iqn <iscsi_initiator_base>:\${hostname}
@@ -3393,7 +3393,7 @@ Trong đó:
 
 Ví dụ về lệnh
 
-```bash
+```shell
 $ cat << EOF > agent.ipxe
 !ipxe
 set initiator-iqn iqn.2023-01.com.example:\${hostname}
@@ -3469,7 +3469,7 @@ Trong đó:
 
 3. Để sao chép một kho lưu trữ hình ảnh (image repository) cụ thể của OpenShift Container Platform, multicluster engine và LSO, hãy chạy lệnh sau:
 
-```bash
+```shell
 $ oc mirror --dest-skip-tls --config \
     ocp-mce-imageset.yaml docker://<your-local-registry-dns-name>:<your-local-registry-port>
 ```
@@ -3515,7 +3515,7 @@ additionalTrustBundle: |
 
 5. Tạo các tệp cấu hình cụm (cluster manifests) bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ openshift-install agent create cluster-manifests
 ```
 
@@ -3633,14 +3633,14 @@ Ví dụ `lso_subscription.yaml`
 
 4. Tạo tệp ảnh ISO của tác nhân bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ openshift-install agent create image --dir <assets_directory>
 ```
 
 5. Khi hình ảnh hệ thống đã sẵn sàng, hãy khởi động máy đích và chờ quá trình cài đặt hoàn tất.
 6. Để theo dõi quá trình cài đặt, hãy chạy lệnh sau:
 
-```bash
+```shell
 $ openshift-install agent wait-for install-complete --dir <assets_directory>
 ```
 
@@ -3667,7 +3667,7 @@ $ openshift-install agent wait-for install-complete --dir <assets_directory>
 
 8. Sử dụng lệnh sau để chờ các PV sẵn sàng, trước khi áp dụng các tệp manifest tiếp theo:
 
-```bash
+```shell
 $ oc wait localvolume -n openshift-local-storage assisted-service --for condition=Available --timeout 10m
 ```
 
@@ -3744,14 +3744,14 @@ Ví dụ: `autoimport.yaml`
 
 13. Hãy đợi cụm được quản lý được tạo xong.
 
-```bash
+```shell
 $ oc wait -n multicluster-engine managedclusters local-cluster --for condition=ManagedClusterJoined=True --timeout 10m
 ```
 
 ##### Xác minh
 Để xác nhận rằng quá trình cài đặt cụm được quản lý đã thành công, hãy chạy lệnh sau:
 
-```bash
+```shell
 $ oc get managedcluster
 NAME            HUB ACCEPTED   MANAGED CLUSTER URLS             JOINED   AVAILABLE  AGE
 local-cluster   true           https://<your cluster url>:6443   True     True       77m

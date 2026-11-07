@@ -591,7 +591,7 @@ Cơ chế này được tích hợp sẵn trong quá trình triển khai, không
 
 Bạn không cần thực hiện bất kỳ thao tác nào để cơ chế tự động này vận hành. Tuy nhiên, bạn có thể quan sát hoạt động của nó trong một sự kiện fencing. Bạn có thể xem các "taint" và chú thích (annotation) được áp dụng ngay sau khi một node bị đưa vào trạng thái fencing bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc get node <node_name>
 ```
 
@@ -699,7 +699,7 @@ Quá trình khôi phục diễn ra tự động khi nút bị lỗi được b�
 
 4. Xác minh rằng nút đã chuyển sang trạng thái Ready bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc get nodes
 ```
 
@@ -707,19 +707,19 @@ $ oc get nodes
 
 1. Hãy xác minh rằng các toán tử cụm (cluster Operators) đã loại bỏ các trạng thái suy giảm (degraded conditions) bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc get co
 ```
 2. Sau khi khôi phục, hãy xác nhận các điều kiện sau:
   * Cả hai nút đều hiển thị trạng thái Ready (Sẵn sàng) bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ oc get nodes
   ```
 
   Kết quả đầu ra tương tự như ví dụ sau:
 
-  ```bash
+  ```shell
   $ oc get nodes
   NAME                                                   STATUS   ROLES                         AGE    VERSION
   e920t-01.cluster1.metal-platform.eng.rdu2.redhat.com   Ready    control-plane,master,worker   5d1h   v1.35.4
@@ -728,7 +728,7 @@ $ oc get co
 
   * Hãy xác minh rằng etcd Operator không còn báo trạng thái Degraded=True nữa bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ oc get co etcd
   ```
 
@@ -749,25 +749,25 @@ Bạn có thể chẩn đoán và giải quyết các vấn đề thường gặ
 
 1. Kiểm tra trạng thái Pacemaker từ nút vẫn đang hoạt động bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc debug node/<surviving-node> -- chroot /host pcs status
 ```
 
 2. Kiểm tra tư cách thành viên etcd bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc debug node/<surviving-node> -- chroot /host podman exec etcd etcdctl member list -w table
 ```
 
 3. Kiểm tra trạng thái nút bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc get nodes
 ```
 
 4. Kiểm tra các toán tử cụm (cluster Operators) bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc get co
 ```
 
@@ -781,7 +781,7 @@ Nếu lệnh `pcs status` hiển thị nút bị lỗi ở trạng thái UNCLEAN
 1. Xác minh rằng nút bị lỗi đã được tắt nguồn thông qua bảng điều khiển BMC hoặc kiểm tra trực tiếp tại chỗ. 
 2. Xác nhận việc fencing theo cách thủ công bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc debug node/<surviving-node> -- chroot /host pcs stonith confirm <failed_node_name> --force
 ```
 
@@ -794,7 +794,7 @@ Nếu nút còn lại không tự động khởi động lại etcd sau khi thao
 
 1. Dọn dẹp tài nguyên etcd bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc debug node/<surviving_node> -- chroot /host bash -c '
   pcs resource cleanup etcd
 '
@@ -818,7 +818,7 @@ Waiting for 1 reply from the controller
 
 2. Kiểm tra trạng thái Pacemaker bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc debug node/<surviving_node> -- chroot /host bash -c ' \
   pcs status
 '
@@ -881,7 +881,7 @@ Nếu nút bị lỗi không tham gia lại cụm sau khi được bật nguồn
 
 1. Kiểm tra trạng thái của Corosync và dịch vụ cụm trên nút vừa khởi động lại bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc debug node/<returning-node> -- chroot /host bash -c '\
   corosync-cfgtool -s\
   systemctl status corosync pacemaker pcsd
@@ -891,13 +891,13 @@ $ oc debug node/<returning-node> -- chroot /host bash -c '\
 2. Xác minh kết nối mạng giữa các nút. 
   * Đối với Mạng Cụm (Corosync), hãy thực hiện lệnh sau để ping một nút lân cận nhằm kiểm tra nút ngang hàng trên mạng cụm:
 
-  ```bash
+  ```shell
   $ ping -c 3 <peer_node_ip>
   ```
 
   * Đối với mạng Quản lý hoặc mạng BMC (đường dẫn cách ly - fencing path), hãy chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ ping -c 3
   ```
 
@@ -915,25 +915,25 @@ $ oc debug node/<returning-node> -- chroot /host bash -c '\
 
   Kiểm tra tình trạng của API server trên nút cục bộ bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ curl -sk https://localhost:6443/healthz
   ```
 
    Check API server health on the peer node by running the following command: 
 
-   ```bash
+   ```shell
    $ curl -sk https://<peer-node-ip>:6443/healthz
    ```
 
    Liệt kê các thành viên trong cụm etcd bằng cách chạy lệnh sau:
 
-   ```bash
+   ```shell
    $ podman exec etcd etcdctl member list --write-out=table
    ```
 
    Kiểm tra tình trạng các điểm cuối (endpoint) etcd trên toàn cụm bằng cách chạy lệnh sau:
 
-   ```bash
+   ```shell
    $ podman exec etcd etcdctl endpoint health --cluster
    ```
 
@@ -959,7 +959,7 @@ Bạn có thể cần thực hiện các bước khôi phục thủ công nếu 
 1. Cập nhật các bí mật (secret) dùng cho cơ chế cách ly (fencing):
   * a. Nếu Cluster API không khả dụng, hãy cập nhật bí mật dùng cho cơ chế cách ly bằng cách chạy lệnh sau trên một trong các nút (node) của cụm:
 
-  ```bash
+  ```shell
   $ sudo pcs stonith update <node_name>_redfish username=<user_name> password=<password>
   ```
 
@@ -967,7 +967,7 @@ Bạn có thể cần thực hiện các bước khôi phục thủ công nếu 
 
   * b. Chỉnh sửa tên người dùng và mật khẩu cho thông tin xác thực (secret) dùng trong cơ chế cách ly (fencing) hiện có dành cho nút mặt phẳng điều khiển (control plane node) bằng cách chạy các lệnh sau:
 
-  ```bash
+  ```shell
   $ oc project openshift-etcd
   $ oc edit secret <node_name>-fencing
   $ oc edit secret fencing-credentials-<node_name>
@@ -988,7 +988,7 @@ Bạn có thể cần thực hiện các bước khôi phục thủ công nếu 
 
   Ngoài ra, bạn có thể sử dụng lệnh sau để tạo hoặc cập nhật bí mật (secret) bằng các chuỗi ký tự cụ thể:
 
-  ```bash
+  ```shell
   $ oc create secret generic fencing-credentials-<node_name> \
     --from-literal=address='<redfish_address>' \
     --from-literal=username='<new_username>' \
@@ -1001,19 +1001,19 @@ Bạn có thể cần thực hiện các bước khôi phục thủ công nếu 
 
   * c. Hãy xác minh rằng thông tin xác thực mới có thể kết nối với BMC bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo pcs stonith config <node_name>_redfish
   ```
 
   * d. Hãy xác minh rằng không có tài nguyên STONITH nào bị chặn bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo pcs status --full
   ```
 
   Cluster etcd Operator thực hiện quy trình xác thực này một cách tự động khi áp dụng thông tin xác thực từ đối tượng secret thông qua việc sử dụng lệnh sau:
 
-  ```bash
+  ```shell
   $ fence_redfish --action status
   ```
 
@@ -1022,7 +1022,7 @@ Bạn có thể cần thực hiện các bước khôi phục thủ công nếu 
 2. Khôi phục sau sự cố tại một nút đơn lẻ:
   * a. Thu thập thông tin chẩn đoán ban đầu bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo pcs status --full
   ```
 
@@ -1032,25 +1032,25 @@ Bạn có thể cần thực hiện các bước khôi phục thủ công nếu 
 
   Đặt lại các tài nguyên trên cụm của bạn bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo pcs resource cleanup
   ```
 
   * c. Xem lại tất cả hoạt động của Pacemaker trên nút bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo journalctl -u pacemaker
   ```
 
   * d. Chẩn đoán các vấn đề khởi động tài nguyên etcd bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo journalctl -u pacemaker | grep podman-etcd
   ```
 
   * e. Xem cấu hình hàng rào (fencing) cho nút bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo pcs stonith config <node_name>_redfish
   ```
 
@@ -1064,7 +1064,7 @@ Bạn có thể cần thực hiện các bước khôi phục thủ công nếu 
 
   * f. Xác nhận rằng nút đã được cách ly bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo pcs stonith confirm <failed_node_name>
   ```
 
@@ -1072,7 +1072,7 @@ Bạn có thể cần thực hiện các bước khôi phục thủ công nếu 
 
   * g. Nếu etcd không khởi động mặc dù cơ chế cách ly (fencing) vẫn đang hoạt động, hãy khôi phục etcd từ bản sao lưu bằng cách chạy các lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo cp -r /var/lib/etcd-backup/* /var/lib/etcd/
   $ sudo chown -R etcd:etcd /var/lib/etcd
   ```
@@ -1088,19 +1088,19 @@ Quy trình này áp dụng khi cả hai nút thuộc mặt phẳng điều khi�
 
   * b. Đặt lại (reset) các tài nguyên trong cụm (cluster) của bạn và yêu cầu Pacemaker thử khởi động lại chúng từ đầu bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo pcs resource cleanup
   ```
 
   * c. Kiểm tra thứ tự khởi động tài nguyên bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo pcs status --full
   ```
 
   * d. Nếu kubelet gặp lỗi, hãy kiểm tra nhật ký dịch vụ pacemaker bằng cách chạy các lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo journalctl -u pacemaker
   $ sudo journalctl -u kubelet
   ```
@@ -1109,7 +1109,7 @@ Quy trình này áp dụng khi cả hai nút thuộc mặt phẳng điều khi�
 
   Nếu một nút có dữ liệu etcd cập nhật hơn, Pacemaker sẽ cố gắng thực hiện thao tác cách ly (fence) đối với nút đang bị tụt hậu, sau đó khởi động lại nút này ở vai trò "người học" (learner). Nếu quá trình này bị đình trệ, hãy kiểm tra điểm cuối (endpoint) và thông tin xác thực dùng cho thao tác cách ly qua Redfish bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo pcs stonith config
   ```
 
@@ -1128,7 +1128,7 @@ Tình huống này thường xảy ra khi bạn cần thay thế một nút đi�
 
   * a. Hãy xác minh rằng chỉ còn một nút đang trực tuyến bằng cách chạy lệnh sau trên nút vẫn còn hoạt động:
 
-  ```bash
+  ```shell
   $ sudo pcs status --full
   ```
 
@@ -1172,7 +1172,7 @@ Tình huống này thường xảy ra khi bạn cần thay thế một nút đi�
 
   Trạng thái PCSD cho thấy nút master-0 đang ở trạng thái trực tuyến (Online), trong khi nút còn lại ở trạng thái ngoại tuyến (Offline). Cả hai nút trong danh sách nút đều ở trạng thái ngoại tuyến vì không nút nào đạt đủ số phiếu cần thiết (quorum).
 
-  ```bash
+  ```shell
   $ sudo pcs quorum status --debug
   Running: /usr/sbin/corosync-quorumtool -p
   Environment:
@@ -1222,7 +1222,7 @@ Tình huống này thường xảy ra khi bạn cần thay thế một nút đi�
 
   * c. Xác nhận với Pacemaker rằng nút bị lỗi đã được cách ly bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo pcs quorum unblock
   ```
 
@@ -1238,7 +1238,7 @@ Tình huống này thường xảy ra khi bạn cần thay thế một nút đi�
 
   * d. Xác minh rằng số lượng đại biểu (quorum) đã được khôi phục bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo pcs quorum status
   ```
 
@@ -1266,31 +1266,31 @@ Tình huống này thường xảy ra khi bạn cần thay thế một nút đi�
   * e. Hãy đợi 30 giây để Pacemaker xử lý xác nhận cách ly (fencing) và bắt đầu quá trình khôi phục.
   * f. Xác minh rằng etcd đang chạy trên nút còn lại bằng cách thực thi lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo pcs resource status etcd
   ```
 
   Nếu etcd không chạy, hãy khởi động lại nó bằng cách thực thi lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo pcs resource cleanup etcd
   ```
 
   Hãy đợi tối đa 5 phút để etcd khởi động. Kiểm tra trạng thái định kỳ bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo pcs resource status etcd
   ```
 
   Lệnh này cho thấy tài nguyên `podman-etcd` đã được khởi động. Nếu container được khởi động thành công, bạn có thể xem các bản ghi (logs) bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   sudo podman logs etcd
   ```
 
   Nếu container chưa được khởi chạy, bạn có thể xem các bản ghi (logs) bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ journalctl -u pacemaker | grep podman-etcd
   ```
 
@@ -1326,7 +1326,7 @@ Bạn có thể thay thế một nút control plane bị lỗi trong cụm OpenS
 ##### Quy trình
 1. Kiểm tra trạng thái quorum (số phiếu bầu tối thiểu cần thiết) bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ sudo pcs quorum status
 ```
 
@@ -1359,19 +1359,19 @@ Membership information
 
   * a. Nếu mất số lượng nút tối thiểu (quorum) mà vẫn còn một nút mặt phẳng điều khiển (control plane node) đang hoạt động, hãy khôi phục quorum theo cách thủ công trên nút còn lại đó bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo pcs quorum unblock
   ```
 
   * b. Nếu chỉ có một nút bị lỗi, hãy xác minh rằng etcd đang chạy trên nút còn lại bằng cách thực thi lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo pcs resource status etcd
   ```
 
   * c. Nếu etcd không chạy, hãy khởi động lại etcd bằng cách thực thi lệnh sau:
 
-  ```bash
+  ```shell
   $ sudo pcs resource cleanup etcd
   ```
 
@@ -1379,7 +1379,7 @@ Membership information
 
   > **Quan trọng:** Trước khi chạy các lệnh này, hãy đảm bảo rằng nút đang được thay thế không thể truy cập được. Nếu không, bạn có nguy cơ làm hỏng dữ liệu etcd.
 
-  ```bash
+  ```shell
   $ sudo pcs resource debug-stop etcd
   $ sudo OCF_RESKEY_CRM_meta_notify_start_resource='etcd' pcs resource debug-start etcd
   ```
@@ -1388,7 +1388,7 @@ Membership information
 
 2. Xóa các bí mật etcd dành cho nút bị lỗi bằng cách chạy các lệnh sau:
 
-```bash
+```shell
 $ oc project openshift-etcd
 $ oc delete secret etcd-peer-<node_name>
 $ oc delete secret etcd-serving-<node_name>
@@ -1400,25 +1400,25 @@ $ oc delete secret etcd-serving-metrics-<node_name>
 3. Xóa các tài nguyên dành cho nút bị lỗi:
 * a. Nếu bạn có các đối tượng BareMetalHost (BMH), hãy liệt kê chúng để xác định nút mà bạn muốn thay thế bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc get bmh -n openshift-machine-api
 ```
 
 * b. Xóa đối tượng BMH cho nút bị lỗi bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc delete bmh/<bmh_name> -n openshift-machine-api
 ```
 
 * c. Hãy liệt kê các đối tượng Machine để xác định đối tượng tương ứng với nút mà bạn đang thay thế bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc get machines.machine.openshift.io -n openshift-machine-api
 ```
 
 d. Lấy nhãn chứa giá trị băm của máy từ đối tượng Machine bằng cách chạy lệnh sau:
 
-```bash
+```shell
 oc get machines.machine.openshift.io/<machine_name> -n openshift-machine-api \
   -o jsonpath='Machine hash label: {.metadata.labels.machine\.openshift\.io/cluster-api-cluster}{"\n"}'
 ```
@@ -1429,7 +1429,7 @@ Bạn cần nhãn này để cấp phát một đối tượng Machine mới.
 
 e. Xóa đối tượng Machine của nút bị lỗi bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc delete machines.machine.openshift.io/<machine_name>-<failed nodename> -n openshift-machine-api
 ```
 
@@ -1483,7 +1483,7 @@ $ oc delete machines.machine.openshift.io/<machine_name>-<failed nodename> -n op
 
   * c. Tạo đối tượng BMH mới cùng với secret để lưu trữ thông tin xác thực BMC bằng cách chạy lệnh sau:
 
-    ```bash
+    ```shell
     $ cat <<EOF | oc apply -f -
     apiVersion: v1
     kind: Secret
@@ -1526,7 +1526,7 @@ $ oc delete machines.machine.openshift.io/<machine_name>-<failed nodename> -n op
 
 5. Hãy xác minh rằng nút mới đã đạt đến trạng thái Provisioned bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc get bmh -o wide
 ```
 
@@ -1536,7 +1536,7 @@ Giá trị của cột `STATUS` trong kết quả đầu ra của lệnh này ph
 
 6. Hãy xác minh rằng cả hai nút mặt phẳng điều khiển (control plane node) đều ở trạng thái Sẵn sàng (Ready) bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc get nodes
 ```
 
@@ -1544,7 +1544,7 @@ Giá trị của cột `STATUS` trong kết quả đầu ra của lệnh này ph
 
 7. Áp dụng chú thích tách rời (detached annotation) cho đối tượng BMH để ngăn Machine API quản lý đối tượng này bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc annotate bmh <bmh_name> -n openshift-machine-api baremetalhost.metal3.io/detached='' --overwrite
 ```
 
@@ -1552,7 +1552,7 @@ $ oc annotate bmh <bmh_name> -n openshift-machine-api baremetalhost.metal3.io/de
 
 > **Lưu ý:** Hãy chạy các lệnh sau trên nút mặt phẳng điều khiển (control plane node) vẫn còn hoạt động, không phải trên nút đang được thay thế.
 
-```bash
+```shell
 $ sudo pcs cluster node remove <node_name>
 $ sudo pcs cluster node add <node_name> addr=<node_ip> --start --enable
 ```
@@ -1566,7 +1566,7 @@ Secret dùng cho cơ chế fencing chứa một URL Redfish trong trường đ�
 
 * a. Xác minh UUID của hệ thống BMC mới bằng cách truy vấn API Redfish:
 
-```bash
+```shell
 $ curl -k https://<bmc_address>/redfish/v1/Systems/ -u <username>:<password>
 ```
 
@@ -1584,7 +1584,7 @@ $ curl -k https://<bmc_address>/redfish/v1/Systems/ -u <username>:<password>
 
 * b. Cập nhật bí mật hàng rào (fencing secret) cho nút thay thế bằng cách chạy lệnh sau:
 
-  ```bash
+  ```shell
   $ oc create secret generic fencing-credentials-<node_name> \
     --namespace openshift-etcd \
     --from-literal=address='redfish+https://<bmc_address>:<port>/redfish/v1/Systems/<new_uuid>' \
@@ -1605,7 +1605,7 @@ $ curl -k https://<bmc_address>/redfish/v1/Systems/ -u <username>:<password>
 
 * c. Xác minh rằng bí mật đã được cập nhật thành công bằng cách chạy lệnh sau:
 
-```bash
+```shell
 oc get secret fencing-credentials-<node_name> -n openshift-etcd \
   -o jsonpath='{.data.address}' | base64 -d
 ```
@@ -1616,7 +1616,7 @@ Xác nhận rằng đầu ra chứa UUID hệ thống BMC mới.
 
 10. Xóa các tác vụ cũ liên quan đến nút bị lỗi bằng cách chạy các lệnh sau:
 
-```bash
+```shell
 $ oc project openshift-etcd
 $ oc delete job tnf-auth-job-<node_name>
 $ oc delete job tnf-after-setup-job-<node_name>
@@ -1635,7 +1635,7 @@ Bạn có thể truy cập ít nhất một nút mặt phẳng điều khiển t
 ##### Quy trình
 1. Kiểm tra trạng thái tổng thể của các nút bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc get nodes
 ```
 
@@ -1643,7 +1643,7 @@ Lệnh này xác minh rằng cả hai nút mặt phẳng điều khiển (contro
 
 2. Kiểm tra trạng thái của cluster-etcd-operator bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc describe co/etcd
 ```
 
@@ -1651,7 +1651,7 @@ $ oc describe co/etcd
 
 3. Hãy kiểm tra danh sách các thành viên etcd bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc rsh -n openshift-etcd <etcd_pod> etcdctl member list -w table
 ```
 
@@ -1659,7 +1659,7 @@ Lệnh này hiển thị các thành viên etcd hiện tại cùng vai trò củ
 
 4. Kiểm tra trạng thái tài nguyên Pacemaker bằng cách chạy lệnh sau trên một trong các nút control plane:
 
-```bash
+```shell
 $ sudo pcs status --full
 ```
 
@@ -1702,7 +1702,7 @@ Hãy sử dụng tập lệnh `fencing_validator` để xác minh cấu hình fe
 
 Bạn có thể xem các thao tác mà tập lệnh sẽ thực hiện — mà không cần thực sự tiến hành kiểm tra cho TNF — bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc debug node/<node_name> --chroot /host /usr/local/bin/fencing_validator --dry-run
 ```
 
@@ -1711,7 +1711,7 @@ $ oc debug node/<node_name> --chroot /host /usr/local/bin/fencing_validator --dr
 
 Bạn có thể xem các tùy chọn dòng lệnh khác nhau cho tập lệnh `fencing_validator` bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc debug node/<node_name> --chroot /host /usr/local/bin/fencing_validator --help
 ```
 
@@ -1743,7 +1743,7 @@ Bạn có thể thiết lập tất cả các cờ (flag) bằng cách sử dụ
 
 Cách đơn giản nhất để chạy tập lệnh này là thông qua một phiên gỡ lỗi (debug session) trên một trong các nút thuộc mặt phẳng điều khiển (control plane node) bằng cách thực thi lệnh sau:
 
-```bash
+```shell
 $ oc debug node/<node_name> --chroot /host /usr/local/bin/fencing_validator
 ```
 
@@ -1781,13 +1781,13 @@ Bạn có thể kiểm chứng khả năng chống chịu của cụm (cluster) 
 
 Bạn có thể kích hoạt cơ chế STONITH (viết tắt của "Shoot The Other Node In The Head" – tạm dịch: "vô hiệu hóa hoàn toàn nút khác") đối với nút gặp lỗi, nhằm cắt quyền truy cập của nút đó vào các tài nguyên dùng chung, từ đó ngăn ngừa tình trạng hỏng dữ liệu bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ pcs stonith fence <node>
 ```
 
 Bạn có thể kiểm tra xem thiết lập cụm OpenShift Container Platform gồm hai nút với cơ chế cách ly (fencing) có thực sự hoạt động hay không bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ oc debug node/<node_name> --chroot /host /usr/local/bin/fencing_validator --disruptive
 ```
 
@@ -1831,7 +1831,7 @@ Cờ `--transport` hỗ trợ các tùy chọn sau:
   * Xác thực: Sử dụng cờ `--ssh-key` để cung cấp khóa SSH cụ thể cho tất cả các kết nối. 
 * `oc debug`: Kết nối bằng cách thực thi lệnh sau trên mỗi nút:
 
-```bash
+```shell
 $ oc debug node/<node> --chroot /host
 ```
 

@@ -7892,3 +7892,317 @@ Trong đó:
 > * Khi sử dụng lệnh `oc adm release mirror`, hãy sử dụng kết quả đầu ra từ phần `imageContentSources`. 
 > * Khi sử dụng lệnh `oc mirror`, hãy sử dụng phần repositoryDigestMirrors từ tệp ImageContentSourcePolicy được tạo ra sau khi chạy lệnh đó.
 > * `ImageContentSourcePolicy` hiện đã lỗi thời (deprecated). Để biết thêm thông tin, hãy xem phần Cấu hình phản chiếu kho lưu trữ registry hình ảnh (Configuring image registry repository mirroring).
+
+##### 2.3.9.2. Cấu hình proxy cho toàn bộ cụm (cluster) trong quá trình cài đặt
+Trong các môi trường thực tế (production), quyền truy cập trực tiếp vào internet có thể bị chặn; thay vào đó, hệ thống sẽ sử dụng một proxy HTTP hoặc HTTPS. Bạn có thể cấu hình để một cụm OpenShift Container Platform mới sử dụng proxy bằng cách thiết lập các thông số proxy trong tệp `install-config.yaml`.
+
+**Lưu ý:** Đối với các hệ thống cài đặt trên phần cứng vật lý (bare-metal), nếu bạn không gán địa chỉ IP cho các nút (node) từ dải địa chỉ được quy định trong trường `networking.machineNetwork[].cidr` tại tệp `install-config.yaml`, bạn bắt buộc phải thêm các địa chỉ đó vào trường `proxy.noProxy`.
+
+**Điều kiện tiên quyết**
+
+* Bạn đã có sẵn tệp `install-config.yaml`. 
+* Bạn đã xem xét các trang web mà cụm của bạn cần truy cập và xác định xem có trang nào cần bỏ qua proxy hay không. Theo mặc định, proxy sẽ xử lý tất cả lưu lượng truy cập đi ra (egress traffic) từ cụm, bao gồm cả các yêu cầu gọi đến API của nhà cung cấp dịch vụ đám mây (cloud provider). Bạn cần thêm các trang web đó vào trường `spec.noProxy` của đối tượng Proxy (Proxy object) nếu muốn bỏ qua proxy cho các trang này. 
+
+> **Lưu ý:** Trường `status.noProxy` của đối tượng Proxy sẽ tự động bao gồm các giá trị từ các trường `networking.machineNetwork[].cidr`, `networking.clusterNetwork[].cidr` và `networking.serviceNetwork[]` trong cấu hình cài đặt của bạn. 
+
+* Đối với các hệ thống cài đặt trên Amazon Web Services (AWS), Google Cloud, Microsoft Azure và Red Hat OpenStack Platform (RHOSP), trường `status.noProxy` của đối tượng Proxy cũng sẽ bao gồm cả điểm cuối (endpoint) chứa siêu dữ liệu của thực thể (instance metadata endpoint: 169.254.169.254).
+
+**Quy trình thực hiện**
+
+1. Chỉnh sửa tệp `install-config.yaml` và thêm các thiết lập proxy. Ví dụ:
+
+```yaml
+apiVersion: v1
+baseDomain: my.domain.com
+proxy:
+  httpProxy: http://<username>:<pswd>@<ip>:<port>
+  httpsProxy: https://<username>:<pswd>@<ip>:<port>
+  noProxy: example.com
+additionalTrustBundle: |
+    -----BEGIN CERTIFICATE-----
+    <MY_TRUSTED_CA_CERT>
+    -----END CERTIFICATE-----
+additionalTrustBundlePolicy: <policy_to_add_additionalTrustBundle>
+# ...
+```
+
+Trong đó:
+
+  * `proxy.httpProxy`: Chỉ định URL proxy được sử dụng để thiết lập các kết nối HTTP bên ngoài cụm (cluster). Giao thức (scheme) của URL phải là `http`.
+  * `proxy.httpsProxy`: Chỉ định URL proxy được sử dụng để thiết lập các kết nối HTTPS bên ngoài cụm.
+  * `proxy.noProxy`: Chỉ định danh sách các tên miền đích, địa chỉ IP hoặc các dải mạng CIDR (được phân tách bằng dấu phẩy) không đi qua proxy. Thêm dấu `.` vào trước tên miền để chỉ khớp với các tên miền phụ (subdomain). Ví dụ: `.y.com` sẽ khớp với `x.y.com`, nhưng không khớp với `y.com`. Sử dụng `*` để bỏ qua proxy cho tất cả các đích đến.
+  * additionalTrustBundle: Nếu bạn chỉ định giá trị này, chương trình cài đặt sẽ tạo một config map có tên là `user-ca-bundle` trong namespace `openshift-config` để lưu trữ các chứng chỉ CA bổ sung. Nếu bạn chỉ định `additionalTrustBundle`` `cùng với ít nhất một thiết lập proxy, đối tượng `Proxy` sẽ tham chiếu đến config map `user-ca-bundle` trong trường `trustedCA`. Sau đó, Cluster Network Operator sẽ tạo một config map có tên `trusted-ca-bundle`, trong đó hợp nhất nội dung được chỉ định cho tham số `trustedCA` với bộ chứng chỉ tin cậy (trust bundle) của RHCOS. Bạn bắt buộc phải thiết lập trường `additionalTrustBundle`, trừ khi chứng chỉ định danh của proxy được ký bởi một cơ quan cấp chứng chỉ (CA) đã nằm trong bộ chứng chỉ tin cậy của RHCOS.
+  * `additionalTrustBundlePolicy`: Chỉ định chính sách xác định cách cấu hình đối tượng Proxy để tham chiếu đến config map `user-ca-bundle` trong trường `trustedCA`. Các giá trị được phép là `Proxyonly` và `Always`. Sử dụng `Proxyonly` nếu muốn tham chiếu đến config map `user-ca-bundle` chỉ khi bạn cấu hình proxy `http/https`. Sử dụng Always nếu muốn luôn luôn tham chiếu đến config map user-ca-bundle. Giá trị mặc định là `Proxyonly`. Đây là tham số tùy chọn.
+
+> **Lưu ý:** Chương trình cài đặt không hỗ trợ trường `readinessEndpoints` của proxy.
+
+> **Lưu ý:** Nếu chương trình cài đặt bị hết thời gian chờ (timeout), hãy khởi động lại rồi hoàn tất quá trình triển khai bằng cách sử dụng lệnh `wait-for` của chương trình cài đặt. Ví dụ: `./openshift-install wait-for install-complete --log-level debug`
+
+2. Hãy lưu tệp này lại và tham chiếu đến nó khi cài đặt OpenShift Container Platform.
+Chương trình cài đặt sẽ tạo một proxy trên toàn cụm (cluster-wide proxy) có tên là `cluster`, sử dụng các thiết lập proxy từ tệp `install-config.yaml`. Nếu bạn không cung cấp các thiết lập proxy, chương trình cài đặt vẫn sẽ tạo một đối tượng Proxy cho cụm, nhưng với phần đặc tả (spec) để trống (giá trị `nil`).
+
+> **Lưu ý:** Chỉ đối tượng Proxy có tên là `cluster` mới được hỗ trợ; bạn không thể tạo thêm các proxy khác.
+
+##### 2.3.9.3. Cấu hình cụm ba nút (three-node cluster)
+Để tạo các cụm có quy mô nhỏ hơn và tiết kiệm tài nguyên phục vụ mục đích thử nghiệm hoặc triển khai thực tế, bạn có thể thiết lập một cụm trên hạ tầng vật lý (bare-metal) mà không cần các máy tính toán (compute machine). Cấu hình tùy chọn này chỉ sử dụng ba máy thuộc mặt phẳng điều khiển (control plane), giúp tối ưu hóa tài nguyên hạ tầng cho các quản trị viên và nhà phát triển.
+
+Trong các môi trường OpenShift Container Platform gồm ba nút, ba máy thuộc mặt phẳng điều khiển này cũng có thể đảm nhận vai trò lập lịch (schedulable); nghĩa là các khối lượng công việc (workload) ứng dụng của bạn sẽ chạy trực tiếp trên các máy này.
+
+**Điều kiện tiên quyết**
+
+* Bạn đã có sẵn tệp `install-config.yaml`.
+
+**Quy trình**
+
+* Đảm bảo rằng số lượng bản sao máy tính toán (compute replica) được đặt thành 0 trong tệp `install-config.yaml` của bạn, như được hiển thị trong đoạn cấu hình `compute` dưới đây:
+
+```yaml
+compute:
+- name: worker
+  platform: {}
+  replicas: 0
+# ...
+```
+
+> **Lưu ý:** Khi cài đặt OpenShift Container Platform trên cơ sở hạ tầng do người dùng cung cấp (user-provisioned infrastructure), bạn phải đặt giá trị của tham số `replicas` cho các máy tính toán (compute machines) là 0, bất kể số lượng máy tính toán mà bạn triển khai là bao nhiêu. Đối với các quy trình cài đặt do trình cài đặt tự động thiết lập (installer-provisioned installations), tham số này sẽ kiểm soát số lượng máy tính toán mà cụm (cluster) tạo ra và quản lý thay cho bạn. Quy định này không áp dụng cho các quy trình cài đặt do người dùng tự cung cấp cơ sở hạ tầng, nơi bạn phải tự triển khai các máy tính toán theo cách thủ công.
+
+Đối với các hệ thống cụm (cluster) gồm ba nút, hãy thực hiện các bước sau:
+
+  * Nếu bạn đang triển khai cụm ba nút mà không có nút tính toán (compute node) nào, các pod của Ingress Controller sẽ chạy trên các nút mặt phẳng điều khiển (control plane node). Trong các hệ thống cụm ba nút, bạn phải cấu hình bộ cân bằng tải (load balancer) cho ứng dụng để định tuyến lưu lượng truy cập HTTP và HTTPS đến các nút mặt phẳng điều khiển. Để biết thêm thông tin, hãy xem phần các yêu cầu về cân bằng tải đối với cơ sở hạ tầng do người dùng cung cấp (user-provisioned infrastructure). 
+  * Khi tạo các tệp manifest Kubernetes trong quy trình tiếp theo, hãy đảm bảo rằng tham số `mastersSchedulable` trong tệp `<installation_directory>/manifests/cluster-scheduler-02-config.yml` được đặt thành `true`. Điều này cho phép các khối lượng công việc (workload) ứng dụng của bạn chạy trên các nút mặt phẳng điều khiển. 
+  * Không triển khai bất kỳ nút tính toán nào khi tạo các máy ảo chạy Red Hat Enterprise Linux CoreOS (RHCOS).
+
+#### 2.3.10. Tạo các tệp manifest Kubernetes và tệp cấu hình Ignition
+Vì bạn tự thiết lập cơ sở hạ tầng theo cách thủ công, bạn cần tạo các tệp manifest Kubernetes và tệp cấu hình Ignition mà cụm (cluster) yêu cầu.
+
+Chương trình cài đặt sẽ chuyển đổi cấu hình cài đặt thành các tệp manifest Kubernetes, sau đó đóng gói chúng vào các tệp cấu hình Ignition. Bạn sử dụng các tệp Ignition này để cấu hình các máy trong cụm.
+
+> **Quan trọng:** Các tệp cấu hình Ignition do chương trình cài đặt OpenShift Container Platform tạo ra chứa các chứng chỉ có thời hạn 24 giờ; sau đó, hệ thống sẽ tự động gia hạn các chứng chỉ này. Nếu bạn tắt cụm trước khi hệ thống kịp gia hạn chứng chỉ và khởi động lại cụm sau khi đã quá 24 giờ, cụm sẽ tự động khôi phục các chứng chỉ đã hết hạn. Một ngoại lệ là bạn phải phê duyệt thủ công các yêu cầu ký chứng chỉ (CSR) của `node-bootstrapper` đang ở trạng thái chờ để khôi phục các chứng chỉ `kubelet`. Để biết thêm thông tin, hãy xem tài liệu về cách khôi phục từ các chứng chỉ control plane đã hết hạn. 
+Hãy sử dụng các tệp cấu hình Ignition trong vòng 12 giờ kể từ khi tạo, vì quá trình xoay vòng chứng chỉ 24 giờ thường diễn ra từ 16 đến 22 giờ sau khi cài đặt cụm. Việc sử dụng các tệp Ignition trong vòng 12 giờ giúp tránh lỗi cài đặt trong trường hợp quá trình cập nhật chứng chỉ diễn ra đúng lúc đang cài đặt.
+
+**Điều kiện tiên quyết**
+
+*  Bạn đã có chương trình cài đặt OpenShift Container Platform. Đối với trường hợp cài đặt trong mạng bị hạn chế (restricted network), các tệp này sẽ nằm trên máy chủ mirror (mirror host) của bạn. 
+Bạn đã tạo tệp cấu hình cài đặt `install-config.yaml`.
+
+**Quy trình**
+
+1. Di chuyển đến thư mục chứa chương trình cài đặt OpenShift Container Platform và tạo các tệp manifest Kubernetes cho cụm:
+
+```shell
+$ ./openshift-install create manifests --dir <installation_directory>
+```
+
+Trong đó: `<installation_directory>` chỉ định thư mục cài đặt chứa tệp install-config.yaml mà bạn đã tạo.
+
+> **Cảnh báo:** Nếu bạn đang cài đặt một cụm gồm ba nút, hãy bỏ qua bước sau để cho phép các nút trong mặt phẳng điều khiển (control plane) có thể nhận các tác vụ được lập lịch.
+
+> **Quan trọng:** Khi bạn cấu hình các nút mặt phẳng điều khiển từ trạng thái mặc định không thể lập lịch sang trạng thái có thể lập lịch, bạn cần thêm các gói đăng ký vì các nút mặt phẳng điều khiển khi đó sẽ trở thành các nút tính toán.
+
+2. Hãy xác minh rằng tham số `mastersSchedulable` trong tệp manifest Kubernetes `<installation_directory>/manifests/cluster-scheduler-02-config.yml` được đặt thành `false`. Thiết lập này ngăn không cho các pod được lập lịch trên các máy thuộc mặt phẳng điều khiển (control plane):
+
+  * Mở tệp `<installation_directory>/manifests/cluster-scheduler-02-config.yml`. 
+  * Tìm tham số `mastersSchedulable` và xác minh rằng nó được đặt thành `false`. 
+  * Lưu tệp và thoát.
+
+3. Để tạo các tệp cấu hình Ignition, hãy chạy lệnh sau từ thư mục chứa chương trình cài đặt:
+
+```shell
+$ ./openshift-install create ignition-configs --dir <installation_directory>
+```
+
+Trong đó: `<installation_directory>` chỉ định cùng một thư mục cài đặt.
+
+Chương trình cài đặt tạo các tệp cấu hình Ignition cho các nút bootstrap, control plane và compute trong thư mục cài đặt. Chương trình này cũng tạo các tệp `kubeadmin-password` và `kubeconfig` trong thư mục `./<installation_directory>/auth`:
+
+```
+.
+├── auth
+│   ├── kubeadmin-password
+│   └── kubeconfig
+├── bootstrap.ign
+├── master.ign
+├── metadata.json
+└── worker.ign
+```
+
+#### 2.3.11. Cấu hình dịch vụ thời gian chrony
+Bạn phải thiết lập máy chủ thời gian cùng các cài đặt liên quan cho dịch vụ thời gian chrony (chronyd) bằng cách sửa đổi nội dung tệp chrony.conf, sau đó truyền nội dung này đến các nút (node) của bạn dưới dạng cấu hình máy (machine config).
+
+**Quy trình**
+
+1. Tạo một cấu hình Butane bao gồm nội dung của tệp `chrony.conf`. Ví dụ: để định cấu hình `chrony` trên các nút worker (worker node), hãy tạo tệp `99-worker-chrony.bu`. 
+
+> **Lưu ý:** [Phiên bản Butane](https://coreos.github.io/butane/specs/) mà bạn chỉ định trong tệp cấu hình phải khớp với phiên bản OpenShift Container Platform và luôn kết thúc bằng số 0. Ví dụ: `4.22.0`. Xem phần "Tạo cấu hình máy (machine config) bằng Butane" để biết thêm thông tin về Butane.
+
+```yaml
+variant: openshift
+version: 4.22.0
+metadata:
+  name: 99-worker-chrony
+  labels:
+    machineconfiguration.openshift.io/role: worker
+storage:
+  files:
+  - path: /etc/chrony.conf
+    mode: 0644
+    overwrite: true
+    contents:
+      inline: |
+        pool 0.rhel.pool.ntp.org iburst
+        driftfile /var/lib/chrony/drift
+        makestep 1.0 3
+        rtcsync
+        logdir /var/log/chrony
+```
+
+  * `name: 99-worker-chrony` - Chỉ định tên cho tệp cấu hình máy (machine config file). Đối với các nút trong mặt phẳng điều khiển (control plane nodes), hãy thay thế `worker` bằng `master`. 
+  * `machineconfiguration.openshift.io/role: worker` - Đối với các nút trong mặt phẳng điều khiển, hãy thay thế `worker` bằng `master`. 
+  * `mode: 0644` - Chỉ định giá trị bát phân (octal value) cho trường `mode` trong tệp cấu hình máy. Sau khi tạo tệp và áp dụng các thay đổi, giá trị này sẽ được chuyển đổi sang dạng thập phân. Bạn có thể kiểm tra tệp YAML bằng lệnh: `oc get mc <mc-name> -o yaml`. 
+  * `pool 0.rhel.pool.ntp.org iburst` - Chỉ định bất kỳ nguồn thời gian hợp lệ và có thể truy cập được nào, chẳng hạn như nguồn do máy chủ DHCP của bạn cung cấp.
+
+> **Lưu ý:** Đối với giao tiếp giữa các máy với nhau, giao thức Network Time Protocol (NTP) sử dụng cổng UDP 123. Nếu bạn định cấu hình một máy chủ thời gian NTP bên ngoài, bạn phải mở cổng UDP 123.
+
+2. Sử dụng Butane để tạo tệp đối tượng `MachineConfig` có tên `99-worker-chrony.yaml`, chứa cấu hình sẽ được chuyển đến các nút (node):
+
+```shell
+$ butane 99-worker-chrony.bu -o 99-worker-chrony.yaml
+```
+
+3. Áp dụng các cấu hình theo một trong hai cách sau:
+  * Nếu cụm (cluster) chưa hoạt động, sau khi tạo các tệp manifest, hãy thêm tệp đối tượng `MachineConfig` vào thư mục `<installation_directory>/openshift`, rồi tiếp tục thực hiện các bước tạo cụm. 
+  * Nếu cụm đã hoạt động, hãy áp dụng tệp đó:
+
+  ```shell
+  $ oc apply -f ./99-worker-chrony.yaml
+  ```
+
+#### 2.3.12. Cài đặt RHCOS và khởi động quy trình bootstrap của OpenShift Container Platform
+Để cài đặt OpenShift Container Platform trên cơ sở hạ tầng phần cứng vật lý (bare-metal) do bạn cung cấp, hãy cài đặt Red Hat Enterprise Linux CoreOS (RHCOS) bằng cách sử dụng các tệp cấu hình Ignition đã được tạo. Việc cung cấp các tệp này đảm bảo quy trình bootstrap sẽ tự động bắt đầu sau khi các máy khởi động lại.
+
+Nếu bạn đã định cấu hình cơ sở hạ tầng mạng, DNS và cân bằng tải phù hợp, quy trình bootstrap của OpenShift Container Platform sẽ tự động bắt đầu sau khi các máy chạy RHCOS khởi động lại.
+
+Để cài đặt RHCOS trên các máy, hãy thực hiện theo các bước sử dụng tệp ảnh ISO hoặc khởi động qua mạng (PXE booting).
+
+> **Lưu ý:** Các bước triển khai nút tính toán (compute node) có trong tài liệu cài đặt này dành riêng cho RHCOS. Nếu bạn chọn triển khai các nút tính toán dựa trên RHEL, bạn sẽ chịu trách nhiệm quản lý và bảo trì toàn bộ vòng đời của hệ điều hành, bao gồm thực hiện cập nhật hệ thống, áp dụng các bản vá và hoàn thành tất cả các tác vụ cần thiết khác. Chỉ các máy tính toán chạy RHEL 8 mới được hỗ trợ.
+
+Bạn có thể định cấu hình RHCOS trong quá trình cài đặt qua ISO hoặc PXE bằng các phương pháp sau:
+
+* Các tham số nhân (Kernel arguments): Bạn có thể sử dụng các tham số nhân để cung cấp thông tin cụ thể cho quá trình cài đặt. Ví dụ: bạn có thể chỉ định vị trí các tệp cài đặt RHCOS đã tải lên máy chủ HTTP của mình, cũng như vị trí tệp cấu hình Ignition tương ứng với loại nút mà bạn đang cài đặt. Đối với cài đặt qua PXE, bạn có thể sử dụng tham số APPEND để truyền các tham số này vào nhân (kernel) của trình cài đặt trực tiếp (live installer). Đối với cài đặt qua ISO, bạn có thể tạm dừng quá trình khởi động của trình cài đặt trực tiếp để thêm các tham số nhân. Trong cả hai trường hợp, bạn đều có thể sử dụng các tham số đặc biệt dạng `coreos.inst.*` để điều hướng trình cài đặt trực tiếp, cũng như các tham số khởi động tiêu chuẩn để bật hoặc tắt các dịch vụ nhân thông thường. 
+* Các tệp cấu hình Ignition: Các tệp cấu hình Ignition (`*.ign`) của OpenShift Container Platform được thiết kế riêng cho từng loại nút mà bạn cài đặt. Bạn cần cung cấp vị trí tệp cấu hình Ignition tương ứng (cho nút bootstrap, nút điều khiển - control plane, hoặc nút tính toán) trong quá trình cài đặt RHCOS để tệp này có hiệu lực ngay từ lần khởi động đầu tiên. Trong một số trường hợp đặc biệt, bạn có thể tạo một tệp cấu hình Ignition riêng biệt với phạm vi giới hạn để truyền vào hệ thống đang chạy. Cấu hình Ignition đó có thể thực hiện một số tác vụ nhất định, chẳng hạn như thông báo trạng thái thành công cho hệ thống cung cấp tài nguyên (provisioning system) sau khi hoàn tất quá trình cài đặt. Cấu hình Ignition đặc biệt này được `coreos-installer` sử dụng để áp dụng vào lần khởi động đầu tiên của hệ thống đã cài đặt. Tuyệt đối không cung cấp trực tiếp các cấu hình Ignition tiêu chuẩn dành cho control plane (mặt phẳng điều khiển) hoặc compute node (nút tính toán) vào tệp ISO chạy trực tiếp (live ISO). 
+* `coreos-installer`: Bạn có thể khởi động tệp ISO chạy trực tiếp (live ISO) vào giao diện dòng lệnh (shell prompt), cho phép chuẩn bị hệ thống chính thức theo nhiều cách khác nhau trước lần khởi động đầu tiên. Cụ thể, bạn có thể chạy lệnh `coreos-installer` để xác định các thành phần (artifacts) cần đưa vào, thao tác với các phân vùng ổ đĩa và thiết lập mạng. Trong một số trường hợp, bạn có thể cấu hình các tính năng trên hệ thống chạy trực tiếp rồi sao chép chúng sang hệ thống đã cài đặt. 
+
+> **Lưu ý:** Kể từ phiên bản 0.17.0-3, `coreos-installer` yêu cầu hệ điều hành RHEL 9 trở lên để chạy chương trình. Bạn vẫn có thể sử dụng các phiên bản `coreos-installer` cũ hơn để tùy chỉnh các thành phần RHCOS của các bản phát hành OpenShift Container Platform mới hơn, cũng như cài đặt các image dành cho phần cứng vật lý (metal images) vào ổ đĩa. Hãy tham khảo mục "coreos-installer image mirror" để tải xuống các phiên bản nhị phân cũ hơn của `coreos-installer`.
+
+Việc chọn cài đặt qua ISO hay PXE tùy thuộc vào tình huống cụ thể của bạn. Cài đặt qua PXE đòi hỏi phải có sẵn dịch vụ DHCP và cần chuẩn bị kỹ lưỡng hơn, nhưng lại giúp quy trình cài đặt trở nên tự động hóa hơn. Ngược lại, cài đặt qua ISO là quy trình thủ công hơn và có thể gây bất tiện nếu bạn cần thiết lập số lượng máy lớn.
+
+##### 2.3.12.1. Cài đặt RHCOS bằng tệp ảnh ISO
+Để cung cấp tài nguyên cho các máy vật lý hoặc máy ảo, hãy cài đặt RHCOS bằng tệp ảnh ISO có khả năng khởi động (bootable ISO image).
+
+**Các điều kiện tiên quyết**
+
+* Bạn đã tạo các tệp cấu hình Ignition cho cụm (cluster) của mình. 
+* Bạn đã thiết lập cơ sở hạ tầng mạng, DNS và cân bằng tải phù hợp. 
+* Bạn có một máy chủ HTTP mà từ đó cả máy tính của bạn và các máy bạn tạo ra đều có thể truy cập được. 
+* Bạn đã xem qua phần cấu hình cài đặt RHCOS nâng cao để biết các phương thức thiết lập những tính năng khác nhau, chẳng hạn như mạng và phân vùng đĩa.
+
+**Quy trình**
+
+1. Lấy mã băm (digest) SHA512 cho từng tệp cấu hình Ignition của bạn. Ví dụ: trên một hệ thống chạy Linux, bạn có thể sử dụng lệnh sau để lấy mã băm SHA512 cho tệp cấu hình Ignition `bootstrap.ign`:
+
+```shell
+$ sha512sum <installation_directory>/bootstrap.ign
+```
+
+Các giá trị tóm tắt (digest) được cung cấp cho `coreos-installer` ở một bước sau đó để xác thực tính nguyên bản của các tệp cấu hình Ignition trên các nút của cụm (cluster).
+
+2. Hãy tải các tệp cấu hình Ignition cho nút bootstrap, control plane và compute node — vốn đã được chương trình cài đặt tạo ra — lên máy chủ HTTP của bạn. Ghi lại các URL của những tệp này.
+
+> **Quan trọng:** Bạn có thể thêm hoặc thay đổi các thiết lập cấu hình trong các tệp Ignition trước khi lưu chúng lên máy chủ HTTP. Nếu bạn dự định bổ sung thêm các máy tính toán (compute machine) vào cụm (cluster) của mình sau khi hoàn tất quá trình cài đặt, đừng xóa các tệp này.
+
+3. Từ máy chủ thực hiện cài đặt (installation host), hãy xác thực rằng các tệp cấu hình Ignition đã sẵn sàng tại các URL tương ứng. Ví dụ dưới đây cho thấy cách truy xuất tệp cấu hình Ignition dành cho nút bootstrap:
+
+```shell
+$ curl -k http://<HTTP_server>/bootstrap.ign
+```
+  * `<HTTP_server>`: Hãy thay thế `bootstrap.ign` bằng `master.ign` hoặc `worker.ign` trong lệnh thực thi để xác nhận rằng các tệp cấu hình Ignition dành cho control plane (mặt phẳng điều khiển) và các nút tính toán (compute node) cũng đã sẵn sàng.
+
+  Ví dụ đầu ra
+
+  ```
+    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+    0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0{"ignition":{"version":"3.2.0"},"passwd":{"users":[{"name":"core","sshAuthorizedKeys":["ssh-rsa...
+  ```
+
+4. Mặc dù bạn có thể lấy các hình ảnh (image) RHCOS cần thiết cho phương thức cài đặt hệ điều hành mà mình chọn từ trang lưu trữ hình ảnh RHCOS, nhưng cách thức được khuyến nghị để có được phiên bản hình ảnh RHCOS chính xác là thông qua kết quả đầu ra của lệnh `openshift-install`:
+
+```shell
+$ openshift-install coreos print-stream-json | grep '\.iso[^.]'
+```
+
+Ví dụ đầu ra
+
+```
+"location": "<url>/art/storage/releases/rhcos-4.22-aarch64/<release>/aarch64/rhcos-<release>-live.aarch64.iso",
+"location": "<url>/art/storage/releases/rhcos-4.22-ppc64le/<release>/ppc64le/rhcos-<release>-live.ppc64le.iso",
+"location": "<url>/art/storage/releases/rhcos-4.22-s390x/<release>/s390x/rhcos-<release>-live.s390x.iso",
+"location": "<url>/art/storage/releases/rhcos-4.22/<release>/x86_64/rhcos-<release>-live.x86_64.iso",
+```
+
+> **Quan trọng:** Các hình ảnh (image) RHCOS có thể không thay đổi theo mỗi phiên bản phát hành của OpenShift Container Platform. Bạn phải tải xuống các hình ảnh có phiên bản cao nhất nhưng không vượt quá phiên bản OpenShift Container Platform mà bạn đang cài đặt. Nếu có sẵn các hình ảnh khớp với phiên bản OpenShift Container Platform của bạn, hãy sử dụng các phiên bản đó. Chỉ sử dụng các tệp hình ảnh định dạng ISO cho quy trình này. Các tệp hình ảnh RHCOS định dạng qcow2 không được hỗ trợ cho kiểu cài đặt này.
+
+Tên tệp ISO có dạng như ví dụ sau: `rhcos-<phiên bản>-live.<architecture>.iso`
+
+5. Sử dụng tệp ISO để bắt đầu quá trình cài đặt RHCOS. Bạn có thể chọn một trong các phương thức sau:
+
+  * Ghi tệp ảnh ISO ra đĩa và khởi động trực tiếp từ đĩa đó. 
+  * Sử dụng tính năng chuyển hướng ISO (ISO redirection) thông qua giao diện quản trị từ xa (lights-out management - LOM).
+
+6. Khởi động tệp ảnh ISO của RHCOS mà không cần chỉ định thêm tùy chọn nào hoặc can thiệp vào trình tự khởi động trực tiếp (live boot). Hãy đợi cho đến khi trình cài đặt khởi động vào giao diện dòng lệnh (shell prompt) trong môi trường RHCOS live.
+
+> **Lưu ý:** Bạn có thể can thiệp vào quá trình khởi động cài đặt RHCOS để thêm các tham số nhân (kernel arguments). Tuy nhiên, đối với quy trình sử dụng tệp ISO này, bạn nên dùng lệnh `coreos-installer` theo các bước hướng dẫn dưới đây thay vì thêm tham số nhân.
+
+7. Thực thi lệnh `coreos-installer` cùng với các tùy chọn phù hợp với yêu cầu cài đặt của bạn. Tối thiểu, bạn cần chỉ định URL dẫn đến tệp cấu hình Ignition (Ignition config file) tương ứng với loại nút (node ​​type) và thiết bị đích nơi bạn muốn thực hiện cài đặt:
+
+```shell
+$ sudo coreos-installer install --ignition-url=http://<HTTP_server>/<node_type>.ign <device> \
+  --ignition-hash=sha512-<digest> --offline
+```
+
+  * <device>: Bạn phải chạy lệnh `coreos-installer` với quyền `sudo`, vì người dùng `core` không có đủ đặc quyền quản trị (root) cần thiết để thực hiện quá trình cài đặt.
+  * <digest>: Tùy chọn `--ignition-hash` là bắt buộc khi tệp cấu hình Ignition được lấy thông qua URL HTTP; tùy chọn này giúp xác thực tính nguyên bản của tệp cấu hình Ignition trên nút (node) của cụm (cluster). `<digest>` chính là mã băm SHA512 của tệp cấu hình Ignition, được lấy từ bước trước đó.
+
+> **Lưu ý:** Nếu bạn muốn cung cấp các tệp cấu hình Ignition thông qua máy chủ HTTPS sử dụng giao thức TLS, bạn có thể thêm cơ quan cấp chứng chỉ (CA) nội bộ vào kho lưu trữ chứng chỉ tin cậy của hệ thống trước khi chạy `coreos-installer`.
+
+Ví dụ dưới đây thực hiện khởi tạo cài đặt cho một nút khởi động (bootstrap node) trên thiết bị `/dev/sda`. Tệp cấu hình Ignition cho nút khởi động này được lấy từ một máy chủ web HTTP có địa chỉ IP là 192.168.1.2:
+
+```shell
+$ sudo coreos-installer install --ignition-url=http://192.168.1.2:80/installation_directory/bootstrap.ign /dev/sda \
+  --ignition-hash=sha512-a5a2d43879223273c9b60af66b44202a1d1248fc01cf156c46d4a79f552b6bad47bc8cc78ddf0116e80c59d2ea9e32ba53bc807afbca581aa059311def2c3e3b \
+  --offline
+```
+
+8. Theo dõi tiến trình cài đặt RHCOS trên bảng điều khiển (console) của máy.
+
+> **Quan trọng:** Hãy đảm bảo rằng quá trình cài đặt đã hoàn tất thành công trên từng nút (node) trước khi bắt đầu cài đặt OpenShift Container Platform. Việc quan sát quá trình cài đặt cũng giúp xác định nguyên nhân nếu xảy ra sự cố trong lúc cài đặt RHCOS.
+
+9. Sau khi RHCOS được cài đặt, bạn phải khởi động lại hệ thống. Trong quá trình khởi động lại, hệ thống sẽ áp dụng tệp cấu hình Ignition mà bạn đã chỉ định.
+10. Kiểm tra đầu ra trên bảng điều khiển để xác nhận rằng Ignition đã chạy.
+
+Ví dụ về lệnh
+
+```
+Ignition: ran on 2022/03/14 14:48:33 UTC (this boot)
+Ignition: user-provided config was applied
+```
+
+11. Tiếp tục tạo các máy khác cho cụm (cluster) của bạn.
+
+> **Quan trọng:** Tại thời điểm này, bạn phải tạo các máy bootstrap và các máy control plane (mặt phẳng điều khiển). Nếu các máy control plane không được thiết lập để có thể lập lịch (schedulable), bạn cũng cần tạo thêm ít nhất hai máy tính toán (compute machine) trước khi cài đặt OpenShift Container Platform.
+
+Nếu các cơ sở hạ tầng cần thiết về mạng, DNS và bộ cân bằng tải (load balancer) đã sẵn sàng, quy trình bootstrap của OpenShift Container Platform sẽ tự động bắt đầu sau khi các nút (node) chạy hệ điều hành RHCOS khởi động lại.
+
+> **Lưu ý:** Các nút RHCOS không có mật khẩu mặc định cho người dùng `core`. Bạn có thể truy cập các nút này bằng cách chạy lệnh `ssh core@<node>.<cluster_name>.<base_domain>` với tư cách là người dùng có quyền truy cập vào khóa cá nhân SSH (SSH private key) tương ứng với khóa công khai (public key) mà bạn đã chỉ định trong tệp `install_config.yaml`. Các nút trong cụm OpenShift Container Platform 4 chạy RHCOS là các thành phần không thể thay đổi (immutable) và dựa vào các Operator để thực hiện các thay đổi đối với cụm. Việc truy cập vào các nút của cụm thông qua SSH không được khuyến khích. Tuy nhiên, khi cần điều tra các sự cố cài đặt — chẳng hạn như khi API của OpenShift Container Platform không khả dụng hoặc `kubelet` trên một nút mục tiêu không hoạt động bình thường — bạn có thể cần truy cập qua SSH để gỡ lỗi hoặc khôi phục hệ thống trong trường hợp xảy ra sự cố nghiêm trọng.
+
+

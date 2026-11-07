@@ -128,7 +128,7 @@ Cài đặt `podman`.
 
 1. Thiết lập phiên bản OpenShift Container Platform:
 
-```bash
+```shell
 $ export OCP_VERSION=<ocp_version>
 ```
 
@@ -136,7 +136,7 @@ Thay thế `<ocp_version>` bằng phiên bản hiện tại, ví dụ: latest-4.
 
 2. Thiết lập kiến trúc cụm mục tiêu:
 
-```bash
+```shell
 $ export ARCH=<architecture>
 ```
 
@@ -144,7 +144,7 @@ Hãy thay thế `<architecture>` bằng kiến trúc của máy chủ đích, ch
 
 3. Thiết lập kiến trúc máy chủ cài đặt:
 
-```bash
+```shell
 $ export HOST_ARCH=$(uname -m)
 ```
 
@@ -152,7 +152,7 @@ Lệnh này phát hiện kiến trúc của máy chủ cài đặt. Nếu kiến
 
 4. Tải xuống ứng dụng khách (`oc`) của OpenShift Container Platform và thiết lập để có thể sử dụng bằng cách nhập các lệnh sau:
 
-```bash
+```shell
 $ curl -k https://mirror.openshift.com/pub/openshift-v4/$HOST_ARCH/clients/ocp/$OCP_VERSION/openshift-client-linux.tar.gz -o oc.tar.gz
 $ tar zxf oc.tar.gz
 $ chmod +x oc
@@ -160,7 +160,7 @@ $ chmod +x oc
 
 5. Tải xuống trình cài đặt OpenShift Container Platform và chuẩn bị sẵn sàng để sử dụng bằng cách nhập các lệnh sau:
 
-```bash
+```shell
 $ curl -k https://mirror.openshift.com/pub/openshift-v4/$HOST_ARCH/clients/ocp/$OCP_VERSION/openshift-install-linux.tar.gz -o openshift-install-linux.tar.gz
 $ tar zxvf openshift-install-linux.tar.gz
 $ chmod +x openshift-install
@@ -168,13 +168,13 @@ $ chmod +x openshift-install
 
 6. Lấy URL của tệp ISO RHCOS bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ export ISO_URL=$(./openshift-install coreos print-stream-json | grep location | grep $ARCH | grep iso | cut -d\" -f4)
 ```
 
 7. Tải xuống tệp ISO RHCOS:
 
-```bash
+```shell
 $ curl -L $ISO_URL -o rhcos-live.iso
 ```
 
@@ -223,7 +223,7 @@ Trong đó:
 
 9. Tạo các tài nguyên OpenShift Container Platform bằng cách chạy các lệnh sau:
 
-```bash
+```shell
 $ mkdir ocp
 $ cp install-config.yaml ocp
 $ ./openshift-install --dir=ocp create single-node-ignition-config
@@ -231,7 +231,7 @@ $ ./openshift-install --dir=ocp create single-node-ignition-config
 
 10. Nhúng dữ liệu khởi động (ignition data) vào tệp ISO của RHCOS bằng cách chạy các lệnh sau:
 
-```bash
+```shell
 $ alias coreos-installer='podman run --privileged --pull always --rm \
         -v /dev:/dev -v /run/udev:/run/udev -v $PWD:/data \
         -w /data quay.io/coreos/coreos-installer:release'
@@ -253,7 +253,7 @@ Sử dụng tệp nhị phân `openshift-install` để theo dõi tiến trình 
 2. Khởi động máy chủ từ tệp ảnh ISO khám phá này. Tệp ảnh ISO khám phá sẽ ghi cấu hình hệ thống vào ổ đĩa đích và tự động kích hoạt quá trình khởi động lại máy chủ. 
 3. Trên máy chủ quản trị, hãy theo dõi quá trình cài đặt bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ ./openshift-install --dir=ocp wait-for install-complete
 ```
 
@@ -265,7 +265,7 @@ Máy chủ sẽ khởi động lại nhiều lần trong quá trình triển kha
 
 Sau khi quá trình cài đặt hoàn tất, hãy kiểm tra môi trường bằng cách chạy lệnh sau:
 
-```bash
+```shell
 $ export KUBECONFIG=ocp/auth/kubeconfig
 $ oc get nodes
 ```
@@ -300,7 +300,7 @@ Bạn có thể cài đặt phần mềm bằng cách sử dụng ổ đĩa USB 
 1. Trên máy chủ quản trị, hãy cắm ổ đĩa USB vào cổng USB. 
 2. Tạo ổ đĩa USB có khả năng khởi động, ví dụ:
 
-```bash
+```shell
 $ dd if=<path_to_iso> of=<path_to_usb> status=progress
 ```
 
