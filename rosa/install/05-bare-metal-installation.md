@@ -8163,7 +8163,7 @@ Tên tệp ISO có dạng như ví dụ sau: `rhcos-<phiên bản>-live.<archite
 
 > **Lưu ý:** Bạn có thể can thiệp vào quá trình khởi động cài đặt RHCOS để thêm các tham số nhân (kernel arguments). Tuy nhiên, đối với quy trình sử dụng tệp ISO này, bạn nên dùng lệnh `coreos-installer` theo các bước hướng dẫn dưới đây thay vì thêm tham số nhân.
 
-7. Thực thi lệnh `coreos-installer` cùng với các tùy chọn phù hợp với yêu cầu cài đặt của bạn. Tối thiểu, bạn cần chỉ định URL dẫn đến tệp cấu hình Ignition (Ignition config file) tương ứng với loại nút (node ​​type) và thiết bị đích nơi bạn muốn thực hiện cài đặt:
+7. Thực thi lệnh `coreos-installer` cùng với các tùy chọn phù hợp với yêu cầu cài đặt của bạn. Tối thiểu, bạn cần chỉ định URL dẫn đến tệp cấu hình Ignition (Ignition config file) tương ứng với loại nút (node type) và thiết bị đích nơi bạn muốn thực hiện cài đặt:
 
 ```shell
 $ sudo coreos-installer install --ignition-url=http://<HTTP_server>/<node_type>.ign <device> \
@@ -8205,4 +8205,695 @@ Nếu các cơ sở hạ tầng cần thiết về mạng, DNS và bộ cân b�
 
 > **Lưu ý:** Các nút RHCOS không có mật khẩu mặc định cho người dùng `core`. Bạn có thể truy cập các nút này bằng cách chạy lệnh `ssh core@<node>.<cluster_name>.<base_domain>` với tư cách là người dùng có quyền truy cập vào khóa cá nhân SSH (SSH private key) tương ứng với khóa công khai (public key) mà bạn đã chỉ định trong tệp `install_config.yaml`. Các nút trong cụm OpenShift Container Platform 4 chạy RHCOS là các thành phần không thể thay đổi (immutable) và dựa vào các Operator để thực hiện các thay đổi đối với cụm. Việc truy cập vào các nút của cụm thông qua SSH không được khuyến khích. Tuy nhiên, khi cần điều tra các sự cố cài đặt — chẳng hạn như khi API của OpenShift Container Platform không khả dụng hoặc `kubelet` trên một nút mục tiêu không hoạt động bình thường — bạn có thể cần truy cập qua SSH để gỡ lỗi hoặc khôi phục hệ thống trong trường hợp xảy ra sự cố nghiêm trọng.
 
+##### 2.3.12.2. Cài đặt RHCOS bằng phương thức khởi động PXE hoặc iPXE
+Bạn có thể sử dụng phương thức khởi động PXE hoặc iPXE để cài đặt RHCOS trên các máy chủ.
 
+**Điều kiện tiên quyết**
+
+* Bạn đã tạo các tệp cấu hình Ignition cho cụm (cluster) của mình. 
+* Bạn đã thiết lập cơ sở hạ tầng mạng, DNS và cân bằng tải phù hợp. 
+* Bạn đã thiết lập cơ sở hạ tầng PXE hoặc iPXE phù hợp. 
+* Bạn có một máy chủ HTTP có thể truy cập được từ máy tính của bạn cũng như từ các máy chủ mà bạn tạo ra. 
+* Bạn đã xem qua phần cấu hình cài đặt RHCOS nâng cao để biết các cách thiết lập những tính năng khác nhau, chẳng hạn như mạng và phân vùng đĩa.
+
+**Quy trình**
+
+1. Tải các tệp cấu hình Ignition dành cho nút bootstrap, nút điều khiển (control plane) và nút tính toán (compute node) — vốn được tạo bởi chương trình cài đặt — lên máy chủ HTTP của bạn. Hãy ghi lại các URL của những tệp này. 
+
+> **Quan trọng:** Bạn có thể thêm hoặc thay đổi các thiết lập cấu hình trong các tệp Ignition trước khi lưu chúng lên máy chủ HTTP. Nếu bạn dự định thêm các máy tính toán (compute machine) vào cụm sau khi hoàn tất cài đặt, đừng xóa các tệp này. 
+
+2. Từ máy chủ cài đặt (installation host), hãy xác thực rằng các tệp cấu hình Ignition đã sẵn sàng tại các URL đó. Ví dụ dưới đây cho thấy cách truy xuất tệp cấu hình Ignition dành cho nút bootstrap:
+
+```shell
+$ curl -k http://<HTTP_server>/bootstrap.ign
+```
+
+  * `<HTTP_server>`: Hãy thay thế `bootstrap.ign` bằng `master.ign` hoặc `worker.ign` trong lệnh thực thi để xác nhận rằng các tệp cấu hình Ignition dành cho control plane (mặt phẳng điều khiển) và các nút tính toán (compute node) cũng đã sẵn sàng.
+
+  Ví dụ đầu ra
+
+  ```
+    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+    0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0{"ignition":{"version":"3.2.0"},"passwd":{"users":[{"name":"core","sshAuthorizedKeys":["ssh-rsa...
+  ```
+
+3. Mặc dù bạn có thể lấy các tệp RHCOS `kernel`, `initramfs` và `rootfs` — vốn cần thiết cho phương thức cài đặt hệ điều hành mà bạn chọn — từ trang [lưu trữ (mirror) hình ảnh RHCOS](https://mirror.openshift.com/pub/openshift-v4/x86_64/dependencies/rhcos/), nhưng cách thức được khuyến nghị để có được phiên bản tệp RHCOS chính xác là thông qua kết quả đầu ra từ lệnh `openshift-install`:
+
+```shell
+$ openshift-install coreos print-stream-json | \
+  grep -Eo '"https.*(kernel-|initramfs.|rootfs.)\w+(\.img)?"'
+```
+
+Ví dụ đầu ra
+
+```
+"<url>/art/storage/releases/rhcos-4.22-aarch64/<release>/aarch64/rhcos-<release>-live-kernel-aarch64"
+"<url>/art/storage/releases/rhcos-4.22-aarch64/<release>/aarch64/rhcos-<release>-live-initramfs.aarch64.img"
+"<url>/art/storage/releases/rhcos-4.22-aarch64/<release>/aarch64/rhcos-<release>-live-rootfs.aarch64.img"
+"<url>/art/storage/releases/rhcos-4.22-ppc64le/49.84.202110081256-0/ppc64le/rhcos-<release>-live-kernel-ppc64le"
+"<url>/art/storage/releases/rhcos-4.22-ppc64le/<release>/ppc64le/rhcos-<release>-live-initramfs.ppc64le.img"
+"<url>/art/storage/releases/rhcos-4.22-ppc64le/<release>/ppc64le/rhcos-<release>-live-rootfs.ppc64le.img"
+"<url>/art/storage/releases/rhcos-4.22-s390x/<release>/s390x/rhcos-<release>-live-kernel-s390x"
+"<url>/art/storage/releases/rhcos-4.22-s390x/<release>/s390x/rhcos-<release>-live-initramfs.s390x.img"
+"<url>/art/storage/releases/rhcos-4.22-s390x/<release>/s390x/rhcos-<release>-live-rootfs.s390x.img"
+"<url>/art/storage/releases/rhcos-4.22/<release>/x86_64/rhcos-<release>-live-kernel-x86_64"
+"<url>/art/storage/releases/rhcos-4.22/<release>/x86_64/rhcos-<release>-live-initramfs.x86_64.img"
+"<url>/art/storage/releases/rhcos-4.22/<release>/x86_64/rhcos-<release>-live-rootfs.x86_64.img"
+```
+
+> **Quan trọng:** Các thành phần (artifact) của RHCOS có thể không thay đổi qua mỗi phiên bản OpenShift Container Platform. Bạn phải tải xuống các image có phiên bản cao nhất nhưng không vượt quá phiên bản OpenShift Container Platform mà bạn đang cài đặt. Chỉ sử dụng các thành phần kernel, initramfs và rootfs phù hợp được mô tả dưới đây cho quy trình này. Các image RHCOS định dạng QCOW2 không được hỗ trợ cho kiểu cài đặt này.
+
+Tên tệp tin bao gồm số phiên bản OpenShift Container Platform. Ví dụ như sau:
+
+  * `kernel`: `rhcos-<version>-live-kernel-<architecture>`
+  * `initramfs`: `rhcos-<version>-live-initramfs.<architecture>.img`
+  * `rootfs`: `rhcos-<version>-live-rootfs.<architecture>.img`
+
+Tải các tệp tin `rootfs`, `kernel` và `initramfs` lên máy chủ HTTP của bạn.
+
+> Quan trọng: Nếu bạn dự định thêm các máy tính toán (compute machine) vào cụm (cluster) của mình sau khi hoàn tất cài đặt, đừng xóa các tệp tin này.
+
+5. Cấu hình cơ sở hạ tầng khởi động qua mạng (network boot) sao cho các máy sẽ khởi động từ ổ đĩa cục bộ sau khi RHCOS đã được cài đặt trên đó.
+6. Cấu hình cài đặt qua PXE hoặc iPXE cho các image RHCOS và bắt đầu quá trình cài đặt.
+7. Điều chỉnh một trong các mục menu mẫu dưới đây cho phù hợp với môi trường của bạn, đồng thời xác minh rằng các tệp tin image và Ignition đều có thể truy cập được:
+  * Đối với PXE (x86_64):
+
+  ```
+  DEFAULT pxeboot
+  TIMEOUT 20
+  PROMPT 0
+  LABEL pxeboot
+      KERNEL http://<HTTP_server>/rhcos-<version>-live-kernel-<architecture>
+      APPEND initrd=http://<HTTP_server>/rhcos-<version>-live-initramfs.<architecture>.img coreos.live.rootfs_url=http://<HTTP_server>/rhcos-<version>-live-rootfs.<architecture>.img coreos.inst.install_dev=/dev/sda coreos.inst.ignition_url=http://<HTTP_server>/bootstrap.ign
+  ```
+
+  Trong đó:
+
+    * `kernel`: Chỉ định vị trí của tệp kernel trực tiếp (live kernel) mà bạn đã tải lên máy chủ HTTP của mình. URL phải thuộc loại HTTP, TFTP hoặc FTP; các giao thức HTTPS và NFS không được hỗ trợ.
+    * `initrd=main`: Nếu sử dụng nhiều card mạng (NIC), hãy chỉ định một giao diện duy nhất trong tùy chọn `ip`. Ví dụ: để sử dụng DHCP trên card mạng có tên là `eno1`, hãy đặt `ip=eno1:dhcp`. Hãy chỉ định vị trí các tệp RHCOS mà bạn đã tải lên máy chủ HTTP của mình. Giá trị của tham số `initrd` là vị trí của tệp `initramfs`, giá trị của tham số `coreos.live.rootfs_url` là vị trí của tệp `rootfs`, và giá trị của tham số `coreos.inst.ignition_url` là vị trí của tệp cấu hình Ignition khởi động (bootstrap Ignition config). Bạn cũng có thể thêm các đối số kernel khác vào dòng `APPEND` để cấu hình mạng hoặc các tùy chọn khởi động khác. 
+
+  > **Lưu ý:** Cấu hình này không kích hoạt quyền truy cập qua console nối tiếp (serial console) trên các máy có console đồ họa. Để cấu hình một console khác, hãy thêm một hoặc nhiều đối số `console=` vào dòng `APPEND`. Ví dụ: thêm `console=tty0 console=ttyS0` để thiết lập cổng nối tiếp đầu tiên trên PC làm console chính và console đồ họa làm console phụ. Để biết thêm thông tin, hãy xem bài viết "Cách thiết lập terminal nối tiếp và/hoặc console trong Red Hat Enterprise Linux?" và mục "Kích hoạt console nối tiếp cho quá trình cài đặt qua PXE và ISO" trong phần "Cấu hình cài đặt RHCOS nâng cao".
+
+  * Đối với iPXE (`x86_64` + `aarch64`):
+
+  ```
+  kernel http://<HTTP_server>/rhcos-<version>-live-kernel-<architecture> initrd=main coreos.live.rootfs_url=http://<HTTP_server>/rhcos-<version>-live-rootfs.<architecture>.img coreos.inst.install_dev=/dev/sda coreos.inst.ignition_url=http://<HTTP_server>/bootstrap.ign
+  initrd --name main http://<HTTP_server>/rhcos-<version>-live-initramfs.<architecture>.img
+  boot
+  ```
+
+    * kernel: Chỉ định vị trí các tệp RHCOS mà bạn đã tải lên máy chủ HTTP của mình. Giá trị của tham số `kernel` là vị trí của tệp kernel; đối số `initrd=main` là bắt buộc để khởi động trên các hệ thống UEFI; giá trị của tham số `coreos.live.rootfs_url` là vị trí của tệp rootfs; và giá trị của tham số `coreos.inst.ignition_url` là vị trí của tệp cấu hình Ignition dùng cho quá trình khởi động (bootstrap). Nếu bạn sử dụng nhiều card mạng (NIC), hãy chỉ định một giao diện duy nhất trong tùy chọn `ip`. Ví dụ: để sử dụng DHCP trên một card mạng có tên là `eno1`, hãy đặt `ip=eno1:dhcp`.
+    * initrd: Chỉ định vị trí của tệp initramfs mà bạn đã tải lên máy chủ HTTP của mình. 
+
+  > **Lưu ý:** Cấu hình này không kích hoạt quyền truy cập qua console nối tiếp (serial console) trên các máy có console đồ họa. Để cấu hình một console khác, hãy thêm một hoặc nhiều đối số `console=` vào dòng kernel. Ví dụ: thêm `console=tty0 console=ttyS0` để thiết lập cổng nối tiếp đầu tiên trên PC làm console chính và console đồ họa làm console phụ. Để biết thêm thông tin, hãy xem bài viết "Cách thiết lập terminal nối tiếp và/hoặc console trong Red Hat Enterprise Linux?" và mục "Kích hoạt console nối tiếp cho quá trình cài đặt qua PXE và ISO" trong phần "Cấu hình cài đặt RHCOS nâng cao". 
+
+  > **Lưu ý:** Để khởi động kernel CoreOS qua mạng trên kiến trúc `aarch64`, bạn cần sử dụng phiên bản iPXE được xây dựng (build) với tùy chọn `IMAGE_GZIP` đã được kích hoạt. Xem thêm về tùy chọn `IMAGE_GZIP` trong iPXE.
+
+  * Đối với PXE (sử dụng UEFI và Grub làm giai đoạn thứ hai) trên kiến trúc `aarch64`:
+
+  ```
+  menuentry 'Install CoreOS' {
+      linux rhcos-<version>-live-kernel-<architecture>  coreos.live.rootfs_url=http://<HTTP_server>/rhcos-<version>-live-rootfs.<architecture>.img coreos.inst.install_dev=/dev/sda coreos.inst.ignition_url=http://<HTTP_server>/bootstrap.ign
+      initrd rhcos-<version>-live-initramfs.<architecture>.img
+  }
+  ```
+
+  Trong đó:
+
+    * `coreos.live.rootfs_url`: Chỉ định vị trí các tệp RHCOS mà bạn đã tải lên máy chủ HTTP/TFTP của mình. 
+    * `kernel`: Giá trị của tham số kernel là vị trí của tệp kernel trên máy chủ TFTP của bạn. Giá trị của tham số `coreos.live.rootfs_url` là vị trí của tệp `rootfs`, còn giá trị của tham số `coreos.inst.ignition_url` là vị trí của tệp cấu hình Ignition khởi động (bootstrap) trên máy chủ HTTP của bạn. Nếu sử dụng nhiều card mạng (NIC), hãy chỉ định một giao diện duy nhất trong tùy chọn `ip`. Ví dụ: để sử dụng DHCP trên card mạng có tên là eno1, hãy đặt `ip=eno1:dhcp`. 
+    * `initrd rhcos`: Chỉ định vị trí của tệp `initramfs` mà bạn đã tải lên máy chủ TFTP của mình.
+
+8. Theo dõi tiến trình cài đặt RHCOS trên bảng điều khiển (console) của máy.
+
+> **Quan trọng:** Hãy đảm bảo rằng quá trình cài đặt đã hoàn tất thành công trên từng nút (node) trước khi bắt đầu cài đặt OpenShift Container Platform. Việc quan sát quá trình cài đặt cũng giúp xác định nguyên nhân nếu xảy ra sự cố trong quá trình cài đặt RHCOS.
+
+9. Sau khi RHCOS được cài đặt, hệ thống sẽ khởi động lại. Trong quá trình khởi động lại, hệ thống sẽ áp dụng tệp cấu hình Ignition mà bạn đã chỉ định.
+10. Kiểm tra đầu ra trên bảng điều khiển để xác nhận rằng Ignition đã chạy.
+
+Ví dụ lệnh
+
+```
+Ignition: ran on 2022/03/14 14:48:33 UTC (this boot)
+Ignition: user-provided config was applied
+```
+
+10. Tiếp tục tạo các máy (machine) cho cụm (cluster) của bạn.
+
+> **Quan trọng:** Tại bước này, bạn phải tạo các máy bootstrap và các máy control plane. Nếu các máy control plane không được thiết lập để có thể lập lịch (schedulable), bạn cũng cần tạo thêm ít nhất hai máy tính toán (compute machine) trước khi tiến hành cài đặt cụm.
+
+Nếu các cơ sở hạ tầng cần thiết về mạng, DNS và bộ cân bằng tải (load balancer) đã sẵn sàng, quy trình bootstrap của OpenShift Container Platform sẽ tự động bắt đầu sau khi các nút (node) chạy hệ điều hành RHCOS khởi động lại.
+
+> **Lưu ý:** Các nút chạy RHCOS không có mật khẩu mặc định cho người dùng `core`. Bạn có thể truy cập vào các nút này bằng lệnh `ssh core@<node>.<cluster_name>.<base_domain>`, với điều kiện bạn là người dùng sở hữu khóa cá nhân SSH (SSH private key) tương ứng với khóa công khai (public key) mà bạn đã chỉ định trong tệp `install_config.yaml`. Các nút trong cụm OpenShift Container Platform 4 chạy RHCOS là các thành phần không thể thay đổi (immutable); mọi thay đổi đối với cụm đều được thực hiện thông qua các Operator. Việc truy cập vào các nút của cụm thông qua SSH không được khuyến khích. Tuy nhiên, trong trường hợp cần điều tra các sự cố cài đặt — chẳng hạn như khi API của OpenShift Container Platform không khả dụng hoặc `kubelet` trên một nút mục tiêu không hoạt động bình thường — bạn có thể cần truy cập qua SSH để phục vụ mục đích gỡ lỗi hoặc khôi phục sau sự cố.
+
+###### 2.3.12.3.1. Sử dụng các tùy chọn mạng nâng cao cho quá trình cài đặt qua PXE và ISO
+Theo mặc định, hệ thống mạng cho các nút (node) trong OpenShift Container Platform sử dụng DHCP để thu thập tất cả các thiết lập cấu hình cần thiết. Bạn có thể thiết lập địa chỉ IP tĩnh hoặc định cấu hình các thiết lập đặc biệt khác.
+
+Để thiết lập địa chỉ IP tĩnh hoặc định cấu hình các thiết lập đặc biệt (ví dụ: gộp cổng mạng - bonding), bạn có thể thực hiện một trong các cách sau:
+
+* Truyền các tham số nhân (kernel parameter) đặc biệt khi khởi động trình cài đặt trực tiếp (live installer). 
+* Sử dụng cấu hình máy (machine config) để sao chép các tệp tin mạng vào hệ thống được cài đặt. 
+* Định cấu hình mạng từ dấu nhắc lệnh (shell prompt) của trình cài đặt trực tiếp, sau đó sao chép các thiết lập đó vào hệ thống được cài đặt để chúng có hiệu lực ngay khi hệ thống này khởi động lần đầu tiên.
+
+Để định cấu hình cho quá trình cài đặt qua PXE hoặc iPXE, hãy sử dụng một trong các tùy chọn sau:
+
+* Tham khảo các bảng "coreos-installer và các tùy chọn khởi động cho quá trình cài đặt qua ISO và PXE". 
+* Sử dụng cấu hình máy (machine config) để sao chép các tệp tin mạng vào hệ thống được cài đặt.
+
+Để định cấu hình cho quá trình cài đặt qua ISO, hãy thực hiện theo quy trình dưới đây.
+
+**Quy trình**
+
+1. Khởi động trình cài đặt ISO. 
+2. Từ dấu nhắc lệnh của hệ thống trực tiếp (live system), hãy định cấu hình mạng cho hệ thống này bằng cách sử dụng các công cụ RHEL sẵn có, chẳng hạn như `nmcli` hoặc `nmtui`. 
+3. Chạy lệnh `coreos-installer` để cài đặt hệ thống, đồng thời thêm tùy chọn `--copy-network` để sao chép cấu hình mạng. Ví dụ:
+
+```shell
+$ sudo coreos-installer install --copy-network \
+  --ignition-url=http://host/worker.ign \
+  --offline \
+  /dev/disk/by-id/scsi-<serial_number>
+```
+
+> Quan trọng: Tùy chọn `--copy-network` chỉ sao chép cấu hình mạng nằm trong thư mục `/etc/NetworkManager/system-connections`. Cụ thể, tùy chọn này không sao chép tên máy (hostname) của hệ thống.
+
+4. Hãy khởi động lại vào hệ thống đã cài đặt.
+
+###### 2.3.12.3.2. Phân vùng đĩa
+Các phân vùng đĩa được tạo trên các nút (node) của cụm OpenShift Container Platform trong quá trình cài đặt Red Hat Enterprise Linux CoreOS (RHCOS). Mỗi nút RHCOS thuộc một kiến trúc cụ thể sẽ sử dụng cùng một bố cục phân vùng, trừ khi bạn thay đổi cấu hình phân vùng mặc định.
+
+Trong quá trình cài đặt RHCOS, kích thước của hệ thống tệp gốc (root file system) sẽ được mở rộng để tận dụng toàn bộ dung lượng trống còn lại trên thiết bị đích.
+
+> **Quan trọng:** Việc sử dụng lược đồ phân vùng tùy chỉnh trên nút có thể khiến OpenShift Container Platform không giám sát hoặc không đưa ra cảnh báo đối với một số phân vùng trên nút đó. Để biết thêm thông tin về việc giám sát hệ thống tệp của máy chủ (host) khi sử dụng phân vùng tùy chỉnh, hãy xem phần Tìm hiểu về Giám sát Hệ thống tệp trong OpenShift (các điều kiện loại bỏ/eviction conditions).
+
+OpenShift Container Platform giám sát hai định danh hệ thống tệp sau:
+
+* `nodefs`: hệ thống tệp chứa thư mục `/var/lib/kubelet`. 
+* `imagefs`: hệ thống tệp chứa thư mục `/var/lib/containers`.
+
+Với lược đồ phân vùng mặc định, cả `nodefs` và `imagefs` đều giám sát cùng một hệ thống tệp gốc là `/`.
+
+Để thay đổi cấu hình phân vùng mặc định khi cài đặt RHCOS trên một nút của cụm OpenShift Container Platform, bạn cần tạo các phân vùng riêng biệt. Chẳng hạn, nếu bạn muốn thêm một phân vùng lưu trữ riêng cho các container và hình ảnh container (container image), bạn có thể gắn (mount) thư mục `/var/lib/containers` vào một phân vùng riêng. Khi đó, kubelet sẽ giám sát `/var/lib/containers` dưới dạng `imagefs`, đồng thời giám sát hệ thống tệp gốc dưới dạng `nodefs`.
+
+> **Quan trọng:** Nếu bạn đã thay đổi kích thước đĩa để chứa một hệ thống tệp lớn hơn, hãy cân nhắc việc tạo một phân vùng riêng cho `/var/lib/containers`. Ngoài ra, đối với các đĩa sử dụng định dạng `xfs`, việc điều chỉnh kích thước đĩa có thể giúp giảm thiểu các vấn đề về tiêu tốn tài nguyên CPU phát sinh do số lượng nhóm phân bổ (allocation groups) quá lớn.
+
+OpenShift Container Platform hỗ trợ thêm một phân vùng duy nhất để gắn lưu trữ vào thư mục /var hoặc một thư mục con của /var. Ví dụ:
+
+* `/var/lib/containers`: Chứa các nội dung liên quan đến container; dung lượng này có thể tăng lên khi có thêm nhiều hình ảnh và container được thêm vào hệ thống. 
+* `/var/lib/etcd`: Chứa dữ liệu mà bạn có thể muốn tách riêng, chẳng hạn như để tối ưu hóa hiệu suất lưu trữ cho etcd.
+* `/var`: Chứa dữ liệu mà bạn có thể muốn tách riêng, chẳng hạn như để phục vụ mục đích kiểm toán. 
+
+> **Quan trọng:** Đối với các ổ đĩa có dung lượng lớn hơn 100GB, và đặc biệt là lớn hơn 1TB, hãy tạo một phân vùng /var riêng biệt.
+
+Việc lưu trữ nội dung của thư mục `/var` trên một phân vùng riêng giúp dễ dàng mở rộng dung lượng lưu trữ cho các khu vực này khi cần thiết, đồng thời cho phép cài đặt lại OpenShift Container Platform sau này mà vẫn giữ nguyên dữ liệu đó. Phương pháp này giúp loại bỏ nhu cầu tải lại các container hoặc sao chép các tệp nhật ký (log) lớn trong quá trình cập nhật hệ thống.
+
+Việc sử dụng một phân vùng riêng cho thư mục `/var` (hoặc một thư mục con của /var) cũng giúp ngăn chặn tình trạng dữ liệu trong thư mục đó tăng lên quá mức, gây đầy hệ thống tệp gốc (root file system).
+
+Quy trình dưới đây thiết lập một phân vùng `/var` riêng biệt bằng cách thêm một tệp cấu hình máy (machine config manifest) vào tệp cấu hình Ignition dành cho một loại nút (node type) trong giai đoạn chuẩn bị cài đặt.
+
+**Quy trình**
+
+1. Trên máy chủ cài đặt (installation host), hãy di chuyển đến thư mục chứa chương trình cài đặt OpenShift Container Platform và tạo các tệp cấu hình Kubernetes (Kubernetes manifests) cho cụm (cluster):
+
+```shell
+$ openshift-install create manifests --dir <installation_directory>
+```
+
+2. Hãy tạo một cấu hình Butane để thiết lập phân vùng bổ sung. Chẳng hạn, bạn có thể đặt tên tệp là $HOME/clusterconfig/98-var-partition.bu, thay đổi tên thiết bị đĩa thành tên thiết bị lưu trữ trên các hệ thống worker, đồng thời thiết lập dung lượng lưu trữ cho phù hợp. Ví dụ này đặt thư mục /var trên một phân vùng riêng biệt:
+
+```yaml
+variant: openshift
+version: 4.22.0
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 98-var-partition
+storage:
+  disks:
+  - device: /dev/disk/by-id/<device_name>
+    partitions:
+    - label: var
+      start_mib: <partition_start_offset>
+      size_mib: <partition_size>
+      number: 5
+  filesystems:
+    - device: /dev/disk/by-partlabel/var
+      path: /var
+      format: xfs
+      mount_options: [defaults, prjquota]
+      with_mount_unit: true
+```
+
+Trong đó:
+
+  * `<device_name>`: Chỉ định tên thiết bị lưu trữ của ổ đĩa mà bạn muốn phân vùng.
+  * `<partition_start_offset>`: Chỉ định giá trị độ lệch (offset) tối thiểu cho ổ đĩa khởi động. Để đạt hiệu suất tối ưu, hãy đặt giá trị độ lệch tối thiểu là 25000 mebibyte. Hệ thống tệp gốc (root file system) sẽ tự động được thay đổi kích thước để lấp đầy toàn bộ không gian khả dụng cho đến độ lệch đã chỉ định. Nếu không chỉ định giá trị độ lệch, hoặc nếu giá trị được chỉ định nhỏ hơn mức tối thiểu khuyến nghị, hệ thống tệp gốc sẽ quá nhỏ; điều này có thể dẫn đến việc các lần cài đặt lại RHCOS sau này ghi đè lên phần đầu của phân vùng dữ liệu.
+  * `<partition_size>`: Chỉ định kích thước của phân vùng dữ liệu (tính bằng mebibyte).
+  * `mount_options`: Tùy chọn gắn (mount option) `prjquota` phải được bật đối với các hệ thống tệp được sử dụng cho lưu trữ container. 
+
+> **Lưu ý:** Khi tạo một phân vùng `/var` riêng biệt, bạn không thể sử dụng các loại instance (instance type) khác nhau cho các nút tính toán (compute node) nếu các loại instance đó không có cùng tên thiết bị.
+
+3. Tạo tệp manifest từ cấu hình Butane và lưu tệp đó vào thư mục `clusterconfig/openshift`. Ví dụ: hãy chạy lệnh sau:
+
+```shell
+$ butane $HOME/clusterconfig/98-var-partition.bu -o $HOME/clusterconfig/openshift/98-var-partition.yaml
+```
+
+4. Tạo các tệp cấu hình Ignition bằng cách chạy lệnh sau:
+
+```shell
+$ openshift-install create ignition-configs --dir <installation_directory>
+```
+
+Trong đó: `<installation_directory>` chỉ định tên của thư mục cài đặt. 
+
+Các tệp cấu hình Ignition được tạo cho các nút bootstrap, control plane (mặt phẳng điều khiển) và compute (nút tính toán) trong thư mục cài đặt:
+
+```
+.
+├── auth
+│   ├── kubeadmin-password
+│   └── kubeconfig
+├── bootstrap.ign
+├── master.ign
+├── metadata.json
+└── worker.ign
+```
+
+Các tệp trong thư mục `<installation_directory>/manifest` và `<installation_directory>/openshift `được đóng gói vào các tệp cấu hình Ignition, bao gồm cả tệp chứa đối tượng `MachineConfig` tùy chỉnh có tên là `98-var-partition`.
+
+5. Tùy chọn: Bạn có thể áp dụng cấu hình phân vùng đĩa tùy chỉnh bằng cách tham chiếu đến các tệp cấu hình Ignition trong quá trình cài đặt RHCOS.
+
+###### 2.3.12.3.3. Ví dụ về việc giữ lại các phân vùng hiện có
+Đối với quá trình cài đặt qua ISO, bạn có thể thêm các tùy chọn vào lệnh `coreos-installer` để yêu cầu chương trình cài đặt giữ lại một hoặc nhiều phân vùng hiện có. Đối với quá trình cài đặt qua PXE, bạn có thể thêm các tùy chọn `coreos.inst.*` vào tham số `APPEND` để bảo toàn các phân vùng.
+
+Các phân vùng được giữ lại có thể là các phân vùng dữ liệu từ một hệ thống OpenShift Container Platform đang tồn tại. Bạn có thể xác định các phân vùng đĩa muốn giữ lại thông qua nhãn phân vùng (label) hoặc số thứ tự phân vùng.
+
+> **Lưu ý:** Nếu bạn giữ lại các phân vùng hiện có mà các phân vùng đó không để lại đủ không gian trống cho RHCOS, quá trình cài đặt sẽ thất bại nhưng các phân vùng được giữ lại đó vẫn sẽ không bị hư hại.
+
+Các ví dụ dưới đây minh họa việc bảo toàn bất kỳ phân vùng hiện có nào trong quá trình cài đặt qua ISO, với điều kiện nhãn của phân vùng đó bắt đầu bằng từ `data` (tức là `data*`):
+
+```shell
+$ coreos-installer install --ignition-url http://10.0.2.2:8080/user.ign \
+  --save-partlabel 'data*' \
+  --offline \
+  /dev/disk/by-id/scsi-<serial_number>
+```
+
+Ví dụ sau đây chạy coreos-installer theo cách bảo toàn phân vùng thứ sáu (6) trên đĩa:
+
+```shell
+$ coreos-installer install --ignition-url http://10.0.2.2:8080/user.ign \
+  --save-partindex 6 \
+  --offline \
+  /dev/disk/by-id/scsi-<serial_number>
+```
+
+Ví dụ sau đây giữ lại các phân vùng từ 5 trở lên:
+
+```shell
+$ coreos-installer install --ignition-url http://10.0.2.2:8080/user.ign \
+  --save-partindex 5- \
+  --offline \
+  /dev/disk/by-id/scsi-<serial_number>
+```
+
+Trong các ví dụ trước đây có sử dụng tính năng bảo toàn phân vùng, `coreos-installer` sẽ tạo lại phân vùng đó ngay lập tức.
+
+Các ví dụ dưới đây giúp giữ nguyên các phân vùng hiện có trong quá trình cài đặt qua PXE. Tùy chọn `APPEND` sau đây cho phép bảo toàn bất kỳ phân vùng nào có nhãn bắt đầu bằng chuỗi `data` (`data*`).
+
+```
+coreos.inst.save_partlabel=data*
+```
+
+Tùy chọn `APPEND` dưới đây bảo toàn các phân vùng từ 5 trở lên:
+
+```
+coreos.inst.save_partindex=5-
+```
+
+Tùy chọn `APPEND` sau đây bảo toàn phân vùng 6:
+
+```
+coreos.inst.save_partindex=6
+```
+
+###### 2.3.12.3.4. Xác định các cấu hình Ignition
+Khi thực hiện cài đặt thủ công RHCOS, bạn có thể cung cấp hai loại cấu hình Ignition: cấu hình Ignition cho cài đặt cố định (permanent install) và cấu hình Ignition cho cài đặt trực tiếp (live install).
+
+Khi cài đặt thủ công RHCOS, bạn có thể cung cấp hai loại cấu hình Ignition sau:
+
+* Cấu hình Ignition cho cài đặt cố định (Permanent install Ignition config): Mọi quá trình cài đặt thủ công RHCOS đều cần sử dụng một trong các tệp cấu hình Ignition do `openshift-installer` tạo ra — chẳng hạn như `bootstrap.ign`, `master.ign` hoặc `worker.ign` — để thực hiện việc cài đặt.
+
+> **Quan trọng:** Không được sửa đổi trực tiếp các tệp cấu hình Ignition này. Bạn có thể cập nhật các tệp manifest (tệp mô tả cấu hình) được đóng gói bên trong các tệp cấu hình Ignition, như đã nêu trong các ví dụ ở những phần trước.
+
+Đối với cài đặt qua PXE, bạn có thể truyền các cấu hình Ignition trên dòng `APPEND` bằng cách sử dụng tùy chọn `coreos.inst.ignition_url=`. Đối với cài đặt qua ISO, sau khi ISO khởi động vào dấu nhắc lệnh (shell prompt), bạn phải chỉ định cấu hình Ignition trong dòng lệnh `coreos-installer` bằng tùy chọn `--ignition-url=`. Trong cả hai trường hợp, chỉ các giao thức HTTP và HTTPS mới được hỗ trợ. 
+
+* Cấu hình Ignition cho cài đặt trực tiếp (Live install Ignition config): Loại cấu hình này có thể được tạo bằng cách sử dụng lệnh phụ `customize` của `coreos-installer` cùng với các tùy chọn đi kèm. Với phương pháp này, cấu hình Ignition được truyền vào phương tiện cài đặt trực tiếp (live install medium), tự động chạy ngay khi khởi động và thực hiện các tác vụ thiết lập trước hoặc sau khi hệ thống RHCOS được cài đặt vào ổ đĩa. Phương pháp này chỉ nên được sử dụng cho các tác vụ cần thực hiện một lần duy nhất và không cần áp dụng lại sau đó, chẳng hạn như các thao tác phân vùng nâng cao mà không thể thực hiện thông qua `machine config`.
+
+Đối với khởi động qua PXE hoặc ISO, bạn có thể tạo cấu hình Ignition và thêm tùy chọn `ignition.config.url=` vào dòng `APPEND` để xác định vị trí của tệp cấu hình đó. Bạn cũng cần thêm các tham số `ignition.firstboot` và `ignition.platform.id=metal`; nếu thiếu các tham số này, tùy chọn `ignition.config.url` sẽ bị bỏ qua.
+
+###### 2.3.12.3.5. Cấu hình bảng điều khiển (console) mặc định
+Các nút (node) Red Hat Enterprise Linux CoreOS (RHCOS) được cài đặt từ ảnh khởi động (boot image) của OpenShift Container Platform 4.22 sử dụng cấu hình bảng điều khiển mặc định, được thiết kế để phù hợp với hầu hết các thiết lập trên môi trường ảo hóa và máy chủ vật lý (bare metal).
+
+Các nền tảng đám mây và ảo hóa khác nhau có thể sử dụng các thiết lập mặc định khác nhau tùy thuộc vào kiến trúc được chọn.
+
+Đối với các hệ thống máy chủ vật lý, cấu hình mặc định của nhân hệ điều hành (kernel) thường đặt bảng điều khiển đồ họa làm bảng điều khiển chính, trong khi bảng điều khiển nối tiếp (serial console) sẽ bị vô hiệu hóa.
+
+Cấu hình bảng điều khiển mặc định có thể không khớp với cấu hình phần cứng cụ thể của bạn, hoặc bạn có thể có những yêu cầu đặc thù đòi hỏi phải điều chỉnh lại cấu hình này. Ví dụ:
+
+* Bạn cần truy cập vào trình bao khẩn cấp (emergency shell) thông qua bảng điều khiển để phục vụ mục đích gỡ lỗi. 
+* Nền tảng đám mây của bạn không cung cấp quyền truy cập tương tác vào bảng điều khiển đồ họa, nhưng lại cung cấp bảng điều khiển nối tiếp. 
+* Bạn muốn kích hoạt nhiều bảng điều khiển cùng lúc.
+
+Cấu hình bảng điều khiển được kế thừa từ ảnh khởi động. Điều này có nghĩa là các nút mới trong các cụm (cluster) hiện có sẽ không bị ảnh hưởng bởi những thay đổi đối với cấu hình bảng điều khiển mặc định.
+
+Bạn có thể định cấu hình bảng điều khiển cho các hệ thống máy chủ vật lý theo những cách sau:
+
+* Sử dụng công cụ `coreos-installer` trực tiếp trên dòng lệnh. 
+* Sử dụng các lệnh phụ (subcommand) `coreos-installer iso customize` hoặc `coreos-installer pxe customize` cùng với tùy chọn `--dest-console` để tạo một ảnh tùy chỉnh giúp tự động hóa quy trình này.
+
+> **Lưu ý:** Đối với các tùy chỉnh nâng cao, hãy thực hiện cấu hình bảng điều khiển thông qua các lệnh phụ `coreos-installer iso` hoặc `coreos-installer pxe`, thay vì sử dụng các tham số của nhân hệ điều hành (kernel arguments).
+
+###### 2.3.12.3.6. Kích hoạt bảng điều khiển nối tiếp (serial console) cho các quá trình cài đặt qua PXE và ISO
+Theo mặc định, bảng điều khiển nối tiếp trên Red Hat Enterprise Linux CoreOS (RHCOS) bị vô hiệu hóa và mọi thông tin đầu ra đều được hiển thị trên bảng điều khiển đồ họa. Bạn có thể kích hoạt bảng điều khiển nối tiếp cho các quá trình cài đặt qua PXE và ISO.
+
+**Quy trình**
+
+1. Khởi động trình cài đặt từ tệp ISO. 
+2. Chạy lệnh `coreos-installer` để cài đặt hệ thống; trong đó, hãy thêm tùy chọn `--console` hai lần: một lần để chỉ định bảng điều khiển đồ họa và một lần để chỉ định bảng điều khiển nối tiếp:
+
+```shell
+$ coreos-installer install \
+  --console=tty0 \
+  --console=ttyS0,<options> \
+  --ignition-url=http://host/worker.ign \
+  --offline \
+  /dev/disk/by-id/scsi-<serial_number>
+```
+
+Trong đó:
+
+  * --console=tty0: Thiết lập console phụ mong muốn; ở đây là console đồ họa. Nếu bỏ qua tùy chọn này, console đồ họa sẽ bị vô hiệu hóa.
+  * `--console=ttyS0`: Thiết lập console chính mong muốn; ở đây là console nối tiếp (serial console). Phần tùy chọn (options) xác định tốc độ truyền (baud rate) và các thiết lập khác. Một giá trị phổ biến cho phần này là 115200n8. Nếu không cung cấp tùy chọn nào, hệ thống sẽ sử dụng giá trị mặc định của nhân Linux (kernel) là 9600n8. Để biết thêm thông tin về định dạng của tùy chọn này, vui lòng tham khảo tài liệu về console nối tiếp của nhân Linux.
+
+3. Khởi động lại vào hệ thống đã cài đặt.
+
+> **Lưu ý:** Bạn có thể đạt được kết quả tương tự bằng cách sử dụng tùy chọn `--append-karg` của `coreos-installer install` và chỉ định console thông qua tham số `console=`. Tuy nhiên, cách này chỉ thiết lập console cho nhân Linux (kernel) chứ không áp dụng cho bộ nạp khởi động (bootloader).
+
+Để cấu hình cài đặt qua PXE, hãy đảm bảo rằng tùy chọn dòng lệnh nhân (kernel command-line option) `coreos.inst.install_dev` không được đưa vào; sau đó, sử dụng dấu nhắc lệnh (shell prompt) để chạy thủ công `coreos-installer` theo quy trình cài đặt từ tệp ISO đã nêu ở trên.
+
+###### 2.3.12.3.7. Tùy chỉnh quá trình cài đặt RHCOS thông qua live ISO hoặc PXE
+Bạn có thể sử dụng ảnh live ISO hoặc môi trường PXE để cài đặt RHCOS bằng cách đưa trực tiếp tệp cấu hình Ignition vào ảnh đó. Việc này tạo ra một ảnh tùy chỉnh mà bạn có thể sử dụng để cung cấp (provision) hệ thống của mình.
+
+Đối với ảnh ISO, cơ chế thực hiện là sử dụng lệnh phụ `coreos-installer iso customize`; lệnh này sẽ sửa đổi tệp .iso dựa trên cấu hình của bạn. Tương tự, đối với môi trường PXE, bạn sử dụng lệnh phụ `coreos-installer pxe customize` để tạo một tệp initramfs mới bao gồm các tùy chỉnh của bạn.
+
+Lệnh phụ `customize` là một công cụ đa năng, cho phép tích hợp nhiều loại tùy chỉnh khác nhau. Dưới đây là một số ví dụ về các tùy chỉnh phổ biến:
+
+* Thêm các chứng chỉ CA tùy chỉnh (trong trường hợp chính sách bảo mật của doanh nghiệp yêu cầu). 
+* Cấu hình các thiết lập mạng mà không cần sử dụng các tham số nhân (kernel arguments). 
+* Nhúng các tập lệnh (script) hoặc tệp nhị phân (binary) tùy ý để chạy trước hoặc sau quá trình cài đặt.
+
+###### 2.3.12.3.8. Tùy chỉnh tệp ISO RHCOS chạy trực tiếp (live ISO)
+Bạn có thể tùy chỉnh trực tiếp tệp ISO RHCOS bằng lệnh phụ `iso customize` của `coreos-installer`. Khi khởi động từ tệp ISO này, các tùy chỉnh sẽ được tự động áp dụng. Bạn có thể sử dụng tính năng này để cấu hình tệp ISO sao cho tự động cài đặt RHCOS.
+
+**Quy trình**
+
+1. Tải xuống tệp nhị phân `coreos-installer` từ trang [lưu trữ (mirror) của `coreos-installer`](https://mirror.openshift.com/pub/openshift-v4/clients/coreos-installer/latest/). 
+2. Lấy tệp ISO RHCOS và tệp cấu hình Ignition từ trang [lưu trữ (mirror) của RHCOS](https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/latest/), sau đó chạy lệnh dưới đây để đưa cấu hình Ignition trực tiếp vào tệp ISO:
+
+```shell
+$ coreos-installer iso customize rhcos-<version>-live.x86_64.iso \
+  --dest-ignition bootstrap.ign \
+  --dest-device /dev/disk/by-id/scsi-<serial_number>
+```
+
+Trong đó:
+
+  * `--dest-ignition`: Chỉ định tệp cấu hình Ignition được tạo ra từ chương trình cài đặt openshift-installer.
+  * `--dest-device`: Khi bạn chỉ định tùy chọn này, tệp ảnh ISO sẽ tự động thực hiện quá trình cài đặt. Nếu không, tệp ảnh vẫn được cấu hình sẵn cho việc cài đặt nhưng sẽ không tự động tiến hành trừ khi bạn chỉ định tham số nhân (kernel argument) `coreos.inst.install_dev`.
+
+3. Tùy chọn: Để xóa các tùy chỉnh trên tệp ảnh ISO và đưa tệp ảnh trở về trạng thái ban đầu, hãy chạy lệnh sau:
+
+```shell
+$ coreos-installer iso reset rhcos-<version>-live.x86_64.iso
+```
+
+Giờ đây, bạn có thể tùy chỉnh lại tệp ảnh ISO trực tiếp (live ISO image) hoặc sử dụng nó ở trạng thái nguyên bản.
+
+Việc áp dụng các tùy chỉnh của bạn sẽ ảnh hưởng đến mọi lần khởi động RHCOS sau đó.
+
+###### 2.3.12.3.8.1. Chỉnh sửa tệp ISO cài đặt trực tiếp (live install ISO) để kích hoạt bảng điều khiển nối tiếp (serial console)
+Để chuyển hướng đầu ra của hệ thống từ giao diện đồ họa mặc định, hãy kích hoạt bảng điều khiển nối tiếp bằng cách chỉnh sửa tệp ISO cài đặt trực tiếp. Cấu hình này đảm bảo khả năng truy cập vào các thông báo khởi động trên các cụm OpenShift Container Platform phiên bản 4.12 trở lên.
+
+**Quy trình**
+
+1. Tải xuống tệp nhị phân `coreos-installer` từ trang [lưu trữ (mirror) hình ảnh](https://mirror.openshift.com/pub/openshift-v4/clients/coreos-installer/latest/) `coreos-installer`. 
+2. Lấy tệp ISO RHCOS từ trang [lưu trữ hình ảnh RHCOS](https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/latest/), sau đó chạy lệnh dưới đây để tùy chỉnh tệp ISO này, qua đó kích hoạt bảng điều khiển nối tiếp để nhận dữ liệu đầu ra:
+
+```shell
+$ coreos-installer iso customize rhcos-<version>-live.x86_64.iso \
+  --dest-ignition <path> \
+  --dest-console tty0 \
+  --dest-console ttyS0,<options> \
+  --dest-device /dev/disk/by-id/scsi-<serial_number>
+```
+
+Trong đó:
+
+  * `<path>`: Vị trí của tệp cấu hình Ignition cần cài đặt.
+  * `tty0`: Bảng điều khiển (console) phụ mong muốn. Trong trường hợp này là bảng điều khiển đồ họa. Nếu bỏ qua tùy chọn này, bảng điều khiển đồ họa sẽ bị vô hiệu hóa.
+  * `<options>`: Bảng điều khiển chính mong muốn. Trong trường hợp này là bảng điều khiển nối tiếp (serial console). Trường tùy chọn này xác định tốc độ truyền (baud rate) và các thiết lập khác. Một giá trị phổ biến cho trường này là 115200n8. Nếu không cung cấp tùy chọn nào, hệ thống sẽ sử dụng giá trị mặc định của nhân Linux là 9600n8. Để biết thêm thông tin về định dạng của tùy chọn này, vui lòng tham khảo tài liệu về bảng điều khiển nối tiếp của nhân Linux.
+  * `<serial_number>`: Ổ đĩa được chỉ định để thực hiện cài đặt. Nếu bạn bỏ qua tùy chọn này, tệp ảnh ISO sẽ tự động chạy chương trình cài đặt, nhưng quá trình này sẽ thất bại trừ khi bạn cũng chỉ định tham số nhân (kernel argument) `coreos.inst.install_dev`. 
+
+> **Lưu ý:** Tùy chọn `--dest-console` chỉ ảnh hưởng đến hệ thống sau khi cài đặt, không ảnh hưởng đến hệ thống chạy trực tiếp từ tệp ảnh ISO (live ISO). Để thay đổi bảng điều khiển cho hệ thống chạy trực tiếp từ tệp ảnh ISO, hãy sử dụng tùy chọn `--live-karg-append` và chỉ định bảng điều khiển thông qua tham số `console=`. 
+
+Các tùy chỉnh của bạn sẽ được áp dụng và có hiệu lực trong mọi lần khởi động tiếp theo từ tệp ảnh ISO này.
+
+3. Tùy chọn: Để xóa các tùy chỉnh trên tệp ảnh ISO và đưa tệp ảnh về trạng thái ban đầu, hãy chạy lệnh sau:
+
+```shell
+$ coreos-installer iso reset rhcos-<version>-live.x86_64.iso
+```
+
+Giờ đây, bạn có thể tùy chỉnh lại tệp ảnh ISO trực tiếp (live ISO image) hoặc sử dụng nó ở trạng thái nguyên bản.
+
+###### 2.3.12.3.8.2. Sửa đổi tệp ISO cài đặt trực tiếp (live install ISO) để sử dụng cơ quan cấp chứng chỉ (CA) tùy chỉnh
+Bạn có thể cung cấp các chứng chỉ của cơ quan cấp chứng chỉ (CA) cho Ignition thông qua cờ `--ignition-ca` trong lệnh phụ `customize`. Các chứng chỉ CA này có thể được sử dụng trong cả giai đoạn khởi động cài đặt lẫn giai đoạn cung cấp cấu hình (provisioning) cho hệ thống đã cài đặt.
+
+> **Lưu ý:** Các chứng chỉ CA tùy chỉnh ảnh hưởng đến cách Ignition truy xuất các tài nguyên từ xa, nhưng chúng không ảnh hưởng đến các chứng chỉ được cài đặt trên chính hệ thống đó.
+
+**Quy trình**
+
+1. Tải xuống tệp nhị phân `coreos-installer` từ trang [lưu trữ (mirror) hình ảnh](https://mirror.openshift.com/pub/openshift-v4/clients/coreos-installer/latest/) của `coreos-installer`. 
+2. Lấy tệp ISO của RHCOS từ [trang lưu trữ hình ảnh RHCOS](https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/latest/), sau đó chạy lệnh dưới đây để tùy chỉnh tệp ISO nhằm sử dụng với một CA tùy chỉnh:
+
+```shell
+$ coreos-installer iso customize rhcos-<version>-live.x86_64.iso --ignition-ca cert.pem
+```
+
+> **Quan trọng:** Tham số nhân (kernel parameter) `coreos.inst.ignition_url` không hoạt động với cờ `--ignition-ca`. Bạn phải sử dụng cờ `--dest-ignition` để tạo một hình ảnh (image) tùy chỉnh cho mỗi cụm (cluster).
+
+Việc áp dụng chứng chỉ CA tùy chỉnh của bạn sẽ ảnh hưởng đến mọi lần khởi động tiếp theo của RHCOS.
+
+###### 2.3.12.3.8.3. Sửa đổi tệp ảnh ISO cài đặt trực tiếp (live install ISO) với các thiết lập mạng tùy chỉnh
+Bạn có thể nhúng một tệp khóa (keyfile) của NetworkManager vào tệp ảnh ISO cài đặt trực tiếp và chuyển nó sang hệ thống được cài đặt thông qua tham số `--network-keyfile` của lệnh con `customize`.
+
+> **Cảnh báo:** Khi tạo hồ sơ kết nối (connection profile), bạn bắt buộc phải sử dụng phần mở rộng tệp là `.nmconnection`. Nếu không sử dụng phần mở rộng này, hệ thống sẽ áp dụng hồ sơ kết nối đó vào môi trường cài đặt trực tiếp, nhưng lại không áp dụng cấu hình này khi các nút (node) khởi động lần đầu, dẫn đến việc thiết lập không hoạt động.
+
+**Quy trình**
+
+1. Tải xuống tệp thực thi `coreos-installer` từ trang [lưu trữ (mirror) tệp ảnh](https://mirror.openshift.com/pub/openshift-v4/clients/coreos-installer/latest/) `coreos-installer`. 
+2. Tạo một hồ sơ kết nối cho giao diện mạng được gộp (bonded interface). Ví dụ: tạo tệp `bond0.nmconnection` trong thư mục cục bộ của bạn với nội dung như sau:
+
+```
+/[connection]
+id=bond0
+type=bond
+interface-name=bond0
+multi-connect=1
+
+/[bond]
+miimon=100
+mode=active-backup
+
+/[ipv4]
+method=auto
+
+/[ipv6]
+method=auto
+```
+
+3. Tạo một hồ sơ kết nối cho giao diện phụ để thêm vào liên kết (bond). Ví dụ, hãy tạo tệp `bond0-proxy-em1.nmconnection` trong thư mục cục bộ của bạn với nội dung sau:
+
+```
+/[connection]
+id=em1
+type=ethernet
+interface-name=em1
+master=bond0
+multi-connect=1
+slave-type=bond
+```
+
+4. Tạo một hồ sơ kết nối cho giao diện phụ để thêm vào liên kết (bond). Ví dụ, hãy tạo tệp `bond0-proxy-em2.nmconnection` trong thư mục cục bộ của bạn với nội dung sau:
+
+```
+/[connection]
+id=em2
+type=ethernet
+interface-name=em2
+master=bond0
+multi-connect=1
+slave-type=bond
+```
+
+5. Hãy tải tệp ảnh ISO của RHCOS từ trang [lưu trữ (mirror) ảnh RHCOS](https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/latest/?extIdCarryOver=true&sc_cid=RHCTG0250000454097), sau đó chạy lệnh dưới đây để tùy chỉnh tệp ảnh ISO này với các thiết lập mạng mà bạn đã cấu hình:
+
+```shell
+$ coreos-installer iso customize rhcos-<version>-live.x86_64.iso \
+  --network-keyfile bond0.nmconnection \
+  --network-keyfile bond0-proxy-em1.nmconnection \
+  --network-keyfile bond0-proxy-em2.nmconnection
+```
+
+Các thiết lập mạng được áp dụng cho hệ thống đang hoạt động và được chuyển sang hệ thống đích.
+
+###### 2.3.12.3.8.4. Tùy chỉnh tệp ảnh ISO cài đặt trực tiếp (live install ISO) cho thiết bị khởi động iSCSI
+Bạn có thể thiết lập các giá trị iSCSI target (đích iSCSI) và initiator (bên khởi tạo iSCSI) để tự động gắn kết (mount), khởi động và cấu hình bằng cách sử dụng một phiên bản tùy chỉnh của tệp ảnh RHCOS dạng live.
+
+**Điều kiện tiên quyết**
+
+* Bạn đã có một iSCSI target mà bạn muốn cài đặt RHCOS lên đó.
+
+**Quy trình**
+
+1. Tải xuống tệp nhị phân `coreos-installer` từ trang [lưu trữ (mirror) tệp ảnh](https://mirror.openshift.com/pub/openshift-v4/clients/coreos-installer/latest/) `coreos-installer`. 
+2. Lấy tệp ảnh ISO của RHCOS từ trang [lưu trữ (mirror) tệp ảnh RHCOS](https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/latest/), sau đó chạy lệnh dưới đây để tùy chỉnh tệp ảnh ISO đó với các thông tin sau:
+
+```shell
+$ coreos-installer iso customize \
+  --pre-install mount-iscsi.sh \
+  --post-install unmount-iscsi.sh \
+  --dest-device /dev/disk/by-path/<IP_address>:<port>-iscsi-<target_iqn>-lun-<lun> \
+  --dest-ignition config.ign \
+  --dest-karg-append rd.iscsi.initiator=<initiator_iqn> \
+  --dest-karg-append netroot=<target_iqn> \
+  -o custom.iso rhcos-<version>-live.x86_64.iso
+```
+
+Trong đó:
+
+  * `mount-iscsi.sh`: Chỉ định tập lệnh (script) sẽ được thực thi trước khi cài đặt. Tập lệnh này cần chứa các lệnh `iscsiadm` để gắn (mount) iSCSI target, cùng với các lệnh cần thiết để kích hoạt tính năng đa đường dẫn (multipathing).
+  * `unmount-iscsi.sh`: Chỉ định tập lệnh sẽ được thực thi sau khi cài đặt. Tập lệnh này cần chứa lệnh `iscsiadm --mode node --logout=all`.
+  * `<target_iqn>`: Xác định vị trí của hệ thống đích. Bạn phải cung cấp địa chỉ IP của cổng đích (target portal), số cổng (port number) tương ứng, nút iSCSI đích (target iSCSI node) ở định dạng IQN, và số đơn vị logic iSCSI (LUN).
+  * `config.ign`: Chỉ định cấu hình Ignition cho hệ thống đích. `<initiator_iqn>`::Xác định tên của iSCSI initiator (phía máy khách) ở định dạng IQN. Initiator này sẽ thiết lập một phiên kết nối tới iSCSI target. `<target_iqn>`::Xác định tên của iSCSI target (phía máy chủ) ở định dạng IQN.
+
+Để biết thêm thông tin về các tùy chọn iSCSI được hỗ trợ bởi `dracut`, vui lòng tham khảo trang hướng dẫn (manual page) `dracut.cmdline`.
+
+###### 2.3.12.3.8.5. Tùy chỉnh tệp ảnh ISO cài đặt trực tiếp (live install ISO) cho thiết bị khởi động iSCSI sử dụng iBFT
+Bạn có thể thiết lập các giá trị iSCSI target (đích iSCSI) và initiator (bên khởi tạo iSCSI) để tự động gắn kết (mount), khởi động và cấu hình hệ thống bằng cách sử dụng một phiên bản tùy chỉnh của tệp ảnh RHCOS dạng live.
+
+**Điều kiện tiên quyết**
+
+1. Bạn đã có một iSCSI target mà bạn muốn cài đặt RHCOS lên đó. 
+2. Tùy chọn: Bạn đã thiết lập đa đường dẫn (multipath) cho iSCSI target của mình.
+
+**Quy trình**
+
+1. Tải xuống tệp nhị phân `coreos-installer` từ trang lưu trữ (mirror) tệp ảnh `coreos-installer`. 
+2. Lấy tệp ảnh ISO của RHCOS từ trang lưu trữ (mirror) tệp ảnh RHCOS, sau đó chạy lệnh dưới đây để tùy chỉnh tệp ảnh ISO đó với các thông tin sau:
+
+```shell
+$ coreos-installer iso customize \
+  --pre-install mount-iscsi.sh \
+  --post-install unmount-iscsi.sh \
+  --dest-device /dev/mapper/mpatha \
+  --dest-ignition config.ign \
+  --dest-karg-append rd.iscsi.firmware=1 \
+  --dest-karg-append rd.multipath=default \
+  -o custom.iso rhcos-<version>-live.x86_64.iso
+```
+
+Trong đó:
+
+  * `mount-iscsi.sh`: Chỉ định tập lệnh (script) sẽ được thực thi trước khi cài đặt. Tập lệnh này nên chứa các lệnh `iscsiadm` để gắn (mount) iSCSI target, cùng với các lệnh cần thiết để kích hoạt tính năng đa đường dẫn (multipathing).
+  * `unmount-iscsi.sh`: Chỉ định tập lệnh sẽ được thực thi sau khi cài đặt. Tập lệnh này nên chứa lệnh `iscsiadm --mode node --logout=all`.
+  * `/dev/mapper/mpatha`: Chỉ định đường dẫn đến thiết bị. Nếu bạn đang sử dụng tính năng đa đường dẫn (multipath), thiết bị đó sẽ là `/dev/mapper/mpatha`. Trong trường hợp có nhiều thiết bị đa đường dẫn được kết nối, hoặc để xác định chính xác hơn, bạn có thể sử dụng liên kết tượng trưng (symlink) dựa trên World Wide Name (WWN) có sẵn trong thư mục `/dev/disk/by-path`.
+  * `config.ign`: Chỉ định cấu hình Ignition cho hệ thống đích. `rd.iscsi.firmware=1` cho biết tham số iSCSI sẽ được đọc từ firmware của BIOS.
+  rd.multipath=default: Xác định xem bạn có muốn kích hoạt tính năng đa đường dẫn hay không. Đây là một tham số tùy chọn.
+
+Để biết thêm thông tin, vui lòng tham khảo trang [hướng dẫn](https://www.man7.org/linux/man-pages/man7/dracut.cmdline.7.html) của `dracut.cmdline`.
+
+###### 2.3.12.3.9. Tùy chỉnh môi trường RHCOS PXE trực tiếp
+Bạn có thể tùy chỉnh trực tiếp môi trường RHCOS PXE bằng lệnh phụ `pxe customize` của `coreos-installer`. Khi khởi động môi trường PXE, các tùy chỉnh này sẽ được tự động áp dụng. Bạn có thể sử dụng tính năng này để cấu hình môi trường PXE nhằm tự động cài đặt RHCOS.
+
+**Quy trình**
+
+1. Tải xuống tệp nhị phân `coreos-installer` từ trang lưu trữ (mirror) hình ảnh `coreos-installer`. 
+2. Lấy các tệp kernel, initramfs và rootfs của RHCOS từ trang lưu trữ hình ảnh RHCOS, cùng với tệp cấu hình Ignition; sau đó, chạy lệnh dưới đây để tạo tệp initramfs mới chứa các tùy chỉnh từ tệp cấu hình Ignition của bạn:
+
+```shell
+$ coreos-installer pxe customize rhcos-<version>-live-initramfs.x86_64.img \
+  --dest-ignition bootstrap.ign \
+  --dest-device /dev/disk/by-id/scsi-<serial_number> \
+  -o rhcos-<version>-custom-initramfs.x86_64.img
+```
+
+Trong đó:
+
+  * `--dest-ignition`: Chỉ định tệp cấu hình Ignition được tạo từ openshift-installer.
+  * `<serial_number>`: Khi bạn chỉ định tùy chọn này, môi trường PXE sẽ tự động thực thi quá trình cài đặt. Nếu không, hình ảnh (image) vẫn được cấu hình sẵn cho việc cài đặt nhưng sẽ không tự động thực hiện trừ khi bạn chỉ định tham số nhân (kernel argument) `coreos.inst.install_dev`.
+  * `<version>`: Sử dụng tệp initramfs đã tùy chỉnh trong cấu hình PXE của bạn. Hãy thêm các tham số nhân `ignition.firstboot` và `ignition.platform.id=metal` nếu chúng chưa có sẵn.
+
+Việc áp dụng các tùy chỉnh này sẽ ảnh hưởng đến mọi lần khởi động RHCOS sau đó.
+
+###### 2.3.12.3.9.1. Sửa đổi môi trường PXE cài đặt trực tiếp (live install) để kích hoạt bảng điều khiển nối tiếp (serial console)
+Để chuyển hướng đầu ra hệ thống từ giao diện đồ họa mặc định, hãy kích hoạt bảng điều khiển nối tiếp bằng cách sửa đổi môi trường PXE cài đặt trực tiếp. Cấu hình này đảm bảo khả năng truy cập vào các thông báo khởi động trên các cụm OpenShift Container Platform phiên bản 4.12 trở lên.
+
+**Quy trình**
+
+1. Tải xuống tệp nhị phân `coreos-installer` từ trang [lưu trữ (mirror) hình ảnh](https://mirror.openshift.com/pub/openshift-v4/clients/coreos-installer/latest/) `coreos-installer`. 
+2. Lấy các tệp nhân (kernel), `initramfs` và `rootfs` của RHCOS từ [trang lưu trữ hình ảnh RHCOS](https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/latest/), cùng với tệp cấu hình Ignition; sau đó, chạy lệnh dưới đây để tạo một tệp `initramfs` tùy chỉnh mới, cho phép bảng điều khiển nối tiếp nhận dữ liệu đầu ra:
+
+```shell
+$ coreos-installer pxe customize rhcos-<version>-live-initramfs.x86_64.img \
+  --dest-ignition <path> \
+  --dest-console tty0 \
+  --dest-console ttyS0,<options> \
+  --dest-device /dev/disk/by-id/scsi-<serial_number> \
+  -o rhcos-<version>-custom-initramfs.x86_64.img
+```
+
+Trong đó:
+
+  * `<path>`: Vị trí của tệp cấu hình Ignition cần cài đặt.
+  * `tty0`: Bảng điều khiển (console) phụ mong muốn. Trong trường hợp này là bảng điều khiển đồ họa. Nếu bỏ qua tùy chọn này, bảng điều khiển đồ họa sẽ bị vô hiệu hóa.
+  * `<options>`: Bảng điều khiển chính mong muốn. Trong trường hợp này là bảng điều khiển nối tiếp (serial console). Trường tùy chọn này xác định tốc độ truyền (baud rate) và các thiết lập khác. Một giá trị phổ biến cho trường này là 115200n8. Nếu không cung cấp tùy chọn nào, hệ thống sẽ sử dụng giá trị mặc định của nhân Linux là 9600n8. Để biết thêm thông tin về định dạng của tùy chọn này, vui lòng tham khảo tài liệu về bảng điều khiển nối tiếp của nhân Linux.
+  * `<serial_number>`: Ổ đĩa được chỉ định để thực hiện cài đặt. Nếu bạn bỏ qua tùy chọn này, môi trường PXE sẽ tự động chạy chương trình cài đặt, nhưng quá trình này sẽ thất bại trừ khi bạn cũng chỉ định tham số nhân `coreos.inst.install_dev`.
+  * `<version>`: Sử dụng tệp initramfs tùy chỉnh trong cấu hình PXE của bạn. Hãy thêm các tham số nhân `ignition.firstboot` và `ignition.platform.id=metal` nếu chúng chưa có sẵn. 
+
+Các tùy chỉnh của bạn sẽ được áp dụng và có hiệu lực trong mọi lần khởi động tiếp theo của môi trường PXE.
+
+###### 2.3.12.3.9.2. Sửa đổi môi trường PXE cài đặt trực tiếp (live install) để sử dụng cơ quan cấp chứng chỉ (CA) tùy chỉnh
+Bạn có thể cung cấp các chứng chỉ của cơ quan cấp chứng chỉ (CA) cho Ignition thông qua cờ `--ignition-ca` của lệnh phụ `customize`. Các chứng chỉ CA này có thể được sử dụng trong cả giai đoạn khởi động cài đặt lẫn giai đoạn cung cấp cấu hình (provisioning) cho hệ thống đã cài đặt.
+
+> **Lưu ý:** Các chứng chỉ CA tùy chỉnh ảnh hưởng đến cách Ignition truy xuất các tài nguyên từ xa, nhưng chúng không ảnh hưởng đến các chứng chỉ được cài đặt trên chính hệ thống đó.
+
+**Quy trình**
+
+1. Tải xuống tệp nhị phân `coreos-installer` từ trang lưu trữ (mirror) hình ảnh `coreos-installer`. 
+2. Lấy các tệp kernel, initramfs và rootfs của RHCOS từ trang lưu trữ hình ảnh RHCOS, sau đó chạy lệnh sau để tạo một tệp `initramfs` tùy chỉnh mới nhằm sử dụng với CA tùy chỉnh:
+
+```shell
+$ coreos-installer pxe customize rhcos-<version>-live-initramfs.x86_64.img \
+  --ignition-ca cert.pem \
+  -o rhcos-<version>-custom-initramfs.x86_64.img
+```
+
+3. Sử dụng tệp initramfs đã tùy chỉnh trong cấu hình PXE của bạn. Hãy thêm các tham số nhân (kernel arguments) `ignition.firstboot` và `ignition.platform.id=metal` nếu chúng chưa có sẵn.
+
+> **Quan trọng:** Tham số nhân `coreos.inst.ignition_url` không hoạt động với cờ `--ignition-ca`. Bạn phải sử dụng cờ `--dest-ignition` để tạo một hình ảnh (image) tùy chỉnh cho mỗi cụm (cluster).
+
+Việc áp dụng chứng chỉ CA tùy chỉnh của bạn sẽ ảnh hưởng đến mọi lần khởi động RHCOS sau đó.
