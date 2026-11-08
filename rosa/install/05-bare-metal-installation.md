@@ -8897,3 +8897,1752 @@ $ coreos-installer pxe customize rhcos-<version>-live-initramfs.x86_64.img \
 > **Quan trọng:** Tham số nhân `coreos.inst.ignition_url` không hoạt động với cờ `--ignition-ca`. Bạn phải sử dụng cờ `--dest-ignition` để tạo một hình ảnh (image) tùy chỉnh cho mỗi cụm (cluster).
 
 Việc áp dụng chứng chỉ CA tùy chỉnh của bạn sẽ ảnh hưởng đến mọi lần khởi động RHCOS sau đó.
+
+###### 2.3.12.3.9.3. Thay đổi môi trường PXE cài đặt trực tiếp (live install) với các thiết lập mạng tùy chỉnh
+Bạn có thể nhúng một tệp khóa (keyfile) của NetworkManager vào môi trường PXE cài đặt trực tiếp và chuyển nó sang hệ thống được cài đặt thông qua tham số `--network-keyfile` của lệnh con `customize`.
+
+> **Cảnh báo:** Khi tạo hồ sơ kết nối (connection profile), bạn bắt buộc phải sử dụng phần mở rộng tệp là `.nmconnection`. Nếu không có phần mở rộng này, cụm (cluster) sẽ áp dụng hồ sơ kết nối vào môi trường cài đặt trực tiếp, nhưng cấu hình đó sẽ không được áp dụng khi cụm khởi động các nút (node) lần đầu tiên, dẫn đến hệ thống không hoạt động như mong đợi.
+
+> Quy trình
+
+1. Tải xuống tệp nhị phân `coreos-installer` từ trang lưu trữ (mirror) hình ảnh của `coreos-installer`. 
+2. Tạo một hồ sơ kết nối cho giao diện mạng được gộp (bonded interface). Ví dụ: tạo tệp `bond0.nmconnection` trong thư mục cục bộ của bạn với nội dung như sau:
+
+```
+/[connection]
+id=bond0
+type=bond
+interface-name=bond0
+multi-connect=1
+
+/[bond]
+miimon=100
+mode=active-backup
+
+/[ipv4]
+method=auto
+
+/[ipv6]
+method=auto
+```
+
+3. Tạo một hồ sơ kết nối cho giao diện phụ để thêm vào liên kết (bond). Ví dụ, hãy tạo tệp `bond0-proxy-em1.nmconnection` trong thư mục cục bộ của bạn với nội dung sau:
+
+```
+/[connection]
+id=em1
+type=ethernet
+interface-name=em1
+master=bond0
+multi-connect=1
+slave-type=bond
+```
+
+4. Tạo một hồ sơ kết nối cho giao diện phụ để thêm vào liên kết (bond). Ví dụ, hãy tạo tệp `bond0-proxy-em2.nmconnection` trong thư mục cục bộ của bạn với nội dung sau:
+
+```
+/[connection]
+id=em2
+type=ethernet
+interface-name=em2
+master=bond0
+multi-connect=1
+slave-type=bond
+```
+
+5. Tải các tệp kernel, `initramfs` và `rootfs` của RHCOS từ trang lưu trữ (mirror) hình ảnh RHCOS, sau đó chạy lệnh dưới đây để tạo một tệp `initramfs` tùy chỉnh mới, trong đó đã bao gồm các cấu hình mạng của bạn:
+
+```shell
+$ coreos-installer pxe customize rhcos-<version>-live-initramfs.x86_64.img \
+  --network-keyfile bond0.nmconnection \
+  --network-keyfile bond0-proxy-em1.nmconnection \
+  --network-keyfile bond0-proxy-em2.nmconnection \
+  -o rhcos-<version>-custom-initramfs.x86_64.img
+```
+
+6. Sử dụng tệp `initramfs` đã tùy chỉnh trong cấu hình PXE của bạn. Hãy thêm các tham số nhân (kernel arguments) `ignition.firstboot` và `ignition.platform.id=metal` nếu chúng chưa có sẵn.
+
+Các thiết lập mạng sẽ được áp dụng cho hệ thống đang chạy (live system) và được chuyển sang hệ thống đích.
+
+###### 2.3.12.3.9.4. Tùy chỉnh môi trường PXE cài đặt trực tiếp (live install) cho thiết bị khởi động iSCSI
+Bạn có thể thiết lập các giá trị iSCSI target (đích iSCSI) và initiator (bên khởi tạo iSCSI) để tự động gắn kết (mount), khởi động và cấu hình bằng cách sử dụng một phiên bản tùy chỉnh của ảnh (image) RHCOS dạng live.
+
+**Điều kiện tiên quyết**
+
+* Bạn đã có một iSCSI target mà bạn muốn cài đặt RHCOS lên đó.
+
+**Quy trình**
+
+1. Tải xuống tệp nhị phân `coreos-installer` từ trang lưu trữ (mirror) ảnh `coreos-installer`. 
+2. Lấy các tệp `kernel`, `initramfs` và `rootfs` của RHCOS từ trang lưu trữ ảnh RHCOS, sau đó chạy lệnh dưới đây để tạo một tệp `initramfs` tùy chỉnh mới với các thông tin sau:
+
+```shell
+$ coreos-installer pxe customize \
+  --pre-install mount-iscsi.sh \
+  --post-install unmount-iscsi.sh \
+  --dest-device /dev/disk/by-path/<IP_address>:<port>-iscsi-<target_iqn>-lun-<lun> \
+  --dest-ignition config.ign \
+  --dest-karg-append rd.iscsi.initiator=<initiator_iqn> \
+  --dest-karg-append netroot=<target_iqn> \
+  -o custom.img rhcos-<version>-live-initramfs.x86_64.img
+```
+
+Trong đó:
+
+  * `mount-iscsi.sh`: Chỉ định tập lệnh (script) sẽ được thực thi trước khi cài đặt. Tập lệnh này cần chứa các lệnh `iscsiadm` để gắn (mount) iSCSI target, cùng với các lệnh cần thiết để kích hoạt tính năng đa đường dẫn (multipathing).
+  * `unmount-iscsi.sh`: Chỉ định tập lệnh sẽ được thực thi sau khi cài đặt. Tập lệnh này cần chứa lệnh `iscsiadm --mode node --logout=all`.
+  * `<target_iqn>`: Xác định vị trí của hệ thống đích. Bạn phải cung cấp địa chỉ IP của cổng đích (target portal), số cổng tương ứng, nút iSCSI đích (target iSCSI node) ở định dạng IQN, và số đơn vị logic iSCSI (LUN).
+  * `config.ign`: Chỉ định cấu hình Ignition cho hệ thống đích.
+  * `<initiator_iqn>`: Xác định tên của iSCSI initiator (bên khởi tạo) hoặc máy khách (client) ở định dạng IQN. Initiator sẽ thiết lập một phiên kết nối tới iSCSI target.
+  * `<target_iqn>`: Xác định tên của iSCSI target (bên đích) hoặc máy chủ (server) ở định dạng IQN. 
+
+Để biết thêm thông tin về các tùy chọn iSCSI được hỗ trợ bởi `dracut`, vui lòng tham khảo trang [hướng dẫn](https://www.man7.org/linux/man-pages/man7/dracut.cmdline.7.html) `dracut.cmdline`.
+
+###### 2.3.12.3.9.5. Tùy chỉnh môi trường cài đặt trực tiếp (live install) qua PXE cho thiết bị khởi động iSCSI sử dụng iBFT
+Bạn có thể thiết lập các giá trị iSCSI target (đích iSCSI) và initiator (bên khởi tạo iSCSI) để tự động gắn kết (mount), khởi động và cấu hình hệ thống bằng cách sử dụng một phiên bản tùy chỉnh của ảnh (image) RHCOS dạng live.
+
+**Điều kiện tiên quyết**
+
+* Bạn đã có một iSCSI target mà bạn muốn cài đặt RHCOS lên đó. 
+* Tùy chọn: Bạn đã thiết lập đa đường dẫn (multipath) cho iSCSI target của mình.
+
+**Quy trình**
+
+1. Tải xuống tệp nhị phân `coreos-installer` từ trang lưu trữ (mirror) ảnh `coreos-installer`. 
+2. Lấy các tệp `kernel`, `initramfs` và `rootfs` của RHCOS từ trang lưu trữ ảnh RHCOS, sau đó chạy lệnh dưới đây để tạo một tệp `initramfs` tùy chỉnh mới với các thông tin sau:
+
+```shell
+$ coreos-installer pxe customize \
+  --pre-install mount-iscsi.sh \
+  --post-install unmount-iscsi.sh \
+  --dest-device /dev/mapper/mpatha \
+  --dest-ignition config.ign \
+  --dest-karg-append rd.iscsi.firmware=1 \
+  --dest-karg-append rd.multipath=default \
+  -o custom.img rhcos-<version>-live-initramfs.x86_64.img
+```
+
+Trong đó:
+
+  * `mount-iscsi.sh`: Chỉ định tập lệnh (script) sẽ được thực thi trước khi cài đặt. Tập lệnh này cần chứa các lệnh `iscsiadm` để gắn (mount) iSCSI target.
+  * `unmount-iscsi.sh`: Chỉ định tập lệnh sẽ được thực thi sau khi cài đặt. Tập lệnh này cần chứa lệnh `iscsiadm --mode node --logout=all`.
+  * `/dev/mapper/mpatha`: Chỉ định đường dẫn đến thiết bị. Nếu bạn đang sử dụng multipath (đa đường dẫn), thiết bị multipath sẽ là `/dev/mapper/mpatha`. Trong trường hợp có nhiều thiết bị multipath được kết nối, hoặc để xác định rõ ràng hơn, bạn có thể sử dụng liên kết tượng trưng (symlink) dựa trên World Wide Name (WWN) có sẵn trong thư mục `/dev/disk/by-path`.
+  * `config.ign`: Chỉ định cấu hình Ignition cho hệ thống đích.
+  * `rd.iscsi.firmware=1`: Chỉ định rằng tham số iSCSI sẽ được đọc từ firmware của BIOS.
+  * `rd.multipath=default`: Chỉ định việc có kích hoạt tính năng multipath hay không. Đây là tham số tùy chọn. 
+
+Để biết thêm thông tin, vui lòng tham khảo trang [hướng dẫn](https://www.man7.org/linux/man-pages/man7/dracut.cmdline.7.html) của `dracut.cmdline`.
+
+##### 2.3.12.4. Các tùy chọn về mạng và liên kết (bonding) cho quá trình cài đặt qua ISO
+Bạn có thể định cấu hình các tùy chọn nâng cao để điều chỉnh quy trình cài đặt thủ công Red Hat Enterprise Linux CoreOS (RHCOS). Các phần tiếp theo sẽ trình bày các ví dụ về tùy chọn mạng cho quá trình cài đặt bằng tệp ISO.
+
+Nếu cài đặt RHCOS từ tệp ảnh ISO, bạn có thể thêm thủ công các tham số nhân (kernel arguments) trong quá trình khởi động tệp ảnh để định cấu hình mạng cho một nút (node). Nếu không có tham số mạng nào được chỉ định, DHCP sẽ tự động được kích hoạt trong `initramfs` khi RHCOS phát hiện cần có kết nối mạng để truy xuất tệp cấu hình Ignition.
+
+> **Quan trọng:** Khi thêm thủ công các tham số mạng, bạn cũng phải thêm tham số nhân `rd.neednet=1` để khởi tạo mạng trong `initramfs`.
+
+Thông tin dưới đây cung cấp các ví dụ về cách định cấu hình mạng và liên kết (bonding) trên các nút RHCOS khi cài đặt qua ISO. Các ví dụ này mô tả cách sử dụng các tham số nhân `ip=`, `nameserver=` và `bond=`.
+
+> **Lưu ý:** Thứ tự khi thêm các tham số nhân là rất quan trọng: `ip=`, `nameserver=`, rồi mới đến `bond=`.
+
+Các tùy chọn mạng này sẽ được chuyển đến công cụ `dracut` trong quá trình khởi động hệ thống. Để biết thêm thông tin về các tùy chọn mạng được `dracut` hỗ trợ, vui lòng tham khảo trang [hướng dẫn](https://www.man7.org/linux/man-pages/man7/dracut.cmdline.7.html) `dracut.cmdline`.
+
+###### 2.3.12.4.1. Cấu hình DHCP hoặc địa chỉ IP tĩnh
+Bạn có thể cấu hình địa chỉ IP bằng cách sử dụng DHCP hoặc thiết lập một địa chỉ IP tĩnh riêng biệt. Nếu chọn sử dụng IP tĩnh, bạn phải xác định địa chỉ IP của máy chủ DNS trên mỗi nút (node).
+
+Các ví dụ cấu hình trong quy trình này cập nhật địa chỉ IP cho các thành phần sau:
+
+* Địa chỉ IP của nút: `10.10.10.2`
+* Địa chỉ cổng mặc định (gateway): `10.10.10.254`
+* Mặt nạ mạng (netmask): `255.255.255.0`
+* Tên máy chủ (hostname): `core0.example.com`
+* Địa chỉ máy chủ DNS: `4.4.4.41`
+* Giá trị tự động cấu hình (auto-configuration): `none`. Không cần thực hiện tự động cấu hình khi mạng IP được thiết lập theo kiểu tĩnh.
+
+**Quy trình**
+
+1. Nhập một lệnh tương tự như lệnh dưới đây để cấu hình địa chỉ IP tĩnh:
+
+```
+ip=10.10.10.2::10.10.10.254:255.255.255.0:core0.example.com:enp1s0:none
+nameserver=4.4.4.41
+```
+
+2. Hãy nhập một lệnh như lệnh dưới đây để cấu hình địa chỉ IP DHCP:
+
+```
+ip=enp1s0:dhcp
+```
+
+> **Lưu ý:** Khi bạn sử dụng DHCP để cấu hình địa chỉ IP cho các máy RHCOS, các máy này cũng sẽ nhận thông tin máy chủ DNS thông qua DHCP. Đối với các triển khai dựa trên DHCP, bạn có thể xác định địa chỉ máy chủ DNS mà các nút RHCOS sẽ sử dụng thông qua cấu hình máy chủ DHCP của mình.
+
+3. Nếu có từ hai giao diện mạng trở lên, hãy tắt DHCP trên các giao diện không cần thiết. Trong ví dụ này, giao diện enp1s0 được thiết lập cấu hình mạng tĩnh, còn DHCP đã bị tắt đối với giao diện enp2s0 (giao diện không được sử dụng):
+
+```
+ip=10.10.10.2::10.10.10.254:255.255.255.0:core0.example.com:enp1s0:none
+ip=::::core0.example.com:enp2s0:none
+```
+
+4. Nếu bạn cần kết hợp các cấu hình DHCP và IP tĩnh trên các hệ thống có nhiều giao diện mạng, hãy chạy lệnh ví dụ sau đây:
+
+```
+ip=enp1s0:dhcp
+ip=10.10.10.2::10.10.10.254:255.255.255.0:core0.example.com:enp2s0:none
+```
+
+###### 2.3.12.4.2. Cấu hình địa chỉ IP mà không cần tên máy chủ (hostname) tĩnh
+Bạn có thể cấu hình địa chỉ IP mà không cần chỉ định tên máy chủ tĩnh. Nếu người dùng không thiết lập tên máy chủ tĩnh, hệ thống sẽ tự động xác định và thiết lập tên máy chủ này thông qua truy vấn DNS ngược (reverse DNS lookup).
+
+Các ví dụ cấu hình trong quy trình này thực hiện cập nhật địa chỉ IP cho các thành phần sau:
+
+* Địa chỉ IP của nút (node): `10.10.10.2`
+* Địa chỉ cổng mặc định (gateway): `10.10.10.254`
+* Mặt nạ mạng (netmask): `255.255.255.0`
+* Địa chỉ máy chủ DNS: `4.4.4.41`
+* Giá trị tự động cấu hình (auto-configuration): `none`. Khi mạng IP được cấu hình theo cách tĩnh (static), không cần thực hiện tự động cấu hình.
+
+**Quy trình**
+
+1. Để cấu hình địa chỉ IP mà không cần tên máy chủ tĩnh, hãy nhập một lệnh tương tự như lệnh dưới đây:
+
+```
+ip=10.10.10.2::10.10.10.254:255.255.255.0::enp1s0:none
+nameserver=4.4.4.41
+```
+
+###### 2.3.12.4.3. Chỉ định nhiều giao diện mạng và máy chủ DNS
+Bạn có thể chỉ định nhiều giao diện mạng bằng cách thiết lập nhiều mục `ip=`. Bạn có thể cung cấp nhiều máy chủ DNS bằng cách thêm một mục `nameserver=` cho mỗi máy chủ.
+
+**Quy trình**
+
+* Để chỉ định nhiều giao diện mạng, bạn có thể nhập một lệnh tương tự như lệnh sau:
+
+```
+ip=10.10.10.2::10.10.10.254:255.255.255.0:core0.example.com:enp1s0:none
+ip=10.10.10.3::10.10.10.254:255.255.255.0:core0.example.com:enp2s0:none
+```
+
+* Để cung cấp nhiều máy chủ DNS bằng cách thêm một mục `nameserver=` cho mỗi máy chủ, hãy nhập một lệnh như lệnh sau đây:
+
+```
+nameserver=1.1.1.1
+nameserver=8.8.8.8
+```
+
+###### 2.3.12.4.4. Cấu hình cổng mặc định (default gateway) và tuyến đường (route)
+Là một tác vụ tùy chọn, bạn có thể cấu hình các tuyến đường đến những mạng bổ sung bằng cách thiết lập giá trị `rd.route=`.
+
+> Lưu ý: Khi cấu hình một hoặc nhiều mạng, bắt buộc phải có một cổng mặc định (default gateway). Nếu cổng của mạng bổ sung khác với cổng của mạng chính, thì cổng mặc định phải là cổng của mạng chính.
+
+**Quy trình**
+
+* Để cấu hình cổng mặc định, hãy nhập lệnh sau:
+
+```
+ip=::10.10.10.254::::
+```
+
+* Để cấu hình tuyến đường cho một mạng bổ sung, hãy nhập lệnh sau:
+
+```
+rd.route=20.20.20.0/24:20.20.20.254:enp2s0
+```
+
+###### 2.3.12.4.5. Cấu hình VLAN trên các giao diện riêng lẻ
+Là một tác vụ tùy chọn, bạn có thể cấu hình VLAN trên các giao diện riêng lẻ bằng cách sử dụng tham số `vlan=`.
+
+**Quy trình**
+
+* Để cấu hình VLAN trên một giao diện mạng và sử dụng địa chỉ IP tĩnh, hãy chạy lệnh sau:
+
+```
+ip=10.10.10.2::10.10.10.254:255.255.255.0:core0.example.com:enp2s0.100:none
+vlan=enp2s0.100:enp2s0
+```
+
+* Để cấu hình VLAN trên một giao diện mạng và sử dụng DHCP, hãy chạy lệnh sau:
+
+```
+ip=enp2s0.100:dhcp
+vlan=enp2s0.100:enp2s0
+```
+
+###### 2.3.12.4.6. Gộp nhiều giao diện mạng thành một giao diện duy nhất
+Là một tác vụ tùy chọn, bạn có thể gộp nhiều giao diện mạng thành một giao diện duy nhất bằng cách sử dụng tùy chọn `bond=`.
+
+Ví dụ dưới đây minh họa việc chỉnh sửa tệp `/etc/config/network` và chỉ định cú pháp sau để gộp nhiều giao diện mạng thành một giao diện duy nhất:
+
+```
+bond=<name>[:<network_interfaces>][:<options>]
+```
+
+* `<name>`: Chỉ định tên của thiết bị liên kết (bonding device), ví dụ: bond0. 
+* `<network_interfaces>`: Chỉ định danh sách các giao diện vật lý (ethernet), cách nhau bằng dấu phẩy, chẳng hạn như em1, em2. 
+* `<options>`: Chỉ định danh sách các tùy chọn liên kết (bonding options), cách nhau bằng dấu phẩy. Hãy chạy lệnh `modinfo bonding` để xem các tùy chọn khả dụng.
+
+Khi tạo một giao diện liên kết (bonded interface) bằng lệnh `bond=`, bạn phải chỉ định cách thức gán địa chỉ IP cùng các thông tin khác cho giao diện đó.
+
+**Quy trình**
+
+* Để cấu hình giao diện liên kết sử dụng DHCP, hãy chỉnh sửa tệp `/etc/config/network` và thiết lập địa chỉ IP cho giao diện liên kết đó là `dhcp`. Ví dụ:
+
+```
+ip=bond0:dhcp
+```
+
+* Để cấu hình giao diện được liên kết (bonded interface) sử dụng địa chỉ IP tĩnh, hãy chỉnh sửa tệp /etc/config/network rồi nhập địa chỉ IP cụ thể mà bạn muốn cùng các thông tin liên quan. Ví dụ:
+
+```
+ip=10.10.10.2::10.10.10.254:255.255.255.0:core0.example.com:bond0:none
+```
+
+###### 2.3.12.4.7. Gộp (bond) nhiều giao diện mạng SR-IOV vào một giao diện NIC hai cổng
+Bạn có thể gộp nhiều giao diện mạng SR-IOV vào một giao diện NIC hai cổng bằng cách sử dụng tùy chọn `bond=`. Hãy đảm bảo thực hiện các bước quy trình trên mỗi nút (node).
+
+**Quy trình**
+
+1. Tạo các hàm ảo (Virtual Functions - VF) SR-IOV theo hướng dẫn trong phần Quản lý thiết bị SR-IOV. Thực hiện theo quy trình trong phần "Gắn các thiết bị mạng SR-IOV vào máy ảo". 
+2. Tạo nhóm gộp (bond), gắn các VF mong muốn vào nhóm đó và thiết lập trạng thái liên kết (link state) cho nhóm gộp theo hướng dẫn trong phần Cấu hình gộp mạng (network bonding). Bạn có thể chọn bất kỳ quy trình nào được mô tả để tạo nhóm gộp. 
+
+Các ví dụ sau đây minh họa cú pháp cần sử dụng:
+
+  * Cú pháp để cấu hình một giao diện được gộp là `bond=<name>[:<network_interfaces>][:options]`. Trong đó, `<name>` là tên của thiết bị được gộp (ví dụ: `bond0`); `<network_interfaces>` đại diện cho các hàm ảo (VF) theo tên gọi của chúng trong nhân hệ thống (kernel) — tên này cũng xuất hiện trong kết quả của lệnh `ip link` (ví dụ: `eno1f0`, `eno2f0`); còn `options` là danh sách các tùy chọn gộp được phân tách bằng dấu phẩy. Hãy chạy lệnh `modinfo bonding` để xem các tùy chọn khả dụng.
+  * Khi tạo một giao diện được gộp bằng tùy chọn `bond=`, bạn cần chỉ định cách thức gán địa chỉ IP cũng như các thông tin khác cho giao diện đó. 
+    * Để cấu hình giao diện được gộp sử dụng DHCP, hãy đặt địa chỉ IP của nhóm gộp là `dhcp`. Ví dụ:
+
+    ```
+    bond=bond0:eno1f0,eno2f0:mode=active-backup
+    ip=bond0:dhcp::AA:BB:CC:DD:EE:FF
+    ip=eno1f0:none::AA:BB:CC:DD:EE:FF
+    ip=eno2f0:none::AA:BB:CC:DD:EE:FF
+    ```
+
+    * Để cấu hình giao diện được liên kết (bonded interface) sử dụng địa chỉ IP tĩnh, hãy nhập địa chỉ IP cụ thể mà bạn muốn cùng các thông tin liên quan. Ví dụ:
+
+    ```
+    bond=bond0:eno1f0,eno2f0:mode=active-backup
+    ip=10.10.10.2::10.10.10.254:255.255.255.0:core0.example.com:bond0:none
+    ```
+
+3. Tùy chọn: Bạn có thể sử dụng tính năng "network teaming" (nhóm mạng) thay thế cho "bonding" (kết hợp giao diện mạng) bằng cách dùng tham số `team=`. 
+  * Cú pháp để cấu hình một giao diện "team" là: `team=name[:network_interfaces]`. Trong đó, `name` là tên của thiết bị "team" (ví dụ: `team0`), còn `network_interfaces` là danh sách các giao diện vật lý (ethernet) được phân tách bằng dấu phẩy (ví dụ: `em1`, `em2`).
+
+  Sử dụng ví dụ sau để cấu hình một nhóm mạng (network team):
+
+  ```
+  team=team0:em1,em2
+  ip=team0:dhcp
+  ```
+
+###### 2.3.12.4.8. coreos-installer và các tùy chọn khởi động cho quá trình cài đặt qua ISO và PXE
+Bạn có thể cài đặt RHCOS bằng cách chạy lệnh `coreos-installer install <các tùy chọn> <thiết bị>` tại dấu nhắc lệnh, sau khi khởi động vào môi trường chạy trực tiếp (live environment) của RHCOS từ một tệp ảnh ISO.
+
+Bảng dưới đây liệt kê các lệnh phụ, tùy chọn và đối số mà bạn có thể truyền vào lệnh `coreos-installer`.
+
+**Bảng 2.36. Các lệnh phụ, tùy chọn dòng lệnh và đối số của coreos-installer**
+
+
+| Lệnh con                                        | Mô tả                                        |
+|-------------------------------------------------|----------------------------------------------|
+| `$ coreos-installer install <options> <device>` | Nhúng cấu hình Ignition vào một tệp ảnh ISO. |
+
+
+* Các tùy chọn cho lệnh con install của coreos-installer
+
+| Tùy chọn                       | Mô tả                                                                                                                                                                                                                                                   |
+|--------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `-u`, `--image-url <url>`      | Nhập thủ công URL của hình ảnh.                                                                                                                                                                                                                         |
+| `-f`, `--image-file <path>`    | Chỉ định thủ công một tệp hình ảnh cục bộ. Được sử dụng cho mục đích gỡ lỗi.                                                                                                                                                                            |
+| `-i`, `--ignition-file <path>` | Nhúng cấu hình Ignition từ một tệp tin.                                                                                                                                                                                                                 |
+| `-I`, `--ignition-url <URL>`   | Nhúng cấu hình Ignition từ một URL.                                                                                                                                                                                                                     |
+| `--ignition-hash <digest>`     | Digest `type-value` của cấu hình Ignition.                                                                                                                                                                                                              |
+| `-p`, `--platform <name>`      | Ghi đè ID nền tảng Ignition cho hệ thống đã cài đặt.                                                                                                                                                                                                    |
+| `--console <spec>`             | Thiết lập bảng điều khiển (console) cho nhân hệ điều hành (kernel) và bộ nạp khởi động (boot loader) của hệ thống đã cài đặt. Để biết thêm thông tin về định dạng của `<spec>`                                                                          |
+| `--append-karg <arg>…`         | Thêm một tham số nhân (kernel argument) mặc định vào hệ thống đã cài đặt.                                                                                                                                                                               |
+| `--delete-karg <arg>…`         | Xóa một tham số nhân mặc định khỏi hệ thống đã cài đặt.                                                                                                                                                                                                 |
+| `-n`, `--copy-network`         | Sao chép cấu hình mạng từ môi trường cài đặt. **Quan trọng**: Tùy chọn `--copy-network` chỉ sao chép cấu hình mạng nằm trong thư mục `/etc/NetworkManager/system-connections`. Cụ thể, tùy chọn này không sao chép tên máy chủ (hostname) của hệ thống. |
+| `--network-dir <path>`         | Dùng với tùy chọn `-n`. Giá trị mặc định là `/etc/NetworkManager/system-connections/`.                                                                                                                                                                  |
+| `--save-partlabel <lx>..`      | Lưu các phân vùng khớp với mẫu nhãn này.                                                                                                                                                                                                                |
+| `--save-partindex <id>…`       | Lưu các phân vùng có số hoặc phạm vi này.                                                                                                                                                                                                               |
+| `--insecure`                   | Bỏ qua việc xác minh chữ ký ảnh RHCOS.                                                                                                                                                                                                                  |
+| `--insecure-ignition`          | Cho phép URL Ignition không có HTTPS hoặc dấu thăng (#).                                                                                                                                                                                                |
+|  `--architecture <name>`       | Kiến trúc CPU đích. Các giá trị hợp lệ là `x86_64` và `aarch64`.                                                                                                                                                                                        |
+| `--preserve-on-error`          | Không xóa bảng phân vùng khi xảy ra lỗi.                                                                                                                                                                                                                |
+| `-h`, `--help`                 | In thông tin trợ giúp.                                                                                                                                                                                                                                  |
+
+* Đối số của lệnh con install trong `coreos-installer`
+
+| Đối số     | Mô tả          |
+|------------|----------------|
+| `<device>` | Thiết bị đích. |
+
+
+* Các lệnh con ISO của `coreos-installer`
+
+| Lệnh con                                                     | Mô tả                                                                                 |
+|--------------------------------------------------------------|---------------------------------------------------------------------------------------|
+| `coreos-installer iso customize <options> <ISO_image>`       | Tùy chỉnh một tệp ISO live của RHCOS.                                                 |
+| `coreos-installer iso reset <options> <ISO_image>`           | Khôi phục tệp ảnh ISO trực tiếp (live ISO image) của RHCOS về các thiết lập mặc định. |
+| `coreos-installer iso ignition remove <options> <ISO_image>` | Xóa cấu hình Ignition được nhúng khỏi tệp ảnh ISO.                                    |
+
+* Các tùy chọn của lệnh con tùy chỉnh ISO trong `coreos-installer`
+
+| Tùy chọn                      | Mô tả                                                                                                                                                           |
+|-------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--dest-ignition <path>`      | Hợp nhất tệp cấu hình Ignition được chỉ định vào một đoạn cấu hình mới dành cho hệ thống đích.                                                                  |
+| `--dest-console <spec>`       | Hãy chỉ định nhân hệ điều hành và bảng điều khiển bộ nạp khởi động cho hệ thống đích.                                                                           |
+| `--dest-device <path>`        | Cài đặt và ghi đè lên thiết bị đích đã chỉ định.                                                                                                                |
+| `--dest-karg-append <arg>`    | Thêm một tham số nhân (kernel argument) vào mỗi lần khởi động của hệ thống đích.                                                                                |
+| `--dest-karg-delete <arg>`    | Xóa một tham số nhân (kernel argument) khỏi mỗi lần khởi động của hệ thống đích.                                                                                |
+| `--network-keyfile <path>`    | Cấu hình mạng bằng cách sử dụng tệp khóa (keyfile) NetworkManager được chỉ định cho các hệ thống trực tiếp (live system) và hệ thống đích (destination system). |
+| `--ignition-ca <path>`        | Chỉ định một cơ quan cấp chứng chỉ TLS bổ sung để Ignition tin tưởng.                                                                                           |
+| `--pre-install <path>`        | Chạy tập lệnh được chỉ định trước khi cài đặt.                                                                                                                  |
+| `--post-install <path>`       | Chạy tập lệnh được chỉ định sau khi cài đặt.                                                                                                                    |
+| `--installer-config <path>`   | Áp dụng tệp cấu hình trình cài đặt đã chỉ định.                                                                                                                 |
+| `--live-ignition <path>`      | Hợp nhất tệp cấu hình Ignition được chỉ định vào một đoạn cấu hình mới dành cho môi trường thực tế (live environment).                                          |
+| `--live-karg-append <arg>`    | Thêm một tham số nhân (kernel argument) vào mỗi lần khởi động môi trường chạy trực tiếp (live environment).                                                     |
+| `--live-karg-delete <arg>`    | Xóa một tham số nhân (kernel argument) khỏi mỗi lần khởi động môi trường chạy trực tiếp (live environment).                                                     |
+| `--live-karg-replace <k=o=n>` | Thay thế một tham số nhân (kernel argument) trong mỗi lần khởi động môi trường chạy trực tiếp (live environment), theo định dạng `key=old=new`.                 |
+| `-f`, `--force`               | Ghi đè lên cấu hình Ignition hiện có.                                                                                                                           |
+| `-o`, `--output <path>`       | Ghi tệp ISO vào một tệp đầu ra mới.                                                                                                                             |
+| `-h`, `--help`                | In thông tin trợ giúp.                                                                                                                                          |
+Bạn có thể tự động áp dụng các tùy chọn của `coreos-installer` ngay khi khởi động bằng cách truyền các tham số khởi động `coreos.inst` vào trình cài đặt trực tiếp (live installer) của RHCOS. Các tham số này được bổ sung bên cạnh những tham số khởi động tiêu chuẩn. 
+
+* Đối với các bản cài đặt từ tệp ISO, bạn có thể thêm các tùy chọn `coreos.inst` bằng cách ngắt quá trình khởi động tự động tại menu của bộ nạp khởi động (boot loader). Bạn có thể thực hiện việc này bằng cách nhấn phím TAB khi tùy chọn menu "RHEL CoreOS (Live)" đang được chọn. 
+* Đối với các bản cài đặt qua PXE hoặc iPXE, các tùy chọn `coreos.inst` cần được thêm vào dòng `APPEND` trước khi trình cài đặt trực tiếp RHCOS khởi chạy.
+
+Bảng dưới đây liệt kê các tùy chọn khởi động `coreos.inst` dành cho trình cài đặt trực tiếp RHCOS trong các trường hợp cài đặt từ tệp ISO hoặc qua PXE.
+
+**Bảng 2.37. Các tùy chọn khởi động coreos.inst**
+
+
+| Đối số                       | Mô tả                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `coreos.inst.install_dev`    | Bắt buộc. Thiết bị khối trên hệ thống dùng để cài đặt. Lưu ý: Bạn nên sử dụng đường dẫn đầy đủ, chẳng hạn như `/dev/sda`, mặc dù chỉ dùng `sda` cũng được chấp nhận.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `coreos.inst.ignition_url`   | Tùy chọn: URL của cấu hình Ignition cần nhúng vào hệ thống được cài đặt. Nếu không chỉ định URL, sẽ không có cấu hình Ignition nào được nhúng vào. Chỉ hỗ trợ các giao thức HTTP và HTTPS.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `coreos.inst.save_partlabel` | Tùy chọn: Danh sách các phân vùng cần giữ lại trong quá trình cài đặt, được phân tách bằng dấu phẩy. Có thể sử dụng các ký tự đại diện (wildcard) kiểu glob. Các phân vùng được chỉ định không nhất thiết phải tồn tại từ trước.                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `coreos.inst.save_partindex` | Tùy chọn: Các chỉ số phân vùng cần giữ lại trong quá trình cài đặt, được phân tách bằng dấu phẩy. Có thể sử dụng các dải giá trị dạng `m-n` (trong đó `m` hoặc `n` có thể được lược bỏ). Các phân vùng được chỉ định không nhất thiết phải tồn tại từ trước.                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `coreos.inst.insecure`       | Tùy chọn: Cho phép hình ảnh hệ điều hành (OS image) được chỉ định bởi coreos.inst.image_url không cần phải có chữ ký.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `coreos.inst.image_url`      | Tùy chọn: Tải xuống và cài đặt hình ảnh (image) RHCOS được chỉ định. Tham số này không nên được sử dụng trong các môi trường thực tế (production) mà chỉ dành cho mục đích gỡ lỗi (debugging). Mặc dù tham số này có thể được dùng để cài đặt một phiên bản RHCOS không khớp với phương tiện cài đặt (live media) hiện có, bạn vẫn nên sử dụng phương tiện cài đặt tương ứng với phiên bản mà bạn muốn cài đặt. Nếu sử dụng `coreos.inst.image_url`, bạn bắt buộc phải dùng kèm với `coreos.inst.insecure`. Lý do là vì các phương tiện cài đặt trên phần cứng vật lý (bare-metal) không được ký bằng GPG cho OpenShift Container Platform. Chỉ hỗ trợ các giao thức HTTP và HTTPS. |
+| `coreos.inst.skip_reboot`    | Tùy chọn: Hệ thống sẽ không khởi động lại sau khi cài đặt. Khi quá trình cài đặt hoàn tất, bạn sẽ nhận được thông báo cho phép kiểm tra các diễn biến trong suốt quá trình cài đặt. Tham số này không nên được sử dụng trong môi trường thực tế (production) mà chỉ dành cho mục đích gỡ lỗi.                                                                                                                                                                                                                                                                                                                                                                                       |
+| `coreos.inst.platform_id`    | Tùy chọn: ID nền tảng Ignition của nền tảng mà ảnh RHCOS đang được cài đặt. Mặc định là `metal`. Tùy chọn này xác định xem có yêu cầu cấu hình Ignition từ nhà cung cấp dịch vụ đám mây, chẳng hạn như VMware hay không. Ví dụ: `coreos.inst.platform_id=vmware`.                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `ignition.config.url`        | Tùy chọn: URL của cấu hình Ignition dùng cho quá trình khởi động trực tiếp (live boot). Ví dụ, thông số này có thể được sử dụng để tùy chỉnh cách thức gọi `coreos-installer`, hoặc để thực thi mã lệnh trước hay sau quá trình cài đặt. Thông số này khác với `coreos.inst.ignition_url` — vốn là cấu hình Ignition dành cho hệ thống sau khi đã được cài đặt.                                                                                                                                                                                                                                                                                                                     |
+
+##### 2.3.12.5. Kích hoạt tính năng đa đường dẫn (multipathing) thông qua các tham số nhân (kernel arguments) trên RHCOS
+RHCOS hỗ trợ tính năng đa đường dẫn (multipathing) trên đĩa chính, giúp tăng cường khả năng chống chịu trước các lỗi phần cứng, từ đó nâng cao tính sẵn sàng của máy chủ (host).
+
+Bạn có thể kích hoạt tính năng đa đường dẫn ngay tại thời điểm cài đặt đối với các nút (node) được cung cấp trong OpenShift Container Platform phiên bản 4.8 trở lên. Mặc dù vẫn có thể kích hoạt tính năng này sau khi cài đặt thông qua cấu hình máy (machine config), Red Hat khuyến nghị nên thực hiện ngay trong quá trình cài đặt.
+
+Trong các cấu hình mà mọi thao tác I/O trên các đường dẫn không được tối ưu hóa (non-optimized paths) đều dẫn đến lỗi hệ thống I/O, bạn bắt buộc phải kích hoạt tính năng đa đường dẫn ngay từ bước cài đặt.
+
+> **Quan trọng:** Trên các hệ thống IBM Z® và IBM® LinuxONE, bạn chỉ có thể kích hoạt tính năng đa đường dẫn nếu đã cấu hình cụm (cluster) cho tính năng này ngay từ khi cài đặt. Để biết thêm thông tin, hãy xem phần "Cài đặt RHCOS và khởi động quy trình bootstrap của OpenShift Container Platform" trong tài liệu hướng dẫn cài đặt cụm trên z/VM dành cho IBM Z® và IBM® LinuxONE.
+
+Quy trình dưới đây hướng dẫn cách kích hoạt tính năng đa đường dẫn tại thời điểm cài đặt bằng cách thêm các tham số nhân (kernel arguments) vào lệnh `coreos-installer install`, đảm bảo hệ thống sau khi cài đặt sẽ sử dụng tính năng đa đường dẫn ngay từ lần khởi động đầu tiên.
+
+> Lưu ý: OpenShift Container Platform không hỗ trợ kích hoạt tính năng đa đường dẫn như một thao tác vận hành sau cài đặt (day-2 activity) đối với các nút đã được nâng cấp từ phiên bản 4.6 trở về trước.
+
+**Điều kiện tiên quyết**
+
+* Bạn đã tạo các tệp cấu hình Ignition cho cụm của mình. 
+* Bạn đã xem qua nội dung về việc cài đặt RHCOS và khởi động quy trình bootstrap của OpenShift Container Platform.
+
+**Quy trình**
+
+1. Để kích hoạt tính năng đa đường dẫn và khởi chạy tiến trình nền (daemon) `multipathd`, hãy thực thi lệnh sau trên máy chủ cài đặt (installation host):
+
+```shell
+$ mpathconf --enable && systemctl start multipathd.service
+```
+
+  * Tùy chọn: Nếu khởi động qua PXE hoặc ISO, bạn có thể kích hoạt tính năng đa đường dẫn (multipath) bằng cách thêm tham số `rd.multipath=default` vào dòng lệnh kernel.
+
+2. Thêm các tham số kernel bằng cách gọi chương trình coreos-installer:
+  * Nếu chỉ có một thiết bị đa đường dẫn (multipath device) được kết nối với máy, thiết bị đó sẽ khả dụng tại đường dẫn /dev/mapper/mpatha. Ví dụ:
+
+  ```shell
+  $ coreos-installer install /dev/mapper/mpatha \
+    --ignition-url=http://host/worker.ign \
+    --append-karg rd.multipath=default \
+    --append-karg root=/dev/disk/by-label/dm-mpath-root \
+    --append-karg rw \
+    --offline
+  ```
+
+    * `/dev/mapper/mpatha`: Cho biết đường dẫn của thiết bị đa đường dẫn (multipathed device) duy nhất.
+
+  * Nếu có nhiều thiết bị đa đường dẫn (multipath) được kết nối với máy, thay vì sử dụng `/dev/mapper/mpatha`, Red Hat khuyến nghị sử dụng liên kết tượng trưng (symlink) dựa trên World Wide Name (WWN). Liên kết tượng trưng này có sẵn trong thư mục `/dev/disk/by-id`. Ví dụ:
+
+  ```shell
+  $ coreos-installer install /dev/disk/by-id/wwn-<wwn_ID> \
+    --ignition-url=http://host/worker.ign \
+    --append-karg rd.multipath=default \
+    --append-karg root=/dev/disk/by-label/dm-mpath-root \
+    --append-karg rw \
+    --offline
+  ```
+
+  Trong đó: `<wwn_ID>` cho biết WWN ID của thiết bị đa đường dẫn (multipathed device) đích. Ví dụ: 0xx194e957fcedb4841. 
+
+  Liên kết tượng trưng (symlink) này cũng có thể được sử dụng làm tham số nhân (kernel argument) `coreos.inst.install_dev` khi dùng các tham số `coreos.inst.*` đặc biệt để điều hướng trình cài đặt trực tiếp (live installer). Để biết thêm thông tin, hãy xem phần "Cài đặt RHCOS và bắt đầu quy trình khởi động (bootstrap) của OpenShift Container Platform".
+
+3. Khởi động lại hệ thống đã cài đặt.
+4. Kiểm tra xem các tham số nhân đã hoạt động đúng hay chưa bằng cách truy cập vào một trong các nút worker (worker node) và liệt kê các tham số dòng lệnh của nhân (có trong tệp `/proc/cmdline` trên máy chủ):
+
+```shell
+$ oc debug node/ip-10-0-141-105.ec2.internal
+```
+
+Ví dụ đầu ra
+
+```shell
+Starting pod/ip-10-0-141-105ec2internal-debug ...
+To use host binaries, run `chroot /host`
+
+sh-4.2# cat /host/proc/cmdline
+...
+rd.multipath=default root=/dev/disk/by-label/dm-mpath-root
+...
+
+sh-4.2# exit
+```
+
+Bạn sẽ thấy các tham số nhân (kernel arguments) đã được thêm vào.
+
+###### 2.3.12.5.1. Kích hoạt tính năng đa đường dẫn (multipathing) trên các ổ đĩa phụ
+RHCOS cũng hỗ trợ tính năng đa đường dẫn (multipathing) trên các ổ đĩa phụ. Thay vì sử dụng các tham số nhân (kernel arguments), bạn có thể dùng Ignition để kích hoạt tính năng này cho ổ đĩa phụ ngay tại thời điểm cài đặt.
+
+**Điều kiện tiên quyết**
+
+* Bạn đã đọc phần Phân vùng ổ đĩa (Disk partitioning). 
+* Bạn đã đọc phần Kích hoạt tính năng đa đường dẫn bằng các tham số nhân trên RHCOS. 
+* Bạn đã cài đặt tiện ích Butane.
+
+**Quy trình**
+
+1. Tạo một tệp cấu hình Butane với thông tin tương tự như ví dụ dưới đây:
+
+Ví dụ: `multipath-config.bu`
+
+```yaml
+variant: openshift
+version: 4.22.0
+systemd:
+  units:
+    - name: mpath-configure.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Configure Multipath on Secondary Disk
+        ConditionFirstBoot=true
+        ConditionPathExists=!/etc/multipath.conf
+        Before=multipathd.service
+        DefaultDependencies=no
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/sbin/mpathconf --enable
+
+        [Install]
+        WantedBy=multi-user.target
+    - name: mpath-var-lib-container.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Set Up Multipath On /var/lib/containers
+        ConditionFirstBoot=true
+        Requires=dev-mapper-mpatha.device
+        After=dev-mapper-mpatha.device
+        After=ostree-remount.service
+        Before=kubelet.service
+        DefaultDependencies=no
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/sbin/mkfs.xfs -L containers -m reflink=1 /dev/mapper/mpatha
+        ExecStart=/usr/bin/mkdir -p /var/lib/containers
+
+        [Install]
+        WantedBy=multi-user.target
+    - name: var-lib-containers.mount
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Mount /var/lib/containers
+        After=mpath-var-lib-containers.service
+        Before=kubelet.service
+
+        [Mount]
+        What=/dev/disk/by-label/dm-mpath-containers
+        Where=/var/lib/containers
+        Type=xfs
+
+        [Install]
+        WantedBy=multi-user.target
+```
+
+Trong đó:
+
+  * `Before=multipathd.service`: Chỉ định rằng cấu hình phải được thiết lập trước khi khởi chạy tiến trình nền (daemon) `multipath`.
+  * `ExecStart=/usr/sbin/mpathconf`: Chỉ định việc khởi chạy tiện ích `mpathconf`.
+  * `ConditionFirstBoot=true`: Được đặt thành giá trị `true`.
+  * `[Service]`: Chỉ định việc tạo hệ thống tệp và thư mục `/var/lib/containers`.
+  * `Before=kubelet.service`: Chỉ định rằng thiết bị phải được gắn (mount) trước khi khởi động bất kỳ nút (node) nào.
+  * `[Mount]`: Chỉ định việc gắn thiết bị vào điểm gắn `/var/lib/containers`. Vị trí này không được phép là một liên kết tượng trưng (symlink).
+
+2. Tạo cấu hình Ignition bằng cách chạy lệnh sau:
+
+```shell
+$ butane --pretty --strict multipath-config.bu > multipath-config.ign
+```
+
+3. Tiếp tục thực hiện các bước còn lại trong quy trình cài đặt RHCOS ở lần khởi động đầu tiên.
+
+> **Quan trọng:** Không thêm các tham số nhân (kernel arguments) `rd.multipath` hoặc `root` vào dòng lệnh (CLI) trong quá trình cài đặt, trừ khi ổ đĩa chính cũng được cấu hình đa đường dẫn (multipath).
+
+##### 2.3.12.6. Cài đặt thủ công RHCOS trên thiết bị khởi động iSCSI
+Bạn có thể cài đặt thủ công RHCOS trên một đích iSCSI (iSCSI target).
+
+**Điều kiện tiên quyết**
+
+* Bạn đang ở trong môi trường chạy trực tiếp (live environment) của RHCOS. 
+* Bạn có một đích iSCSI mà bạn muốn cài đặt RHCOS lên đó.
+
+**Quy trình**
+
+1. Gắn (mount) đích iSCSI từ môi trường chạy trực tiếp bằng cách thực thi lệnh sau:
+
+```shell
+$ iscsiadm \
+  --mode discovery \
+  --type sendtargets
+  --portal <IP_address> \
+  --login
+```
+
+Trong đó: `<IP_address>` chỉ định địa chỉ IP của cổng (portal) đích.
+
+2. Cài đặt RHCOS vào đích iSCSI bằng cách chạy lệnh sau và sử dụng các tham số nhân (kernel arguments) cần thiết, ví dụ:
+
+```shell
+$ coreos-installer install \
+  /dev/disk/by-path/ip-<IP_address>:<port>-iscsi-<target_iqn>-lun-<lun> \
+  --append-karg rd.iscsi.initiator=<initiator_iqn> \
+  --append.karg netroot=<target_iqn> \
+  --console ttyS0,115200n8 \
+  --ignition-file <path_to_file> \
+  --offline
+```
+
+Trong đó:
+
+  * `/dev/disk/by-path/ip`: Xác định vị trí cài đặt. Bạn phải cung cấp địa chỉ IP của cổng đích (target portal), số cổng tương ứng, nút iSCSI đích ở định dạng IQN và số đơn vị logic (LUN) iSCSI.
+  * `<initiator_iqn>`: Xác định tên của iSCSI initiator (bên khởi tạo) – hay còn gọi là client – ở định dạng IQN. Initiator này sẽ thiết lập một phiên kết nối tới iSCSI target (đích đến).
+  * `<target_iqn>`: Xác định tên của iSCSI target (đích đến) – hay còn gọi là server – ở định dạng IQN. 
+
+Để biết thêm thông tin về các tùy chọn iSCSI được dracut hỗ trợ, hãy xem trang [hướng dẫn](https://www.man7.org/linux/man-pages/man7/dracut.cmdline.7.html) dracut.cmdline.
+
+3. Ngắt kết nối đĩa iSCSI bằng lệnh sau:
+
+```shell
+$ iscsiadm --mode node --logoutall=all
+```
+
+Quy trình này cũng có thể được thực hiện bằng cách sử dụng các lệnh phụ `coreos-installer iso customize` hoặc `coreos-installer pxe customize`.
+
+##### 2.3.12.7. Cài đặt RHCOS trên thiết bị khởi động iSCSI sử dụng iBFT
+Trên một máy hoàn toàn không có ổ đĩa cục bộ, các giá trị iSCSI target (đích) và initiator (bên khởi tạo) có thể được truyền qua iBFT. Tính năng đa đường dẫn (multipathing) cho iSCSI cũng được hỗ trợ.
+
+**Các điều kiện tiên quyết**
+
+* Bạn đang ở trong môi trường chạy trực tiếp (live environment) của RHCOS. 
+* Bạn đã có một iSCSI target mà bạn muốn cài đặt RHCOS lên đó. 
+* Tùy chọn: Bạn đã cấu hình tính năng đa đường dẫn (multipathing) cho iSCSI target của mình.
+
+**Quy trình**
+
+1. Gắn (mount) iSCSI target từ môi trường chạy trực tiếp bằng cách thực hiện lệnh sau:
+
+```shell
+$ iscsiadm \
+  --mode discovery \
+  --type sendtargets
+  --portal <IP_address> \
+  --login
+```
+
+Trong đó: `<IP_address>` chỉ định địa chỉ IP của cổng đích (target portal).
+
+2. Tùy chọn: bật tính năng đa đường dẫn (multipathing) và khởi chạy tiến trình nền (daemon) bằng lệnh sau:
+
+```shell
+$ mpathconf --enable && systemctl start multipathd.service
+```
+
+3. Cài đặt RHCOS vào đích iSCSI bằng cách chạy lệnh sau và sử dụng các tham số nhân (kernel arguments) cần thiết, chẳng hạn như:
+
+```shell
+$ coreos-installer install \
+  /dev/mapper/mpatha \
+  --append-karg rd.iscsi.firmware=1 \
+  --append-karg rd.multipath=default \
+  --console ttyS0 \
+  --ignition-file <path_to_file> \
+  --offline
+```
+
+Trong đó:
+
+  * `/dev/mapper/mpatha`: Chỉ định đường dẫn của một thiết bị đa đường dẫn (multipathed device). Nếu có nhiều thiết bị đa đường dẫn được kết nối, hoặc để xác định rõ ràng hơn, bạn có thể sử dụng liên kết tượng trưng (symlink) theo tên định danh toàn cầu (World Wide Name - WWN) có sẵn trong `/dev/disk/by-path`.
+  * `rd.iscsi.firmware=1`: Chỉ định rằng tham số iSCSI được đọc từ firmware của BIOS.
+  * `rd.multipath=default`: Chỉ định kích hoạt tính năng đa đường dẫn (multipathing). Đây là tham số tùy chọn. 
+
+  Để biết thêm thông tin về các tùy chọn iSCSI được dracut hỗ trợ, hãy xem trang [hướng dẫn](https://www.man7.org/linux/man-pages/man7/dracut.cmdline.7.html) dracut.cmdline.
+
+3. Ngắt kết nối (unmount) đĩa iSCSI:
+
+```shell
+$ iscsiadm --mode node --logout=all
+```
+
+Bạn cũng có thể thực hiện quy trình này bằng cách sử dụng các lệnh phụ `coreos-installer iso customize` hoặc `coreos-installer pxe customize`.
+
+#### 2.3.13. Chờ quá trình khởi động ban đầu (bootstrap) hoàn tất
+Sau khi các nút (node) trong cụm (cluster) của bạn khởi động lần đầu vào môi trường RHCOS cố định đã được cài đặt trên ổ đĩa, hãy chờ cho quá trình khởi động ban đầu (bootstrap) của OpenShift Container Platform hoàn tất.
+
+Thông tin cấu hình được cung cấp thông qua các tệp cấu hình Ignition sẽ được sử dụng để khởi tạo quy trình bootstrap và cài đặt OpenShift Container Platform trên các máy chủ.
+
+**Điều kiện tiên quyết**
+
+* Bạn đã tạo các tệp cấu hình Ignition cho cụm của mình. 
+* Bạn đã thiết lập cơ sở hạ tầng mạng, DNS và cân bằng tải phù hợp. 
+* Bạn đã tải xuống chương trình cài đặt và tạo các tệp cấu hình Ignition cho cụm của mình. 
+* Bạn đã cài đặt RHCOS trên các máy chủ trong cụm và cung cấp các tệp cấu hình Ignition do chương trình cài đặt OpenShift Container Platform tạo ra.
+
+**Quy trình**
+
+1. Theo dõi quá trình khởi động ban đầu (bootstrap):
+
+```shell
+$ ./openshift-install --dir <installation_directory> wait-for bootstrap-complete \
+  --log-level=info
+```
+
+Trong đó:
+
+* `<installation_directory>`: Chỉ định đường dẫn đến thư mục lưu trữ các tệp cài đặt.
+* `--log-level=info`: Có thể thay thế `info` bằng `warn`, `debug` hoặc `error` để xem các chi tiết cài đặt khác nhau. 
+
+Ví dụ đầu ra
+
+```
+INFO Waiting up to 20m0s for the Kubernetes API at https://api.test.example.com:6443...
+INFO API v1.35.4 up
+INFO Waiting up to 1h0m0s for bootstrapping to complete...
+INFO It is now safe to remove the bootstrap resources
+```
+
+Thời gian chờ hoàn tất quá trình khởi động ban đầu (bootstrapping) khác nhau tùy theo từng nền tảng.
+
+Lệnh này sẽ thực thi thành công khi Kubernetes API server phát tín hiệu xác nhận rằng quá trình khởi động ban đầu đã hoàn tất trên các máy thuộc mặt phẳng điều khiển (control plane).
+
+2. Sau khi quá trình khởi động ban đầu hoàn tất, hãy loại bỏ máy khởi động (bootstrap machine) khỏi bộ cân bằng tải (load balancer).
+
+> **Quan trọng:** Tại thời điểm này, bạn bắt buộc phải loại bỏ máy khởi động khỏi bộ cân bằng tải. Bạn cũng có thể xóa hoặc định dạng lại chính máy khởi động đó.
+
+#### 2.3.14. Đăng nhập vào cụm bằng CLI
+Để đăng nhập vào cụm của bạn với tư cách là người dùng hệ thống mặc định, hãy xuất tệp kubeconfig. Cấu hình này cho phép CLI xác thực và kết nối với máy chủ API cụ thể đã được tạo trong quá trình cài đặt OpenShift Container Platform.
+
+Tệp kubeconfig gắn liền với một cụm cụ thể và được OpenShift Container Platform tạo ra trong quá trình cài đặt.
+
+**Điều kiện tiên quyết**
+
+* Bạn đã triển khai một cụm OpenShift Container Platform. 
+* Bạn đã cài đặt OpenShift CLI (oc).
+
+**Quy trình**
+
+1. Xuất thông tin xác thực `kubeadmin` bằng cách chạy lệnh sau:
+
+```shell
+$ export KUBECONFIG=<installation_directory>/auth/kubeconfig
+```
+
+Trong đó: `<installation_directory>` chỉ định đường dẫn đến thư mục lưu trữ các tệp cài đặt.
+
+2. Hãy xác minh rằng bạn có thể chạy thành công các lệnh `oc` bằng cách sử dụng cấu hình đã xuất, thông qua việc thực thi lệnh sau:
+
+```shell
+$ oc whoami
+```
+
+Ví dụ đầu ra
+
+```
+system:admin
+```
+
+**Các bước tiếp theo**
+
+* "Tùy chỉnh cụm của bạn"
+* "Báo cáo tình trạng từ xa"
+
+#### 2.3.15. Phê duyệt các yêu cầu ký chứng chỉ cho các máy của bạn
+Để cho phép các máy mới được thêm vào tham gia cụm OpenShift Container Platform của bạn, hãy đảm bảo rằng cụm đã phê duyệt các yêu cầu ký chứng chỉ (CSR) đang chờ xử lý, hoặc tự bạn thực hiện phê duyệt các yêu cầu đó. Hãy phê duyệt các yêu cầu từ phía máy khách (client) trước, sau đó mới đến các yêu cầu từ phía máy chủ (server).
+
+**Điều kiện tiên quyết**
+
+* Bạn đã thêm các máy vào cụm của mình.
+
+**Quy trình**
+
+1. Xác nhận rằng cụm đã nhận diện được các máy đó:
+
+```shell
+$ oc get nodes
+```
+
+Ví dụ đầu ra
+
+```
+NAME      STATUS    ROLES   AGE  VERSION
+master-0  Ready     master  63m  v1.35.4
+master-1  Ready     master  63m  v1.35.4
+master-2  Ready     master  64m  v1.35.4
+```
+
+Kết quả đầu ra liệt kê tất cả các máy mà bạn đã tạo.
+
+> **Lưu ý:** Kết quả đầu ra nêu trên có thể chưa bao gồm các nút tính toán (compute node) cho đến khi bạn phê duyệt một số yêu cầu ký chứng chỉ (CSR).
+
+3. Xem xét các CSR đang chờ xử lý và đảm bảo rằng bạn thấy các yêu cầu từ máy khách (client request) ở trạng thái "Đang chờ xử lý" (Pending) hoặc "Đã phê duyệt" (Approved) đối với mỗi máy mà bạn đã thêm vào cụm (cluster):
+
+```shell
+$ oc get csr
+```
+
+Ví dụ đầu ra
+
+```
+NAME        AGE     REQUESTOR                                                                   CONDITION
+csr-8b2br   15m     system:serviceaccount:openshift-machine-config-operator:node-bootstrapper   Pending
+csr-8vnps   15m     system:serviceaccount:openshift-machine-config-operator:node-bootstrapper   Pending
+...
+```
+
+Trong ví dụ này, có hai máy đang tham gia vào cụm (cluster). Bạn có thể thấy nhiều yêu cầu ký chứng chỉ (CSR) đã được phê duyệt hơn trong danh sách.
+
+3. Nếu các CSR chưa được phê duyệt, sau khi tất cả các CSR dành cho các máy bạn vừa thêm đều ở trạng thái "Đang chờ xử lý" (Pending), hãy tiến hành phê duyệt các CSR đó cho các máy trong cụm của bạn:
+
+> **Lưu ý:** Bạn phải phê duyệt các CSR trong vòng một giờ kể từ khi thêm máy vào cụm. Nếu không thực hiện trong khoảng thời gian này, các chứng chỉ sẽ tự động xoay vòng (rotate), dẫn đến việc mỗi nút (node) sẽ có nhiều hơn hai chứng chỉ. Khi đó, bạn sẽ phải phê duyệt tất cả các chứng chỉ này. Sau khi bạn phê duyệt CSR của máy khách (client CSR), kubelet sẽ tạo thêm một CSR thứ hai cho chứng chỉ phục vụ (serving certificate); CSR này cũng cần được phê duyệt thủ công. Sau đó, thành phần "machine-approver" sẽ tự động phê duyệt các yêu cầu gia hạn chứng chỉ phục vụ tiếp theo, miễn là kubelet yêu cầu chứng chỉ mới với các tham số tương tự.
+
+> **Lưu ý:** Đối với các cụm chạy trên những nền tảng không hỗ trợ "machine API" (ví dụ: hạ tầng vật lý - bare metal - hoặc hạ tầng do người dùng tự cung cấp), bạn cần triển khai một cơ chế tự động phê duyệt các yêu cầu ký chứng chỉ phục vụ (CSR) từ kubelet. Nếu bạn không phê duyệt yêu cầu này, các lệnh như `oc exec`, `oc rsh` và `oc logs` sẽ không thể thực thi thành công, vì API server yêu cầu phải có chứng chỉ phục vụ khi kết nối với kubelet. Mọi thao tác liên lạc với điểm cuối (endpoint) của kubelet đều đòi hỏi chứng chỉ này phải được phê duyệt. Cơ chế đó cần theo dõi các CSR mới, xác nhận rằng CSR được gửi bởi tài khoản dịch vụ (service account) `node-bootstrapper` (thuộc nhóm `system:node` hoặc `system:admin`), đồng thời xác thực danh tính của nút đó. 
+
+`* Để phê duyệt từng CSR một, hãy chạy lệnh sau cho mỗi CSR hợp lệ:
+
+  ```shell
+  $ oc adm certificate approve <csr_name>
+  ```
+
+  Trong đó: `<csr_name>` chỉ định tên của một CSR từ danh sách các CSR hiện có.
+
+  * Để phê duyệt tất cả các CSR đang chờ xử lý, hãy chạy lệnh sau:
+
+  ```shell
+  $ oc get csr -o go-template='{{range .items}}{{if not .status}}{{.metadata.name}}{{"\n"}}{{end}}{{end}}' | \
+    xargs --no-run-if-empty oc adm certificate approve
+  ```
+
+  > **Lưu ý:** Một số Operator có thể chưa khả dụng cho đến khi bạn phê duyệt các yêu cầu ký chứng chỉ (CSR). Mỗi node sẽ gửi hai CSR, vì vậy có thể bạn sẽ cần chạy lệnh phê duyệt CSR nhiều lần.
+
+4. Sau khi phê duyệt các yêu cầu từ phía client, hãy xem xét các yêu cầu từ phía server đối với từng máy mà bạn đã thêm vào cụm (cluster):
+
+```shell
+$ oc get csr
+```
+
+Ví dụ đầu ra
+
+```
+NAME        AGE     REQUESTOR                                                                   CONDITION
+csr-bfd72   5m26s   system:node:ip-10-0-50-126.us-east-2.compute.internal                       Pending
+csr-c57lv   5m26s   system:node:ip-10-0-95-157.us-east-2.compute.internal                       Pending
+...
+```
+
+5. Nếu các yêu cầu ký chứng chỉ (CSR) còn lại chưa được phê duyệt và đang ở trạng thái "Đang chờ xử lý" (Pending), hãy phê duyệt các CSR đó cho các máy trong cụm (cluster) của bạn:
+
+  * Để phê duyệt từng yêu cầu một, hãy chạy lệnh sau cho mỗi CSR hợp lệ:
+
+  ```shell
+  $ oc adm certificate approve <csr_name>
+  ```
+
+  Trong đó: `<csr_name>` chỉ định tên của một CSR từ danh sách các CSR hiện có.
+
+  * Để phê duyệt tất cả các CSR đang chờ xử lý, hãy chạy lệnh sau:
+
+  ```shell
+  $ oc get csr -o go-template='{{range .items}}{{if not .status}}{{.metadata.name}}{{"\n"}}{{end}}{{end}}' | \
+    xargs oc adm certificate approve
+  ```
+
+6. Sau khi bạn phê duyệt tất cả các CSR của máy khách và máy chủ, các máy đó sẽ chuyển sang trạng thái Sẵn sàng (Ready). Hãy xác minh điều này bằng cách chạy lệnh sau:
+
+```shell
+$ oc get nodes
+```
+
+Ví dụ đầu ra
+
+```
+NAME      STATUS    ROLES   AGE  VERSION
+master-0  Ready     master  73m  v1.35.4
+master-1  Ready     master  73m  v1.35.4
+master-2  Ready     master  74m  v1.35.4
+worker-0  Ready     worker  11m  v1.35.4
+worker-1  Ready     worker  11m  v1.35.4
+```
+
+> **Lưu ý:** Bạn có thể cần đợi vài phút sau khi các CSR máy chủ được phê duyệt để các máy chuyển sang trạng thái `Ready`.
+
+##### 2.3.16. Cấu hình Operator ban đầu
+Sau khi mặt phẳng điều khiển (control plane) khởi tạo xong, bạn cần lập tức cấu hình một số Operator để đảm bảo tất cả chúng đều ở trạng thái sẵn sàng.
+
+**Điều kiện tiên quyết**
+
+* Mặt phẳng điều khiển của bạn đã khởi tạo xong.
+
+**Quy trình**
+
+1. Theo dõi quá trình các thành phần trong cụm (cluster) chuyển sang trạng thái hoạt động:
+
+```shell
+$ watch -n5 oc get clusteroperators
+```
+
+Ví dụ đầu ra
+
+```
+NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE
+authentication                             4.22.0    True        False         False      19m
+baremetal                                  4.22.0    True        False         False      37m
+cloud-credential                           4.22.0    True        False         False      40m
+cluster-autoscaler                         4.22.0    True        False         False      37m
+config-operator                            4.22.0    True        False         False      38m
+console                                    4.22.0    True        False         False      26m
+csi-snapshot-controller                    4.22.0    True        False         False      37m
+dns                                        4.22.0    True        False         False      37m
+etcd                                       4.22.0    True        False         False      36m
+image-registry                             4.22.0    True        False         False      31m
+ingress                                    4.22.0    True        False         False      30m
+insights                                   4.22.0    True        False         False      31m
+kube-apiserver                             4.22.0    True        False         False      26m
+kube-controller-manager                    4.22.0    True        False         False      36m
+kube-scheduler                             4.22.0    True        False         False      36m
+kube-storage-version-migrator              4.22.0    True        False         False      37m
+machine-api                                4.22.0    True        False         False      29m
+machine-approver                           4.22.0    True        False         False      37m
+machine-config                             4.22.0    True        False         False      36m
+marketplace                                4.22.0    True        False         False      37m
+monitoring                                 4.22.0    True        False         False      29m
+network                                    4.22.0    True        False         False      38m
+node-tuning                                4.22.0    True        False         False      37m
+openshift-apiserver                        4.22.0    True        False         False      32m
+openshift-controller-manager               4.22.0    True        False         False      30m
+openshift-samples                          4.22.0    True        False         False      32m
+operator-lifecycle-manager                 4.22.0    True        False         False      37m
+operator-lifecycle-manager-catalog         4.22.0    True        False         False      37m
+operator-lifecycle-manager-packageserver   4.22.0    True        False         False      32m
+service-ca                                 4.22.0    True        False         False      38m
+storage                                    4.22.0    True        False         False      37m
+```
+
+2. Cấu hình các Operator không khả dụng.
+
+##### 2.3.16.1. Vô hiệu hóa các nguồn danh mục phần mềm mặc định
+Để chỉ sử dụng các danh mục Operator đáng tin cậy hoặc có sẵn tại địa phương, hãy vô hiệu hóa các nguồn danh mục phần mềm mặc định mà OpenShift Container Platform thiết lập trong quá trình cài đặt. Trong môi trường mạng bị hạn chế, với tư cách là quản trị viên cụm (cluster administrator), bạn bắt buộc phải vô hiệu hóa các danh mục mặc định này.
+
+**Quy trình**
+
+* Vô hiệu hóa các nguồn danh mục mặc định bằng cách thêm `disableAllDefaultSources: true` vào đối tượng `OperatorHub`:
+
+```shell
+$ oc patch OperatorHub cluster --type json \
+  -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
+```
+
+> **Mẹo:** Ngoài ra, bạn có thể sử dụng bảng điều khiển web để quản lý các nguồn danh mục (catalog source). Tại trang **Administration** > **Cluster Settings** > **Configuration** > **OperatorHub**, hãy nhấp vào tab **Sources**; tại đây, bạn có thể tạo, cập nhật, xóa, vô hiệu hóa hoặc kích hoạt từng nguồn riêng lẻ.
+
+##### 2.3.16.2. Cấu hình lưu trữ cho registry hình ảnh (image registry)
+Image Registry Operator sẽ không khả dụng ngay từ đầu trên các nền tảng không cung cấp bộ lưu trữ mặc định. Sau khi cài đặt, bạn cần cấu hình bộ lưu trữ cho registry của mình để Image Registry Operator trở nên khả dụng.
+
+Hãy cấu hình một volume bền vững (persistent volume) – đây là yêu cầu bắt buộc đối với các cụm (cluster) trong môi trường sản xuất. Đối với các cụm không thuộc môi trường sản xuất, bạn có thể cấu hình một thư mục trống (empty directory) làm vị trí lưu trữ.
+
+Bạn cũng có thể cho phép registry hình ảnh sử dụng các loại lưu trữ khối (block storage) bằng cách áp dụng chiến lược triển khai `Recreate` trong quá trình nâng cấp.
+
+###### 2.3.16.2.1. Thay đổi trạng thái quản lý của registry hình ảnh
+Để khởi chạy registry hình ảnh (image registry), bạn phải thay đổi `managementState` trong cấu hình của Image Registry Operator từ `Removed` thành `Managed`.
+
+**Quy trình**
+
+* Thay đổi `managementState` trong cấu hình Image Registry Operator từ `Removed` thành `Managed`. Ví dụ:
+
+```shell
+$ oc patch configs.imageregistry.operator.openshift.io cluster --type merge \
+  --patch '{"spec":{"managementState":"Managed"}}'
+```
+
+###### 2.3.16.2.2. Cấu hình lưu trữ cho registry trong các môi trường bare metal và các hình thức cài đặt thủ công khác
+Với tư cách là quản trị viên cụm (cluster administrator), sau khi hoàn tất cài đặt, bạn cần cấu hình để registry sử dụng bộ lưu trữ.
+
+**Các điều kiện tiên quyết**
+
+* Bạn có quyền truy cập vào cụm với vai trò `cluster-admin`. 
+* Cụm của bạn sử dụng các nút (node) Red Hat Enterprise Linux CoreOS (RHCOS) được cung cấp theo cách thủ công, chẳng hạn như trong môi trường bare metal. 
+* Bạn đã cung cấp bộ lưu trữ bền vững (persistent storage) cho cụm của mình, ví dụ như Red Hat OpenShift Data Foundation. 
+
+> **Quan trọng:** OpenShift Container Platform hỗ trợ quyền truy cập `ReadWriteOnce` cho bộ lưu trữ của image registry khi chỉ có một bản sao (replica). Quyền truy cập `ReadWriteOnce` cũng yêu cầu registry phải sử dụng chiến lược triển khai (rollout strategy) là `Recreate`. Để triển khai một image registry hỗ trợ tính sẵn sàng cao (high availability) với từ hai bản sao trở lên, cần phải có quyền truy cập `ReadWriteMany`. 
+Bạn cần chuẩn bị một hệ thống có dung lượng lưu trữ tối thiểu là 100Gi.
+
+**Quy trình thực hiện**
+
+1. Để cấu hình registry sử dụng bộ lưu trữ, hãy thay đổi thuộc tính `spec.storage.pvc` trong tài nguyên `configs.imageregistry/cluster`. 
+
+> **Lưu ý:** Khi sử dụng bộ lưu trữ chia sẻ (shared storage), hãy xem xét các thiết lập bảo mật của bạn để ngăn chặn truy cập từ bên ngoài. 
+
+2. Xác minh rằng hiện không có pod registry nào đang chạy:
+
+```shell
+$ oc get pod -n openshift-image-registry -l docker-registry=default
+```
+
+Ví dụ đầu ra
+
+```
+No resources found in openshift-image-registry namespace
+```
+
+> **Lưu ý:** Nếu bạn đã có một pod registry trong kết quả đầu ra, bạn không cần tiếp tục thực hiện quy trình này nữa.
+
+3. Kiểm tra cấu hình registry:
+
+```shell
+$ oc edit configs.imageregistry.operator.openshift.io
+```
+
+Ví dụ đầu ra
+
+```yaml
+storage:
+  pvc:
+    claim:
+```
+
+Để trống trường `claim` để cho phép tự động tạo PVC `image-registry-storage`.
+
+4. Kiểm tra trạng thái của `clusteroperator`:
+
+```shell
+$ oc get clusteroperator image-registry
+```
+
+5. Hãy đảm bảo rằng registry của bạn được thiết lập ở chế độ quản lý để cho phép xây dựng và đẩy ảnh hệ thống.
+  Chạy lệnh:
+
+  ```shell
+  $ oc edit configs.imageregistry/cluster
+  ```
+
+  Sau đó, thay đổi dòng `managementState: Removed` thành `managementState: Managed`
+
+###### 2.3.16.2.3. Định cấu hình lưu trữ cho registry hình ảnh trong các cụm không thuộc môi trường sản xuất (non-production clusters)
+Bạn phải định cấu hình lưu trữ cho Image Registry Operator. Đối với các cụm không thuộc môi trường sản xuất, bạn có thể thiết lập registry hình ảnh trỏ đến một thư mục trống; tuy nhiên, nếu bạn khởi động lại registry, tất cả các hình ảnh sẽ bị mất.
+
+**Quy trình**
+
+* Để thiết lập lưu trữ cho registry hình ảnh trỏ đến một thư mục trống:
+
+```shell
+$ oc patch configs.imageregistry.operator.openshift.io cluster --type merge \
+  --patch '{"spec":{"storage":{"emptyDir":{}}}}'
+```
+
+> **Cảnh báo:** Chỉ cấu hình tùy chọn này cho các cụm không thuộc môi trường sản xuất (non-production clusters).
+
+Nếu bạn chạy lệnh này trước khi Image Registry Operator khởi tạo các thành phần của nó, lệnh `oc patch` sẽ thất bại và hiển thị lỗi sau:
+
+Ví dụ đầu ra
+
+```
+Error from server (NotFound): configs.imageregistry.operator.openshift.io "cluster" not found
+```
+
+Hãy đợi vài phút rồi chạy lại lệnh đó.
+
+###### 2.3.16.2.4. Cấu hình lưu trữ dạng khối (block storage) cho registry trên hạ tầng vật lý (bare metal)
+Để cho phép registry lưu trữ ảnh (image registry) sử dụng các loại lưu trữ dạng khối trong quá trình nâng cấp, với tư cách là quản trị viên cụm (cluster administrator), bạn có thể sử dụng chiến lược triển khai `Recreate`.
+
+> **Quan trọng:** Các volume lưu trữ dạng khối (block storage volumes) — hay còn gọi là các volume bền vững dạng khối (block persistent volumes) — được hỗ trợ nhưng không được khuyến khích sử dụng cho registry lưu trữ ảnh trên các cụm môi trường thực tế (production clusters). Một hệ thống registry được cấu hình trên lưu trữ dạng khối sẽ không có tính sẵn sàng cao (high availability), vì registry trong trường hợp này không thể có nhiều hơn một bản sao (replica).
+
+Nếu bạn chọn sử dụng volume lưu trữ dạng khối cho registry lưu trữ ảnh, bạn bắt buộc phải sử dụng yêu cầu volume bền vững (Persistent Volume Claim - PVC) dựa trên hệ thống tệp (filesystem).
+
+**Quy trình**
+
+1. Nhập lệnh sau để thiết lập lưu trữ cho registry lưu trữ ảnh thành loại lưu trữ dạng khối, đồng thời điều chỉnh (patch) registry để sử dụng chiến lược triển khai `Recreate` và chỉ chạy với một (`1`) bản sao (replica):
+
+```shell
+$ oc patch config.imageregistry.operator.openshift.io/cluster --type=merge -p '{"spec":{"rolloutStrategy":"Recreate","replicas":1}}'
+```
+
+2. Cung cấp PV cho thiết bị lưu trữ khối (block storage device) và tạo PVC cho volume đó. Volume khối được yêu cầu sử dụng chế độ truy cập ReadWriteOnce (RWO). 
+  * Tạo tệp `pvc.yaml` với nội dung dưới đây để định nghĩa một đối tượng PersistentVolumeClaim (PVC) cho VMware vSphere:
+
+  ```yaml
+  kind: PersistentVolumeClaim
+  apiVersion: v1
+  metadata:
+    name: image-registry-storage
+    namespace: openshift-image-registry
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 100Gi
+  ```
+  Trong đó:
+
+    * `metadata.name`: Chỉ định một tên duy nhất đại diện cho đối tượng `PersistentVolumeClaim`.
+    * `metadata.namespace:` Chỉ định namespace cho đối tượng `PersistentVolumeClaim`; trong trường hợp này là openshift-image-registry.
+    * `spec.accessModes`: Chỉ định chế độ truy cập (access mode) của `PersistentVolumeClaim`. Với tùy chọn `ReadWriteOnce`, volume có thể được mount (gắn) với quyền đọc và ghi bởi một node duy nhất.
+    * `spec.resources.requests.storage`: Kích thước của `PersistentVolumeClaim`.
+
+  * Hãy nhập lệnh sau để tạo đối tượng `PersistentVolumeClaim` từ tệp tin này:
+
+  ```shell
+  $ oc create -f pvc.yaml -n openshift-image-registry
+  ```
+
+3. Hãy nhập lệnh sau để chỉnh sửa cấu hình registry sao cho nó tham chiếu đến PVC chính xác:
+
+```shell
+$ oc edit config.imageregistry.operator.openshift.io -o yaml
+```
+
+Ví dụ đầu ra
+
+```yaml
+storage:
+  pvc:
+    claim:
+```
+
+Khi tạo một PVC tùy chỉnh, bạn có thể để trống trường `claim` để hệ thống tự động tạo một PVC `image-registry-storage` theo mặc định.
+
+#### 2.3.17. Hoàn tất cài đặt trên cơ sở hạ tầng do người dùng cung cấp
+Để hoàn tất quá trình cài đặt trên cơ sở hạ tầng do người dùng cung cấp, hãy thực hiện các bước cuối cùng để triển khai cụm (cluster) sau khi đã định cấu hình các Operator. Việc này đảm bảo cụm hoạt động hoàn chỉnh trên cơ sở hạ tầng mà bạn cung cấp.
+
+**Điều kiện tiên quyết**
+
+* Control plane của bạn đã được khởi tạo. 
+* Bạn đã hoàn tất việc định cấu hình ban đầu cho các Operator.
+
+**Quy trình**
+
+1. Xác nhận rằng tất cả các thành phần của cụm đều đang trực tuyến (online) bằng lệnh sau:
+
+```shell
+$ watch -n5 oc get clusteroperators
+```
+
+Ví dụ đầu ra
+
+```
+NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE
+authentication                             4.22.0    True        False         False      19m
+baremetal                                  4.22.0    True        False         False      37m
+cloud-credential                           4.22.0    True        False         False      40m
+cluster-autoscaler                         4.22.0    True        False         False      37m
+config-operator                            4.22.0    True        False         False      38m
+console                                    4.22.0    True        False         False      26m
+csi-snapshot-controller                    4.22.0    True        False         False      37m
+dns                                        4.22.0    True        False         False      37m
+etcd                                       4.22.0    True        False         False      36m
+image-registry                             4.22.0    True        False         False      31m
+ingress                                    4.22.0    True        False         False      30m
+insights                                   4.22.0    True        False         False      31m
+kube-apiserver                             4.22.0    True        False         False      26m
+kube-controller-manager                    4.22.0    True        False         False      36m
+kube-scheduler                             4.22.0    True        False         False      36m
+kube-storage-version-migrator              4.22.0    True        False         False      37m
+machine-api                                4.22.0    True        False         False      29m
+machine-approver                           4.22.0    True        False         False      37m
+machine-config                             4.22.0    True        False         False      36m
+marketplace                                4.22.0    True        False         False      37muser
+monitoring                                 4.22.0    True        False         False      29m
+network                                    4.22.0    True        False         False      38m
+node-tuning                                4.22.0    True        False         False      37m
+openshift-apiserver                        4.22.0    True        False         False      32muser
+openshift-controller-manager               4.22.0    True        False         False      30m
+openshift-samples                          4.22.0    True        False         False      32m
+operator-lifecycle-manager                 4.22.0    True        False         False      37m
+operator-lifecycle-manager-catalog         4.22.0    True        False         False      37m
+operator-lifecycle-manager-packageserver   4.22.0    True        False         False      32m
+service-ca                                 4.22.0    True        False         False      38m
+storage                                    4.22.0    True        False         False      37m
+```
+
+Ngoài ra, lệnh sau đây sẽ thông báo cho bạn khi tất cả các cụm đã sẵn sàng. Lệnh này cũng truy xuất và hiển thị thông tin xác thực:
+
+```shell
+$ ./openshift-install --dir <installation_directory> wait-for install-complete
+```
+
+Trong đó: `<installation_directory>` chỉ định đường dẫn đến thư mục nơi bạn lưu trữ các tệp cài đặt.
+
+Ví dụ đầu ra
+
+```
+INFO Waiting up to 30m0s for the cluster to initialize...
+```
+
+Lệnh này thực thi thành công khi Cluster Version Operator hoàn tất việc triển khai cụm OpenShift Container Platform từ máy chủ API Kubernetes.
+
+> **Quan trọng:**
+> 
+> * Các tệp cấu hình Ignition do chương trình cài đặt tạo ra chứa các chứng chỉ có thời hạn 24 giờ; sau khoảng thời gian này, các chứng chỉ đó sẽ được gia hạn. Nếu cụm (cluster) bị tắt trước khi các chứng chỉ được gia hạn và sau đó được khởi động lại khi đã qua 24 giờ, cụm sẽ tự động khôi phục các chứng chỉ đã hết hạn. Một ngoại lệ là bạn phải phê duyệt thủ công các yêu cầu ký chứng chỉ (CSR) của node-bootstrapper đang chờ xử lý để khôi phục các chứng chỉ kubelet. Để biết thêm thông tin, hãy xem tài liệu về cách khôi phục các chứng chỉ control plane đã hết hạn. 
+> * Bạn nên sử dụng các tệp cấu hình Ignition trong vòng 12 giờ kể từ khi chúng được tạo, vì quá trình xoay vòng chứng chỉ 24 giờ thường diễn ra trong khoảng từ 16 đến 22 giờ sau khi cụm được cài đặt. Việc sử dụng các tệp cấu hình Ignition trong vòng 12 giờ giúp tránh nguy cơ cài đặt thất bại trong trường hợp quá trình cập nhật chứng chỉ diễn ra đúng lúc đang thực hiện cài đặt.
+
+2. Xác nhận rằng Kubernetes API server đang giao tiếp với các pod. 
+  * Để xem danh sách tất cả các pod, hãy sử dụng lệnh sau:
+
+  ```shell
+  $ oc get pods --all-namespaces
+  ```
+
+  Ví dụ đầu ra
+
+  ```
+  NAMESPACE                         NAME                                            READY   STATUS      RESTARTS   AGE
+  openshift-apiserver-operator      openshift-apiserver-operator-85cb746d55-zqhs8   1/1     Running     1          9m
+  openshift-apiserver               apiserver-67b9g                                 1/1     Running     0          3m
+  openshift-apiserver               apiserver-ljcmx                                 1/1     Running     0          1m
+  openshift-apiserver               apiserver-z25h4                                 1/1     Running     0          2m
+  openshift-authentication-operator authentication-operator-69d5d8bf84-vh2n8        1/1     Running     0          5m
+  ```
+
+  * Xem nhật ký của một pod có tên trong kết quả đầu ra của lệnh trước đó bằng cách sử dụng lệnh sau:
+
+  ```shell
+  $ oc logs <pod_name> -n <namespace>
+  ```
+
+  Trong đó: `<namespace>` chỉ định tên pod và namespace (không gian tên), như được hiển thị trong kết quả của một lệnh trước đó. 
+
+  Nếu nhật ký (logs) của pod được hiển thị, nghĩa là máy chủ API Kubernetes có thể giao tiếp với các máy trong cụm (cluster).
+
+3. Đối với hệ thống sử dụng Giao thức Fibre Channel (FCP), cần thực hiện các bước bổ sung để kích hoạt tính năng đa đường dẫn (multipathing). Không kích hoạt tính năng đa đường dẫn trong quá trình cài đặt.
+
+Để biết thêm thông tin, hãy xem mục "Kích hoạt tính năng đa đường dẫn bằng các tham số nhân (kernel arguments) trên RHCOS" trong tài liệu về các tác vụ cấu hình máy sau cài đặt.
+
+4. Đăng ký cụm (cluster) của bạn trên trang [Đăng ký cụm](https://console.redhat.com/openshift/register).
+
+#### 2.3.18. Truy cập Telemetry cho OpenShift Container Platform
+Để cung cấp các chỉ số về tình trạng cụm (cluster) và kết quả của các bản cập nhật, dịch vụ Telemetry cần có quyền truy cập internet. Khi được kết nối, dịch vụ này sẽ tự động chạy theo mặc định và đăng ký cụm của bạn với [OpenShift Cluster Manager](https://console.redhat.com/openshift).
+
+Sau khi xác nhận rằng danh mục tài nguyên (inventory) trên [OpenShift Cluster Manager](https://console.redhat.com/openshift) đã chính xác — dù được duy trì tự động bởi Telemetry hay được cập nhật thủ công thông qua OpenShift Cluster Manager — bạn có thể sử dụng tính năng "subscription watch" để theo dõi các gói đăng ký (subscription) OpenShift Container Platform ở cấp độ tài khoản hoặc cấp độ đa cụm. Để biết thêm thông tin về "subscription watch", hãy xem mục "Dữ liệu được thu thập và sử dụng bởi các dịch vụ đăng ký của Red Hat" trong phần Tài nguyên bổ sung.
+
+#### 2.3.19. Các bước tiếp theo
+
+* Xác thực quá trình cài đặt. 
+* Tùy chỉnh cụm (cluster) của bạn. 
+* Cấu hình các luồng hình ảnh (image stream) cho Cluster Samples Operator và công cụ must-gather. 
+* Tìm hiểu cách sử dụng Operator Lifecycle Manager trong các môi trường không kết nối mạng (disconnected environments). 
+* Nếu registry phản chiếu (mirror registry) mà bạn đã sử dụng để cài đặt cụm có chứa chứng chỉ từ một cơ quan cấp chứng chỉ (CA) đáng tin cậy, hãy thêm chứng chỉ đó vào cụm bằng cách cấu hình các kho lưu trữ tin cậy (trust store) bổ sung. 
+* Nếu cần, bạn có thể thiết lập tính năng báo cáo tình trạng từ xa (remote health reporting). 
+* Nếu cần, hãy xem hướng dẫn về việc đăng ký cụm trong môi trường không kết nối mạng.
+
+### 2.4. Mở rộng quy mô cụm do người dùng cung cấp bằng Bare Metal Operator
+Sau khi triển khai một cụm trên cơ sở hạ tầng do người dùng cung cấp, bạn có thể sử dụng Bare Metal Operator (BMO) cùng các thành phần metal khác để mở rộng quy mô các máy chủ vật lý (bare-metal host) trong cụm đó. Phương pháp này giúp bạn mở rộng quy mô cụm do người dùng cung cấp theo cách tự động hơn.
+
+#### 2.4.1. Về việc mở rộng quy mô cụm do người dùng cung cấp bằng Bare Metal Operator
+Bạn có thể mở rộng quy mô các cụm hạ tầng do người dùng cung cấp (user-provisioned infrastructure clusters) bằng cách sử dụng Bare Metal Operator (BMO) cùng các thành phần metal3 khác.
+
+Các hệ thống hạ tầng do người dùng cung cấp không bao gồm Machine API Operator. Thông thường, Machine API Operator đảm nhận việc quản lý vòng đời của các nút (node) vật lý trong một cụm. Tuy nhiên, bạn vẫn có thể sử dụng BMO và các thành phần metal3 khác để mở rộng quy mô các nút trong các cụm do người dùng cung cấp mà không cần đến Machine API Operator.
+
+##### 2.4.1.1. Các điều kiện tiên quyết để mở rộng quy mô cụm do người dùng cung cấp
+Cần đáp ứng các điều kiện tiên quyết sau đây trước khi mở rộng quy mô một cụm do người dùng cung cấp. 
+
+* Bạn đã cài đặt một cụm trên cơ sở hạ tầng do người dùng cung cấp (user-provisioned infrastructure) trên phần cứng vật lý (bare metal). 
+* Bạn có quyền truy cập vào bộ điều khiển quản lý bo mạch chủ (BMC) của các máy chủ.
+
+##### 2.4.1.2. Các hạn chế khi mở rộng quy mô cụm do người dùng cung cấp
+Các hạn chế sau đây áp dụng cho việc mở rộng quy mô cụm do người dùng cung cấp (user-provisioned cluster). 
+
+* Bạn không thể sử dụng mạng cung cấp (provisioning network) để mở rộng quy mô các cụm hạ tầng do người dùng cung cấp thông qua Bare Metal Operator (BMO). 
+* Do đó, bạn chỉ có thể sử dụng các trình điều khiển máy chủ vật lý (bare-metal host drivers) hỗ trợ khởi động qua mạng bằng phương tiện ảo (virtual media networking booting), chẳng hạn như `redfish-virtualmedia` và `idrac-virtualmedia`. 
+* Bạn không thể mở rộng quy mô các đối tượng MachineSet trong các cụm hạ tầng do người dùng cung cấp thông qua BMO.
+
+#### 2.4.2. Cấu hình tài nguyên cung cấp (provisioning resource) để mở rộng quy mô các cụm do người dùng cung cấp
+Tạo một tài nguyên tùy chỉnh (Custom Resource - CR) loại Provisioning để kích hoạt các thành phần nền tảng Metal trên một cụm hạ tầng do người dùng cung cấp.
+
+**Điều kiện tiên quyết**
+
+* Bạn đã cài đặt một cụm hạ tầng do người dùng cung cấp trên nền tảng phần cứng vật lý (bare metal).
+
+**Quy trình**
+
+1. Tạo một CR loại Provisioning. 
+  * Lưu nội dung YAML dưới đây vào tệp `provisioning.yaml`:
+
+  ```yaml
+  apiVersion: metal3.io/v1alpha1
+  kind: Provisioning
+  metadata:
+    name: provisioning-configuration
+  spec:
+    provisioningNetwork: "Disabled"
+    watchAllNamespaces: false
+  ```
+
+  > **Lưu ý:** OpenShift Container Platform 4.22 không hỗ trợ việc kích hoạt mạng cung cấp (provisioning network) khi bạn mở rộng quy mô một cụm do người dùng cung cấp (user-provisioned cluster) bằng cách sử dụng Bare Metal Operator.
+
+2. Tạo `Provisioning` CR bằng cách chạy lệnh sau:
+
+```shell
+$ oc create -f provisioning.yaml
+```
+
+Ví dụ đầu ra
+
+```
+provisioning.metal3.io/provisioning-configuration created
+```
+
+**Xác minh**
+
+Xác minh rằng dịch vụ cung cấp (provisioning service) đang chạy bằng cách thực thi lệnh sau:
+
+```shell
+$ oc get pods -n openshift-machine-api
+```
+
+Ví dụ đầu ra
+
+```
+NAME                                                  READY   STATUS    RESTARTS        AGE
+cluster-autoscaler-operator-678c476f4c-jjdn5          2/2     Running   0               5d21h
+cluster-baremetal-operator-6866f7b976-gmvgh           2/2     Running   0               5d21h
+control-plane-machine-set-operator-7d8566696c-bh4jz   1/1     Running   0               5d21h
+ironic-proxy-64bdw                                    1/1     Running   0               5d21h
+ironic-proxy-rbggf                                    1/1     Running   0               5d21h
+ironic-proxy-vj54c                                    1/1     Running   0               5d21h
+machine-api-controllers-544d6849d5-tgj9l              7/7     Running   1 (5d21h ago)   5d21h
+machine-api-operator-5c4ff4b86d-6fjmq                 2/2     Running   0               5d21h
+metal3-6d98f84cc8-zn2mx                               5/5     Running   0               5d21h
+metal3-image-customization-59d745768d-bhrp7           1/1     Running   0               5d21h
+```
+
+#### 2.4.3. Cấp phát các host mới trong cụm do người dùng cấp phát (user-provisioned cluster) bằng cách sử dụng BMO
+Bạn có thể sử dụng Bare Metal Operator (BMO) để cấp phát các host vật lý (bare-metal host) trong một cụm do người dùng cấp phát bằng cách tạo một tài nguyên tùy chỉnh (custom resource - CR) có tên là BareMetalHost.
+
+> **Lưu ý:** Khi cấp phát các host vật lý vào cụm bằng BMO, tham số `spec.externallyProvisioned` trong tài nguyên tùy chỉnh BareMetalHost sẽ mặc định được đặt thành `false`. Không được đặt tham số `spec.externallyProvisioned` thành `true`, vì thiết lập này sẽ dẫn đến các hành vi không mong muốn.
+
+**Điều kiện tiên quyết**
+
+* Bạn đã tạo một cụm bare-metal do người dùng cấp phát. 
+* Bạn có quyền truy cập vào bộ điều khiển quản lý bo mạch chủ (Baseboard Management Controller - BMC) của các host. 
+* Bạn đã triển khai dịch vụ cấp phát (provisioning service) trong cụm bằng cách tạo một CR loại Provisioning.
+
+**Quy trình**
+
+1. Tạo tệp cấu hình cho node bare-metal. Tùy thuộc vào việc bạn sử dụng cấu hình tĩnh (static configuration) hay máy chủ DHCP, hãy chọn một trong các tệp `bmh.yaml` mẫu dưới đây và điều chỉnh theo nhu cầu của bạn bằng cách thay thế các giá trị trong tệp YAML sao cho phù hợp với môi trường thực tế:
+  * Để triển khai với cấu hình tĩnh, hãy tạo tệp `bmh.yaml` như sau:
+
+  ```yaml
+  ---
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: openshift-worker-<num>-network-config-secret
+    namespace: openshift-machine-api
+  type: Opaque
+  stringData:
+    nmstate: |
+      interfaces:
+      - name: <nic1_name>
+        type: ethernet
+        state: up
+        ipv4:
+          address:
+          - ip: <ip_address>
+            prefix-length: 24
+          enabled: true
+      dns-resolver:
+        config:
+          server:
+          - <dns_ip_address>
+      routes:
+        config:
+        - destination: 0.0.0.0/0
+          next-hop-address: <next_hop_ip_address>
+          next-hop-interface: <next_hop_nic1_name>
+  ---
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: openshift-worker-<num>-bmc-secret
+    namespace: openshift-machine-api
+  type: Opaque
+  data:
+    username: <base64_of_uid>
+    password: <base64_of_pwd>
+  ---
+  apiVersion: metal3.io/v1alpha1
+  kind: BareMetalHost
+  metadata:
+    name: openshift-worker-<num>
+    namespace: openshift-machine-api
+  spec:
+    online: true
+    bootMACAddress: <nic1_mac_address>
+    bmc:
+      address: <protocol>://<bmc_url>
+      credentialsName: openshift-worker-<num>-bmc-secret
+      disableCertificateVerification: false
+    customDeploy:
+      method: install_coreos
+    userData:
+      name: worker-user-data-managed
+      namespace: openshift-machine-api
+    rootDeviceHints:
+      deviceName: <root_device_hint>
+    preprovisioningNetworkDataName: openshift-worker-<num>-network-config-secret
+  ```
+
+  Trong đó:
+
+    * `metadata.name`: Chỉ định số thứ tự duy nhất cho nút tính toán (compute node). Hãy thay thế tất cả các vị trí có chứa `<num>` bằng một số thứ tự duy nhất cho các nút bare-metal (nút vật lý) tại các trường `name`, `credentialsName` và preprovisioningNetworkDataName.
+    * `stringData.nmstate`: Chỉ định cú pháp YAML của NMState để cấu hình các giao diện (interface) của máy chủ. Để cấu hình giao diện mạng cho một nút mới được tạo, hãy chỉ định tên của đối tượng secret chứa cấu hình mạng đó. Hãy tuân theo cú pháp `nmstate` để định nghĩa cấu hình mạng cho nút của bạn. Xem phần "Chuẩn bị nút bare-metal" để biết chi tiết về cách cấu hình theo cú pháp NMState.
+    * `stringData.nmstate.interfaces`: Chỉ định các giao diện mạng. Nếu bạn đã cấu hình giao diện mạng bằng `nmstate` và muốn vô hiệu hóa một giao diện, hãy đặt `state: up`, đồng thời thiết lập các địa chỉ IP với thuộc tính `enabled: false`. Trường này là tùy chọn.
+    * `stringData.nmstate.interfaces[].name`: Chỉ định tên của bộ điều khiển giao diện mạng (NIC) đầu tiên trên nút bare-metal. Hãy thay thế `<nic1_name>` bằng tên của NIC đó.
+    * `stringData.nmstate.interfaces[].ipv4.address[].ip`: Chỉ định địa chỉ IP cho NIC của nút bare-metal. Hãy thay thế `<ip_address>` bằng địa chỉ IP tương ứng.
+    * `stringData.nmstate.dns-resolver.config.server[]`: Chỉ định địa chỉ IP của bộ phân giải DNS (DNS resolver) cho nút bare-metal. Hãy thay thế `<dns_ip_address>` bằng địa chỉ IP của máy chủ DNS.
+    * `stringData.nmstate.routes.config[].next-hop-address`: Chỉ định địa chỉ IP của cổng kết nối bên ngoài (external gateway) cho nút bare-metal. Hãy thay thế `<next_hop_ip_address>` bằng địa chỉ IP của cổng kết nối này.
+    * `stringData.nmstate.routes.config[].next-hop-interface`: Chỉ định tên của giao diện cổng kết nối bên ngoài trên nút bare-metal. Hãy thay thế `<next_hop_nic1_name>` bằng tên của giao diện đó.
+    * `data.username`: Chỉ định thông tin xác thực (credentials) đã được mã hóa bằng base64 cho đối tượng BMC Secret. Thay thế `<base64_of_uid`> và `<base64_of_pwd>` bằng chuỗi mã hóa base64 của tên người dùng và mật khẩu.
+    * `spec.bootMACAddress`: Chỉ định địa chỉ MAC của card mạng (NIC) đầu tiên trên nút phần cứng vật lý (bare-metal node). Xem phần "Đánh địa chỉ BMC" (BMC addressing) để biết thêm các tùy chọn cấu hình BMC khác.
+    * `spec.bmc.address`: Chỉ định địa chỉ BMC. Thay thế `<protocol>` bằng giao thức BMC, chẳng hạn như IPMI, Redfish hoặc các giao thức khác. Thay thế `<bmc_url`> bằng URL của bộ điều khiển quản lý bo mạch chủ (Baseboard Management Controller - BMC) trên nút phần cứng vật lý.
+    * `spec.rootDeviceHints.deviceName`: Chỉ định đường dẫn gợi ý thiết bị gốc (root device hint). Thay thế `<root_device_hint>` bằng đường dẫn thiết bị khi xác định gợi ý thiết bị gốc. Xem phần "Gợi ý thiết bị gốc" (Root device hints) để biết thêm chi tiết. Trường này là tùy chọn.
+
+  * Khi định cấu hình giao diện mạng với thiết lập tĩnh bằng cách sử dụng nmstate, hãy đặt `state: up` và thiết lập các địa chỉ IP với tùy chọn `enabled: false`:
+
+  ```yaml
+  ---
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: openshift-worker-<num>-network-config-secret
+    namespace: openshift-machine-api
+   # ...
+  interfaces:
+    - name: <nic_name>
+      type: ethernet
+      state: up
+      ipv4:
+        enabled: false
+      ipv6:
+        enabled: false
+  # ...
+  ```
+
+  * Để triển khai với cấu hình DHCP, hãy tạo tệp bmh.yaml như sau:
+
+  ```yaml
+  ---
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: openshift-worker-<num>-bmc-secret
+    namespace: openshift-machine-api
+  type: Opaque
+  data:
+    username: <base64_of_uid>
+    password: <base64_of_pwd>
+  ---
+  apiVersion: metal3.io/v1alpha1
+  kind: BareMetalHost
+  metadata:
+    name: openshift-worker-<num>
+    namespace: openshift-machine-api
+  spec:
+    online: true
+    bootMACAddress: <nic1_mac_address>
+    bmc:
+      address: <protocol>://<bmc_url>
+      credentialsName: openshift-worker-<num>-bmc
+      disableCertificateVerification: false
+    customDeploy:
+      method: install_coreos
+    userData:
+      name: worker-user-data-managed
+      namespace: openshift-machine-api
+    rootDeviceHints:
+      deviceName: <root_device_hint>
+  ```
+
+  Trong đó:
+
+    * `metadata.name`: Xác định tên của BMC Secret. Hãy thay thế `<num>` bằng một số định danh duy nhất cho mỗi nút bare-metal (máy chủ vật lý) trong các trường `name` và `credentialsName`. 
+    * `data.username`: Chứa thông tin xác thực đã được mã hóa bằng `base64`. Hãy thay thế `<base64_of_uid>` và `<base64_of_pwd>` lần lượt bằng chuỗi `base64` của tên người dùng và mật khẩu. 
+    * `spec.bootMACAddress`: Xác định địa chỉ MAC của card mạng (NIC) đầu tiên trên nút bare-metal. Xem phần "Đánh địa chỉ BMC" (BMC addressing) để biết thêm các tùy chọn cấu hình BMC khác. 
+    * `spec.bmc.address`: Xác định địa chỉ BMC. Hãy thay thế `<protocol>` bằng giao thức BMC tương ứng (ví dụ: IPMI, Redfish, v.v.) và thay thế `<bmc_url>` bằng URL của bộ điều khiển quản lý bo mạch chủ (Baseboard Management Controller - BMC) trên nút bare-metal đó. 
+    * `spec.rootDeviceHints.deviceName`: Xác định đường dẫn gợi ý thiết bị gốc (root device hint). Hãy thay thế `<root_device_hint>` bằng đường dẫn thiết bị cụ thể. Xem phần "Gợi ý thiết bị gốc" (Root device hints) để biết thêm chi tiết. Trường này là tùy chọn. 
+
+  > **Quan trọng:** Nếu địa chỉ MAC của một nút bare-metal hiện có trùng với địa chỉ MAC của máy chủ bare-metal mà bạn đang cố gắng cấp phát (provision), quá trình cài đặt sẽ thất bại. Nếu các bước như đăng ký máy chủ (enrollment), kiểm tra (inspection), làm sạch (cleaning) hoặc các bước khác gặp lỗi, Bare Metal Operator sẽ liên tục thử lại quá trình cài đặt. Xem phần "Chẩn đoán lỗi trùng lặp địa chỉ MAC khi cấp phát máy chủ mới trong cụm" để biết thêm chi tiết.
+
+2. Tạo nút bare-metal bằng cách chạy lệnh sau:
+
+```shell
+$ oc create -f bmh.yaml
+```
+
+Ví dụ đầu ra
+
+```
+secret/openshift-worker-<num>-network-config-secret created
+secret/openshift-worker-<num>-bmc-secret created
+baremetalhost.metal3.io/openshift-worker-<num> created
+```
+
+3. Kiểm tra nút bare-metal bằng cách chạy lệnh sau:
+
+```shell
+$ oc -n openshift-machine-api get bmh openshift-worker-<num>
+```
+
+Trong đó: `<num>` chỉ định số hiệu nút tính toán.
+
+Ví dụ đầu ra
+
+```
+NAME                    STATE       CONSUMER   ONLINE   ERROR
+openshift-worker-<num>  provisioned true
+```
+
+4. Phê duyệt tất cả các yêu cầu ký chứng chỉ (CSR). 
+  * Lấy danh sách các CSR đang chờ xử lý bằng cách chạy lệnh sau:
+
+  ```shell
+  $ oc get csr
+  ```
+
+  Ví dụ đầu ra
+
+  ```
+  NAME        AGE   SIGNERNAME                                    REQUESTOR                                         REQUESTEDDURATION CONDITION
+  csr-gfm9f   33s   kubernetes.io/kube-apiserver-client-kubelet   system:serviceaccount:openshift-machine-config-o
+  perator:node-bootstrapper   <none>              Pending
+  ```
+
+  * Phê duyệt CSR bằng cách chạy lệnh sau:
+
+  ```shell
+  $ oc adm certificate approve <csr_name>
+  ```
+
+  Ví dụ đầu ra
+
+  ```
+  certificatesigningrequest.certificates.k8s.io/<csr_name> approved
+  ```
+
+**Xác minh**
+
+* Hãy xác minh rằng nút (node) đã sẵn sàng bằng cách chạy lệnh sau:
+
+```shell
+$ oc get nodes
+```
+
+Ví dụ đầu ra
+
+```
+NAME        STATUS   ROLES           AGE     VERSION
+app1        Ready    worker          47s     v1.24.0+dc5a2fd
+controller1 Ready    master,worker   2d22h   v1.24.0+dc5a2fd
+```
+
+#### 2.4.4. Tùy chọn: Quản lý các máy chủ hiện có trong cụm do người dùng cung cấp (user-provisioned cluster) bằng cách sử dụng BMO
+Bạn có thể tùy chọn sử dụng Bare Metal Operator (BMO) để quản lý các máy chủ vật lý (bare-metal) hiện có trong một cụm do người dùng cung cấp, bằng cách tạo đối tượng `BareMetalHost` cho các máy chủ đó.
+
+Việc quản lý các máy chủ do người dùng cung cấp không phải là yêu cầu bắt buộc; tuy nhiên, bạn có thể đăng ký chúng dưới dạng các máy chủ được cung cấp từ bên ngoài (externally-provisioned hosts) để phục vụ mục đích kiểm kê (inventory).
+
+> **Quan trọng:** Để quản lý các máy chủ hiện có bằng BMO, bạn phải đặt thuộc tính `spec.externallyProvisioned` trong tài nguyên tùy chỉnh (custom resource) `BareMetalHost` thành `true`. Điều này giúp ngăn chặn BMO thực hiện cấp phát lại (re-provisioning) cho máy chủ đó.
+
+**Điều kiện tiên quyết**
+
+* Bạn đã tạo một cụm máy chủ vật lý (bare-metal cluster) do người dùng cung cấp. 
+* Bạn có quyền truy cập vào bộ điều khiển quản lý bo mạch chủ (Baseboard Management Controller - BMC) của các máy chủ. 
+* Bạn đã triển khai dịch vụ cấp phát (provisioning service) trong cụm bằng cách tạo một tài nguyên tùy chỉnh `Provisioning`.
+
+**Quy trình**
+
+1. Tạo tài nguyên tùy chỉnh `Secret` và `BareMetalHost`. 
+  * Lưu nội dung YAML dưới đây vào tệp `controller.yaml`:
+
+  ```yaml
+  ---
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: controller1-bmc
+    namespace: openshift-machine-api
+  type: Opaque
+  data:
+    username: <base64_of_uid>
+    password: <base64_of_pwd>
+  ---
+  apiVersion: metal3.io/v1alpha1
+  kind: BareMetalHost
+  metadata:
+    name: controller1
+    namespace: openshift-machine-api
+  spec:
+    bmc:
+      address: <protocol>://<bmc_url>
+      credentialsName: "controller1-bmc"
+    bootMACAddress: <nic1_mac_address>
+    customDeploy:
+      method: install_coreos
+    externallyProvisioned: true
+    online: true
+    userData:
+      name: controller-user-data-managed
+      namespace: openshift-machine-api
+  ```
+
+  Trong đó:
+    * `spec.bmc.address`: Chỉ định địa chỉ BMC. Chỉ các trình điều khiển máy chủ vật lý (bare-metal host) hỗ trợ khởi động qua mạng bằng phương tiện ảo (virtual media) mới được chấp nhận; ví dụ: redfish-virtualmedia và idrac-virtualmedia.
+    * `spec.externallyProvisioned`: Xác định xem máy chủ có được cung cấp (provision) từ bên ngoài hay không. Bạn phải đặt giá trị này là `true` để ngăn BMO thực hiện cung cấp lại (re-provision) cho máy chủ vật lý đó.
+
+2. Tạo đối tượng máy chủ bare-metal bằng cách chạy lệnh sau:
+
+```shell
+$ oc create -f controller.yaml
+```
+
+Ví dụ đầu ra
+
+```
+secret/controller1-bmc created
+baremetalhost.metal3.io/controller1 created
+```
+
+**Xác minh**
+
+Xác minh rằng BMO đã tạo đối tượng máy chủ vật lý (bare-metal host object) bằng cách chạy lệnh sau:
+
+```shell
+$ oc get bmh -A
+```
+
+Ví dụ đầu ra
+
+```
+NAMESPACE               NAME          STATE                    CONSUMER   ONLINE   ERROR   AGE
+openshift-machine-api   controller1   externally provisioned              true             13s
+```
+
+#### 2.4.5. Loại bỏ các máy chủ khỏi cụm do người dùng cung cấp bằng cách sử dụng BMO
+Bạn có thể sử dụng Bare Metal Operator (BMO) để loại bỏ các máy chủ vật lý (bare-metal host) khỏi một cụm do người dùng cung cấp.
+
+**Điều kiện tiên quyết**
+
+* Bạn đã tạo một cụm máy chủ vật lý do người dùng cung cấp. 
+* Bạn có quyền truy cập vào bộ điều khiển quản lý bo mạch chủ (BMC) của các máy chủ đó. 
+* Bạn đã triển khai dịch vụ cung cấp tài nguyên (provisioning service) trong cụm bằng cách tạo một đối tượng Provisioning CR.
+
+**Quy trình**
+
+1. Thực hiện chặn (cordon) và giải phóng (drain) nút bằng cách chạy lệnh sau:
+
+```shell
+$ oc adm drain app1 --force --ignore-daemonsets=true
+```
+
+Ví dụ đầu ra
+
+```
+node/app1 cordoned
+WARNING: ignoring DaemonSet-managed Pods: openshift-cluster-node-tuning-operator/tuned-tvthg, openshift-dns/dns-
+default-9q6rz, openshift-dns/node-resolver-zvt42, openshift-image-registry/node-ca-mzxth, openshift-ingress-cana
+ry/ingress-canary-qq5lf, openshift-machine-config-operator/machine-config-daemon-v79dm, openshift-monitoring/nod
+e-exporter-2vn59, openshift-multus/multus-additional-cni-plugins-wssvj, openshift-multus/multus-fn8tg, openshift
+-multus/network-metrics-daemon-5qv55, openshift-network-diagnostics/network-check-target-jqxn2, openshift-ovn-ku
+bernetes/ovnkube-node-rsvqg
+evicting pod openshift-operator-lifecycle-manager/collect-profiles-27766965-258vp
+evicting pod openshift-operator-lifecycle-manager/collect-profiles-27766950-kg5mk
+evicting pod openshift-operator-lifecycle-manager/collect-profiles-27766935-stf4s
+pod/collect-profiles-27766965-258vp evicted
+pod/collect-profiles-27766950-kg5mk evicted
+pod/collect-profiles-27766935-stf4s evicted
+node/app1 drained
+```
+
+2. Xóa đặc tả `customDeploy` khỏi CR `BareMetalHost`. 
+  * Chỉnh sửa CR `BareMetalHost` cho máy chủ bằng cách chạy lệnh sau:
+
+  ```shell
+  $ oc edit bmh -n openshift-machine-api <host_name>
+  ```
+
+  * Xóa các dòng `spec.customDeploy` và `spec.customDeploy.method`:
+
+  ```yaml
+  ...
+    customDeploy:
+      method: install_coreos
+  ```
+
+  * Hãy xác minh rằng trạng thái cung cấp (provisioning state) của máy chủ chuyển sang trạng thái hủy cung cấp (deprovisioning) bằng cách chạy lệnh sau:
+
+  ```shell
+  $ oc get bmh -A
+  ```
+
+  Ví dụ đầu ra
+
+  ```
+  NAMESPACE               NAME          STATE                    CONSUMER   ONLINE   ERROR   AGE
+  openshift-machine-api   controller1   externally provisioned              true             58m
+  openshift-machine-api   worker1       deprovisioning                      true             57m
+  ```
+
+3. Hãy xóa host bằng cách chạy lệnh sau khi trạng thái của `BareMetalHost` chuyển sang `available`:
+
+```shell
+$ oc delete bmh -n openshift-machine-api <bmh_name>
+```
+
+> **Lưu ý:** Bạn có thể thực hiện bước này mà không cần chỉnh sửa CR `BareMetalHost`. Có thể sẽ mất một khoảng thời gian để trạng thái của `BareMetalHost` chuyển từ `deprovisioning` (đang hủy cấp phát) sang `available` (sẵn sàng).
+
+4. Xóa nút bằng cách chạy lệnh sau:
+
+```shell
+$ oc delete node <node_name>
+```
+
+**Xác minh**
+
+* Hãy xác minh rằng bạn đã xóa nút bằng cách chạy lệnh sau:
+
+```shell
+$ oc get nodes
+```
+
+Ví dụ đầu ra
+
+```
+NAME          STATUS   ROLES           AGE     VERSION
+controller1   Ready    master,worker   2d23h   v1.24.0+dc5a2fd
+```
