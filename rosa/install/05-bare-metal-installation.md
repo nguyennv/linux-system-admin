@@ -12047,3 +12047,1032 @@ platform:
 Thay thế `<bootstrap_os_image>` bằng giá trị của $BOOTSTRAP_OS_IMAGE.
 
 Xem phần "Cấu hình tệp install-config.yaml" để biết thêm chi tiết.
+
+#### 3.3.11. Các dịch vụ dành cho bộ cân bằng tải do người dùng quản lý
+Bạn có thể định cấu hình cụm OpenShift Container Platform để sử dụng bộ cân bằng tải do người dùng quản lý thay cho bộ cân bằng tải mặc định.
+
+> **Quan trọng:** Việc định cấu hình bộ cân bằng tải do người dùng quản lý phụ thuộc vào bộ cân bằng tải từ nhà cung cấp của bạn.
+
+Thông tin và các ví dụ trong phần này chỉ mang tính chất hướng dẫn. Vui lòng tham khảo tài liệu từ nhà cung cấp để biết thêm thông tin chi tiết về bộ cân bằng tải của họ.
+
+Red Hat hỗ trợ các dịch vụ sau cho bộ cân bằng tải do người dùng quản lý:
+
+* Ingress Controller (Bộ điều khiển Ingress)
+* OpenShift API
+* OpenShift MachineConfig API
+
+Bạn có thể chọn định cấu hình một hoặc tất cả các dịch vụ này cho bộ cân bằng tải do người dùng quản lý. Việc chỉ định cấu hình dịch vụ Ingress Controller là một tùy chọn phổ biến. Để hiểu rõ hơn về từng dịch vụ, hãy xem các sơ đồ sau:
+
+**Hình 3.5. Ví dụ về quy trình mạng thể hiện Ingress Controller hoạt động trong môi trường OpenShift Container Platform**
+![Hình 3.5](img/external-load-balancer-default.png)
+
+**Hình 3.6. Ví dụ về quy trình mạng cho thấy một API OpenShift đang hoạt động trong môi trường OpenShift Container Platform**
+![Hình 3.6](img/external-load-balancer-openshift-api.png)
+
+**Hình 3.7. Ví dụ về quy trình mạng cho thấy OpenShift MachineConfig API đang hoạt động trong môi trường OpenShift Container Platform**
+![Hình 3.7](img/external-load-balancer-machine-config-api.png)
+
+Các tùy chọn cấu hình sau đây được hỗ trợ cho các bộ cân bằng tải (load balancer) do người dùng quản lý:
+
+* Sử dụng bộ chọn nút (node selector) để ánh xạ Ingress Controller tới một tập hợp các nút cụ thể. Bạn phải gán một địa chỉ IP tĩnh cho mỗi nút trong tập hợp này, hoặc cấu hình để mỗi nút nhận cùng một địa chỉ IP từ Giao thức Cấu hình Máy chủ Động (DHCP). Các nút hạ tầng (infrastructure nodes) thường được cấu hình theo cách này. 
+* Nhắm mục tiêu đến tất cả các địa chỉ IP trên một mạng con (subnet). Cấu hình này có thể giúp giảm bớt công sức duy trì bộ cân bằng tải, vì bạn có thể tạo hoặc xóa các nút trong các mạng đó mà không cần phải cấu hình lại các đích đến (targets) của bộ cân bằng tải. Nếu bạn triển khai các pod ingress của mình bằng cách sử dụng một tập hợp máy (machine set) trên một mạng nhỏ hơn, chẳng hạn như mạng /27 hoặc /28, bạn có thể đơn giản hóa các đích đến cho bộ cân bằng tải của mình. 
+
+> **Mẹo:** Bạn có thể liệt kê tất cả các địa chỉ IP hiện có trong một mạng bằng cách kiểm tra các tài nguyên của nhóm cấu hình máy (machine config pool).
+
+Trước khi định cấu hình bộ cân bằng tải do người dùng quản lý cho cụm OpenShift Container Platform của mình, hãy cân nhắc các thông tin sau:
+
+* Đối với địa chỉ IP phía trước (front-end), bạn có thể sử dụng cùng một địa chỉ IP cho bộ cân bằng tải của Ingress Controller và bộ cân bằng tải của API. Hãy kiểm tra tài liệu từ nhà cung cấp để xác nhận khả năng này. 
+* Đối với địa chỉ IP phía sau (back-end), hãy đảm bảo rằng địa chỉ IP của các nút trong mặt phẳng điều khiển (control plane node) của OpenShift Container Platform không thay đổi trong suốt vòng đời của bộ cân bằng tải do người dùng quản lý. Bạn có thể thực hiện việc này bằng một trong các cách sau:
+  * Gán địa chỉ IP tĩnh cho từng nút trong mặt phẳng điều khiển. 
+  * Định cấu hình để mỗi nút luôn nhận được cùng một địa chỉ IP từ DHCP mỗi khi nút đó yêu cầu cấp phát IP (DHCP lease). Tùy thuộc vào nhà cung cấp, cơ chế này có thể được thực hiện thông qua việc đặt trước địa chỉ IP (IP reservation) hoặc gán IP tĩnh qua DHCP. 
+* Bạn cần định nghĩa thủ công từng nút chạy Ingress Controller trong bộ cân bằng tải do người dùng quản lý dành cho dịch vụ back-end của Ingress Controller. Ví dụ: nếu Ingress Controller di chuyển sang một nút chưa được định nghĩa, kết nối có thể bị gián đoạn.
+
+##### 3.3.11.1. Cấu hình bộ cân bằng tải do người dùng quản lý
+Bạn có thể cấu hình cụm OpenShift Container Platform để sử dụng bộ cân bằng tải do người dùng quản lý thay cho bộ cân bằng tải mặc định.
+
+> **Quan trọng:** Trước khi cấu hình bộ cân bằng tải do người dùng quản lý, hãy đảm bảo rằng bạn đã đọc phần "Các dịch vụ dành cho bộ cân bằng tải do người dùng quản lý".
+
+Hãy đọc các điều kiện tiên quyết sau đây áp dụng cho dịch vụ mà bạn muốn cấu hình cho bộ cân bằng tải do người dùng quản lý của mình.
+
+> **Lưu ý:** MetalLB, chạy trên một cụm, đóng vai trò là bộ cân bằng tải do người dùng quản lý.
+
+**Các điều kiện tiên quyết**
+
+Danh sách dưới đây nêu chi tiết các điều kiện tiên quyết đối với API của OpenShift:
+
+* Bạn đã xác định một địa chỉ IP giao diện người dùng (front-end IP address). 
+* Các cổng TCP 6443 và 22623 được mở trên địa chỉ IP giao diện người dùng của bộ cân bằng tải. Hãy kiểm tra các mục sau:
+  * Cổng 6443 cung cấp quyền truy cập vào dịch vụ API của OpenShift. 
+  * Cổng 22623 có thể cung cấp các cấu hình khởi động (ignition startup configurations) cho các nút (node). 
+* Địa chỉ IP giao diện người dùng và cổng 6443 phải có thể truy cập được bởi tất cả người dùng trong hệ thống của bạn từ các vị trí bên ngoài cụm OpenShift Container Platform. 
+* Địa chỉ IP giao diện người dùng và cổng 22623 chỉ được phép truy cập bởi các nút (node) thuộc OpenShift Container Platform. 
+* Phần phụ trợ (backend) của bộ cân bằng tải phải có khả năng giao tiếp với các nút thuộc mặt phẳng điều khiển (control plane nodes) của OpenShift Container Platform thông qua các cổng 6443 và 22623.
+
+Danh sách dưới đây nêu chi tiết các điều kiện tiên quyết đối với Ingress Controller:
+
+* Bạn đã xác định một địa chỉ IP front-end (địa chỉ IP phía trước). 
+* Các cổng TCP 443 và 80 được mở trên địa chỉ IP front-end của bộ cân bằng tải (load balancer). 
+* Địa chỉ IP front-end cùng các cổng 80 và 443 phải có thể truy cập được bởi tất cả người dùng hệ thống nằm bên ngoài cụm OpenShift Container Platform của bạn. 
+* Địa chỉ IP front-end cùng các cổng 80 và 443 phải có thể truy cập được bởi tất cả các node đang hoạt động trong cụm OpenShift Container Platform của bạn. 
+* Phần backend của bộ cân bằng tải có thể giao tiếp với các node OpenShift Container Platform—nơi chạy Ingress Controller—thông qua các cổng 80, 443 và 1936.
+
+Danh sách dưới đây nêu chi tiết các điều kiện tiên quyết đối với thông số kỹ thuật của URL kiểm tra trạng thái (health check URL):
+
+Bạn có thể cấu hình hầu hết các bộ cân bằng tải bằng cách thiết lập các URL kiểm tra trạng thái để xác định xem một dịch vụ đang khả dụng hay không khả dụng. OpenShift Container Platform cung cấp các cơ chế kiểm tra trạng thái này cho OpenShift API, Machine Configuration API và các dịch vụ backend của Ingress Controller.
+
+Ví dụ dưới đây minh họa thông số kỹ thuật kiểm tra trạng thái Kubernetes API cho một dịch vụ backend:
+
+```
+Path: HTTPS:6443/readyz
+Healthy threshold: 2
+Unhealthy threshold: 2
+Timeout: 10
+Interval: 10
+```
+
+Ví dụ sau đây cho thấy thông số kỹ thuật kiểm tra tình trạng (health check) của Machine Config API dành cho một dịch vụ backend:
+
+```
+Path: HTTPS:22623/healthz
+Healthy threshold: 2
+Unhealthy threshold: 2
+Timeout: 10
+Interval: 10
+```
+
+Ví dụ sau đây cho thấy thông số kỹ thuật kiểm tra tình trạng (health check) của Ingress Controller dành cho một dịch vụ backend:
+
+```
+Path: HTTP:1936/healthz/ready
+Healthy threshold: 2
+Unhealthy threshold: 2
+Timeout: 5
+Interval: 10
+```
+
+**Quy trình**
+
+1. Cấu hình HAProxy Ingress Controller để cho phép truy cập vào cụm (cluster) từ bộ cân bằng tải (load balancer) thông qua các cổng 6443, 22623, 443 và 80. Tùy theo nhu cầu, bạn có thể chỉ định địa chỉ IP của một mạng con (subnet) duy nhất hoặc các địa chỉ IP từ nhiều mạng con khác nhau trong cấu hình HAProxy của mình. 
+
+Ví dụ về cấu hình HAProxy với một mạng con được liệt kê
+
+```
+# ...
+listen my-cluster-api-6443
+    bind 192.168.1.100:6443
+    mode tcp
+    balance roundrobin
+  option httpchk
+  http-check connect
+  http-check send meth GET uri /readyz
+  http-check expect status 200
+    server my-cluster-master-2 192.168.1.101:6443 check inter 10s rise 2 fall 2
+    server my-cluster-master-0 192.168.1.102:6443 check inter 10s rise 2 fall 2
+    server my-cluster-master-1 192.168.1.103:6443 check inter 10s rise 2 fall 2
+
+listen my-cluster-machine-config-api-22623
+    bind 192.168.1.100:22623
+    mode tcp
+    balance roundrobin
+  option httpchk
+  http-check connect
+  http-check send meth GET uri /healthz
+  http-check expect status 200
+    server my-cluster-master-2 192.168.1.101:22623 check inter 10s rise 2 fall 2
+    server my-cluster-master-0 192.168.1.102:22623 check inter 10s rise 2 fall 2
+    server my-cluster-master-1 192.168.1.103:22623 check inter 10s rise 2 fall 2
+
+listen my-cluster-apps-443
+    bind 192.168.1.100:443
+    mode tcp
+    balance roundrobin
+  option httpchk
+  http-check connect
+  http-check send meth GET uri /healthz/ready
+  http-check expect status 200
+    server my-cluster-worker-0 192.168.1.111:443 check port 1936 inter 10s rise 2 fall 2
+    server my-cluster-worker-1 192.168.1.112:443 check port 1936 inter 10s rise 2 fall 2
+    server my-cluster-worker-2 192.168.1.113:443 check port 1936 inter 10s rise 2 fall 2
+
+listen my-cluster-apps-80
+   bind 192.168.1.100:80
+   mode tcp
+   balance roundrobin
+  option httpchk
+  http-check connect
+  http-check send meth GET uri /healthz/ready
+  http-check expect status 200
+    server my-cluster-worker-0 192.168.1.111:80 check port 1936 inter 10s rise 2 fall 2
+    server my-cluster-worker-1 192.168.1.112:80 check port 1936 inter 10s rise 2 fall 2
+    server my-cluster-worker-2 192.168.1.113:80 check port 1936 inter 10s rise 2 fall 2
+# ...
+```
+
+Ví dụ cấu hình HAProxy với nhiều mạng con được liệt kê
+
+```
+# ...
+listen api-server-6443
+    bind *:6443
+    mode tcp
+      server master-00 192.168.83.89:6443 check inter 1s
+      server master-01 192.168.84.90:6443 check inter 1s
+      server master-02 192.168.85.99:6443 check inter 1s
+      server bootstrap 192.168.80.89:6443 check inter 1s
+
+listen machine-config-server-22623
+    bind *:22623
+    mode tcp
+      server master-00 192.168.83.89:22623 check inter 1s
+      server master-01 192.168.84.90:22623 check inter 1s
+      server master-02 192.168.85.99:22623 check inter 1s
+      server bootstrap 192.168.80.89:22623 check inter 1s
+
+listen ingress-router-80
+    bind *:80
+    mode tcp
+    balance source
+      server worker-00 192.168.83.100:80 check inter 1s
+      server worker-01 192.168.83.101:80 check inter 1s
+
+listen ingress-router-443
+    bind *:443
+    mode tcp
+    balance source
+      server worker-00 192.168.83.100:443 check inter 1s
+      server worker-01 192.168.83.101:443 check inter 1s
+
+listen ironic-api-6385
+    bind *:6385
+    mode tcp
+    balance source
+      server master-00 192.168.83.89:6385 check inter 1s
+      server master-01 192.168.84.90:6385 check inter 1s
+      server master-02 192.168.85.99:6385 check inter 1s
+      server bootstrap 192.168.80.89:6385 check inter 1s
+
+listen inspector-api-5050
+    bind *:5050
+    mode tcp
+    balance source
+      server master-00 192.168.83.89:5050 check inter 1s
+      server master-01 192.168.84.90:5050 check inter 1s
+      server master-02 192.168.85.99:5050 check inter 1s
+      server bootstrap 192.168.80.89:5050 check inter 1s
+# ...
+```
+
+2. Sử dụng lệnh CLI `curl` để xác minh rằng bộ cân bằng tải do người dùng quản lý cùng các tài nguyên của nó đang hoạt động:
+  * Xác minh rằng API cấu hình máy cụm (cluster machine configuration API) có thể truy cập được từ tài nguyên máy chủ API Kubernetes (Kubernetes API server resource) bằng cách chạy lệnh sau và quan sát phản hồi:
+
+  ```shell
+  $ curl https://<loadbalancer_ip_address>:6443/version --insecure
+  ```
+
+  Nếu cấu hình chính xác, bạn sẽ nhận được một đối tượng JSON trong phản hồi:
+
+  ```json
+  {
+    "major": "1",
+    "minor": "11+",
+    "gitVersion": "v1.11.0+ad103ed",
+    "gitCommit": "ad103ed",
+    "gitTreeState": "clean",
+    "buildDate": "2019-01-09T06:44:10Z",
+    "goVersion": "go1.10.3",
+    "compiler": "gc",
+    "platform": "linux/amd64"
+  }
+  ```
+
+  * Hãy xác minh rằng API cấu hình máy trong cụm có thể truy cập được từ tài nguyên máy chủ cấu hình máy (Machine config server), bằng cách chạy lệnh sau và quan sát kết quả đầu ra:
+
+  ```shell
+  $ curl -v https://<loadbalancer_ip_address>:22623/healthz --insecure
+  ```
+
+  Nếu cấu hình chính xác, kết quả từ lệnh này sẽ hiển thị phản hồi như sau:
+
+  ```
+  HTTP/1.1 200 OK
+  Content-Length: 0
+  ```
+
+  * Hãy xác minh rằng bộ điều khiển có thể truy cập được từ tài nguyên Ingress Controller thông qua cổng 80 bằng cách chạy lệnh sau và quan sát kết quả đầu ra:
+
+  ```shell
+  $ curl -I -L -H "Host: console-openshift-console.apps.<cluster_name>.<base_domain>" http://<load_balancer_front_end_IP_address>
+  ```
+
+  Nếu cấu hình chính xác, kết quả từ lệnh này sẽ hiển thị phản hồi như sau:
+
+  ```
+  HTTP/1.1 302 Found
+  content-length: 0
+  location: https://console-openshift-console.apps.ocp4.private.opequon.net/
+  cache-control: no-cache
+  ```
+
+  * Hãy xác minh rằng tài nguyên Ingress Controller có thể truy cập được bộ điều khiển (controller) thông qua cổng 443 bằng cách chạy lệnh sau và quan sát kết quả đầu ra:
+
+  ```shell
+  $ curl -I -L --insecure --resolve console-openshift-console.apps.<cluster_name>.<base_domain>:443:<Load Balancer Front End IP Address> https://console-openshift-console.apps.<cluster_name>.<base_domain>
+  ```
+
+  Nếu cấu hình chính xác, kết quả từ lệnh này sẽ hiển thị phản hồi như sau:
+
+  ```
+  HTTP/1.1 200 OK
+  referrer-policy: strict-origin-when-cross-origin
+  set-cookie: csrf-token=UlYWOyQ62LWjw2h003xtYSKlh1a0Py2hhctw0WmV2YEdhJjFyQwWcGBsja261dGLgaYO0nxzVErhiXt6QepA7g==; Path=/; Secure; SameSite=Lax
+  x-content-type-options: nosniff
+  x-dns-prefetch-control: off
+  x-frame-options: DENY
+  x-xss-protection: 1; mode=block
+  date: Wed, 04 Oct 2023 16:29:38 GMT
+  content-type: text/html; charset=utf-8
+  set-cookie: 1e2670d92730b515ce3a1bb65da45062=1bf5e9573c9a2760c964ed1659cc1673; path=/; HttpOnly; Secure; SameSite=None
+  cache-control: private
+  ```
+
+3. Hãy định cấu hình các bản ghi DNS cho cụm (cluster) của bạn để trỏ đến các địa chỉ IP giao diện người dùng (front-end IP) của bộ cân bằng tải do người dùng quản lý. Bạn cần cập nhật các bản ghi trên máy chủ DNS của mình cho API của cụm cũng như cho các ứng dụng thông qua bộ cân bằng tải đó. Các ví dụ dưới đây cho thấy các bản ghi DNS đã được sửa đổi:
+
+```
+<load_balancer_ip_address>  A  api.<cluster_name>.<base_domain>
+A record pointing to Load Balancer Front End
+```
+
+```
+<load_balancer_ip_address>   A apps.<cluster_name>.<base_domain>
+A record pointing to Load Balancer Front End
+```
+
+> **Quan trọng:** Quá trình lan truyền DNS có thể mất một khoảng thời gian để mỗi bản ghi DNS trở nên khả dụng. Hãy đảm bảo rằng từng bản ghi DNS đã được lan truyền trước khi tiến hành xác thực các bản ghi đó.
+
+4. Để cụm OpenShift Container Platform của bạn sử dụng bộ cân bằng tải do người dùng quản lý, bạn phải chỉ định cấu hình sau trong tệp `install-config.yaml` của cụm:
+
+```yaml
+# ...
+platform:
+  bare-metal:
+    loadBalancer:
+      type: <loadBalancer_type>
+    apiVIPs:
+    - <api_ip>
+    ingressVIPs:
+    - <ingress_ip>
+# ...
+```
+
+Trong đó:
+
+  * `<loadBalancer_type>`: Xác định loại bộ cân bằng tải (load balancer). Hãy đặt giá trị là UserManaged nếu muốn sử dụng bộ cân bằng tải do người dùng quản lý cho cụm (cluster) của bạn. Tham số này mặc định là OpenShiftManagedDefault, tương ứng với bộ cân bằng tải nội bộ mặc định của OpenShift. Đối với các dịch vụ được định nghĩa trong namespace `openshift-kni-infra`, bộ cân bằng tải do người dùng quản lý có thể triển khai dịch vụ `coredns` tới các pod trong cụm, nhưng sẽ bỏ qua các dịch vụ `keepalived` và `haproxy`.
+  * `<api_ip>`: Xác định địa chỉ IP công khai của bộ cân bằng tải do người dùng quản lý dành cho Kubernetes API. Đây là tham số bắt buộc.
+  * `<ingress_ip>`: Xác định địa chỉ IP công khai của bộ cân bằng tải do người dùng quản lý dành cho lưu lượng truy cập vào (ingress traffic). Đây là tham số bắt buộc.
+
+**Xác minh**
+
+1. Sử dụng lệnh CLI `curl` để kiểm tra xem bộ cân bằng tải do người dùng quản lý và cấu hình bản ghi DNS đã hoạt động hay chưa:
+  * Xác minh rằng bạn có thể truy cập API của cụm (cluster API) bằng cách chạy lệnh sau và quan sát kết quả đầu ra:
+
+  ```shell
+  $ curl https://api.<cluster_name>.<base_domain>:6443/version --insecure
+  ```
+
+  Nếu cấu hình chính xác, bạn sẽ nhận được một đối tượng JSON trong phản hồi:
+
+  ```json
+  {
+    "major": "1",
+    "minor": "11+",
+    "gitVersion": "v1.11.0+ad103ed",
+    "gitCommit": "ad103ed",
+    "gitTreeState": "clean",
+    "buildDate": "2019-01-09T06:44:10Z",
+    "goVersion": "go1.10.3",
+    "compiler": "gc",
+    "platform": "linux/amd64"
+  }
+  ```
+
+  * Hãy xác minh rằng bạn có thể truy cập cấu hình máy trong cụm (cluster) bằng cách chạy lệnh sau và quan sát kết quả đầu ra:
+
+  ```shell
+  $ curl -v https://api.<cluster_name>.<base_domain>:22623/healthz --insecure
+  ```
+
+  Nếu cấu hình chính xác, kết quả từ lệnh này sẽ hiển thị phản hồi như sau:
+
+  ```
+  HTTP/1.1 200 OK
+  Content-Length: 0
+  ```
+
+  * Hãy xác minh rằng bạn có thể truy cập từng ứng dụng trong cụm trên cổng 80 bằng cách chạy lệnh sau và quan sát kết quả đầu ra:
+
+  ```shell
+  $ curl http://console-openshift-console.apps.<cluster_name>.<base_domain> -I -L --insecure
+  ```
+
+  Nếu cấu hình chính xác, kết quả từ lệnh này sẽ hiển thị phản hồi như sau:
+
+  ```
+  HTTP/1.1 302 Found
+  content-length: 0
+  location: https://console-openshift-console.apps.<cluster-name>.<base domain>/
+  cache-control: no-cacheHTTP/1.1 200 OK
+  referrer-policy: strict-origin-when-cross-origin
+  set-cookie: csrf-token=39HoZgztDnzjJkq/JuLJMeoKNXlfiVv2YgZc09c3TBOBU4NI6kDXaJH1LdicNhN1UsQWzon4Dor9GWGfopaTEQ==; Path=/; Secure
+  x-content-type-options: nosniff
+  x-dns-prefetch-control: off
+  x-frame-options: DENY
+  x-xss-protection: 1; mode=block
+  date: Tue, 17 Nov 2020 08:42:10 GMT
+  content-type: text/html; charset=utf-8
+  set-cookie: 1e2670d92730b515ce3a1bb65da45062=9b714eb87e93cf34853e87a92d6894be; path=/; HttpOnly; Secure; SameSite=None
+  cache-control: private
+  ```
+
+  * Xác minh rằng bạn có thể truy cập từng ứng dụng trong cụm trên cổng 443 bằng cách chạy lệnh sau và quan sát kết quả đầu ra:
+
+  ```shell
+  $ curl https://console-openshift-console.apps.<cluster_name>.<base_domain> -I -L --insecure
+  ```
+
+  Nếu cấu hình chính xác, kết quả từ lệnh này sẽ hiển thị phản hồi như sau:
+
+  ```
+  HTTP/1.1 200 OK
+  referrer-policy: strict-origin-when-cross-origin
+  set-cookie: csrf-token=UlYWOyQ62LWjw2h003xtYSKlh1a0Py2hhctw0WmV2YEdhJjFyQwWcGBsja261dGLgaYO0nxzVErhiXt6QepA7g==; Path=/; Secure; SameSite=Lax
+  x-content-type-options: nosniff
+  x-dns-prefetch-control: off
+  x-frame-options: DENY
+  x-xss-protection: 1; mode=block
+  date: Wed, 04 Oct 2023 16:29:38 GMT
+  content-type: text/html; charset=utf-8
+  set-cookie: 1e2670d92730b515ce3a1bb65da45062=1bf5e9573c9a2760c964ed1659cc1673; path=/; HttpOnly; Secure; SameSite=None
+  cache-control: private
+  ```
+
+#### 3.3.12. Thiết lập tên máy chủ (hostname) cho các nút trong cụm thông qua DHCP
+Trên các máy chạy hệ điều hành Red Hat Enterprise Linux CoreOS (RHCOS), `NetworkManager` đảm nhận việc thiết lập tên máy chủ (hostname). Theo mặc định, DHCP sẽ cung cấp tên máy chủ cho `NetworkManager`; đây cũng là phương pháp được khuyến nghị.
+
+`NetworkManager` sẽ thực hiện tra cứu DNS ngược (reverse DNS lookup) để lấy tên máy chủ trong các trường hợp sau:
+
+* Nếu DHCP không cung cấp tên máy chủ.
+* Nếu bạn sử dụng các tham số nhân (kernel arguments) để thiết lập tên máy chủ.
+* Nếu bạn sử dụng một phương pháp khác để thiết lập tên máy chủ.
+
+Quá trình tra cứu DNS ngược diễn ra sau khi mạng đã được khởi tạo trên một nút; điều này có thể làm tăng thời gian cần thiết để `NetworkManager` thiết lập tên máy chủ. Các dịch vụ hệ thống khác có thể khởi chạy trước khi `NetworkManager` kịp thiết lập tên máy chủ, dẫn đến việc các dịch vụ đó sử dụng tên máy chủ mặc định, chẳng hạn như `localhost`.
+
+> **Mẹo:** Bạn có thể tránh được sự chậm trễ trong việc thiết lập tên máy chủ bằng cách sử dụng DHCP để cung cấp tên máy chủ cho từng nút trong cụm. Ngoài ra, việc thiết lập tên máy chủ thông qua DHCP còn giúp tránh các lỗi cấu hình thủ công đối với bản ghi DNS trong các môi trường triển khai DNS theo cơ chế "split-horizon" (DNS phân tách theo nguồn truy vấn).
+
+#### 3.3.13. Các điều kiện tiên quyết để cấu hình nút trọng tài cục bộ (local arbiter node)
+Để duy trì tính sẵn sàng cao (HA) đồng thời giảm chi phí cơ sở hạ tầng cho cụm (cluster) của mình, bạn có thể cấu hình cụm OpenShift Container Platform với hai nút mặt phẳng điều khiển (control plane node) và một nút trọng tài cục bộ (local arbiter node).
+
+Nút trọng tài cục bộ là một máy chủ có chi phí thấp hơn, được đặt cùng vị trí và tham gia vào các quyết định thiết lập hạn ngạch (quorum) của mặt phẳng điều khiển. Khác với nút mặt phẳng điều khiển tiêu chuẩn, nút trọng tài không chạy toàn bộ các dịch vụ của mặt phẳng điều khiển. Bạn có thể sử dụng cấu hình này để duy trì tính sẵn sàng cao trong cụm của mình chỉ với hai nút mặt phẳng điều khiển được thiết lập đầy đủ, thay vì ba nút.
+
+> **Quan trọng:** Bạn chỉ có thể cấu hình nút trọng tài cục bộ. Các nút trọng tài từ xa (remote arbiter node) không được hỗ trợ.
+
+Để triển khai một cụm gồm hai nút mặt phẳng điều khiển và một nút trọng tài cục bộ, bạn phải xác định các nút sau trong tệp `install-config.yaml`:
+
+* 2 nút mặt phẳng điều khiển
+* 1 nút trọng tài
+
+Nút trọng tài phải đáp ứng các yêu cầu hệ thống tối thiểu sau:
+
+* 2 luồng (threads)
+* 8 GB RAM
+* 50 GB ổ cứng SSD hoặc dung lượng lưu trữ tương đương
+
+Nút trọng tài phải được đặt trong môi trường mạng có độ trễ đầu cuối (end-to-end latency) dưới 500 mili giây, bao gồm cả độ trễ I/O của ổ đĩa. Trong các môi trường có độ trễ cao, bạn có thể cần áp dụng cấu hình "etcd slow profile".
+
+Các nút mặt phẳng điều khiển phải đáp ứng các yêu cầu hệ thống tối thiểu sau:
+
+* 4 luồng (threads)
+* 16 GB RAM
+* 120 GB ổ cứng SSD hoặc dung lượng lưu trữ tương đương
+
+Ngoài ra, các nút mặt phẳng điều khiển cũng phải có đủ dung lượng lưu trữ cho khối lượng công việc (workload).
+
+#### 3.3.14. Cấu hình nút trọng tài (arbiter node) cục bộ bằng cơ sở hạ tầng do trình cài đặt cung cấp
+Để duy trì tính sẵn sàng cao (HA) đồng thời giảm chi phí cơ sở hạ tầng cho cụm (cluster) của mình, bạn có thể cấu hình cụm OpenShift Container Platform với hai nút mặt phẳng điều khiển (control plane node) và một nút trọng tài cục bộ.
+
+**Điều kiện tiên quyết**
+
+* Bạn đã tải xuống OpenShift CLI (oc) và chương trình cài đặt. 
+* Bạn đã đăng nhập vào OpenShift CLI (oc).
+
+**Quy trình**
+
+1. Chỉnh sửa tệp `install-config.yaml` để xác định nút trọng tài cùng với các nút mặt phẳng điều khiển. 
+
+Ví dụ về cấu hình trong tệp `install-config.yaml` để triển khai một nút trọng tài
+
+```yaml
+apiVersion: v1
+baseDomain: devcluster.openshift.com
+compute:
+  - architecture: amd64
+    hyperthreading: Enabled
+    name: worker
+    platform: {}
+    replicas: 0
+arbiter:
+  architecture: amd64
+  hyperthreading: Enabled
+  replicas: 1
+  name: arbiter
+  platform:
+    baremetal: {}
+controlPlane:
+  architecture: amd64
+  hyperthreading: Enabled
+  name: master
+  platform:
+    baremetal: {}
+  replicas: 2
+platform:
+  baremetal:
+# ...
+    hosts:
+      - name: cluster-master-0
+        role: master
+# ...
+      - name: cluster-master-1
+        role: master
+        ...
+      - name: cluster-arbiter-0
+        role: arbiter
+# ...
+```
+
+trong đó:
+
+* `arbiter`: Chỉ định nhóm máy chủ đóng vai trò trọng tài (arbiter). Bạn phải cấu hình trường này để triển khai một cụm (cluster) có nút trọng tài.
+* `arbiter.replicas`: Chỉ định giá trị cho tham số arbiter.replicas. Hãy đặt trường replicas thành 1 cho nhóm máy chủ trọng tài. Bạn không được đặt giá trị cho trường này lớn hơn 1.
+* `arbiter.name`: Chỉ định tên cho nhóm máy chủ trọng tài.
+* `controlPlane`: Chỉ định nhóm máy chủ điều khiển (control plane).
+* `controlPlane.replicas`: Chỉ định giá trị cho tham số `controlPlane.replicas`. Khi một nhóm máy chủ trọng tài được xác định, thì việc thiết lập 2 bản sao (replica) cho nhóm máy chủ điều khiển là hợp lệ.
+
+2. Lưu tệp `install-config.yaml` đã sửa đổi.
+
+#### 3.3.15. Cấu hình tệp install-config.yaml
+Tệp `install-config.yaml` cần có thêm một số thông tin chi tiết. Phần lớn các thông tin này cung cấp cho chương trình cài đặt và cụm (cluster) được tạo ra những dữ liệu cần thiết về phần cứng hiện có, giúp hệ thống có thể quản lý phần cứng đó một cách toàn diện.
+
+> **Lưu ý:** Chương trình cài đặt không còn yêu cầu tệp ảnh RHCOS (clusterOSImage) nữa, vì tệp ảnh phù hợp đã được bao gồm sẵn trong gói phát hành (release payload).
+
+Quy trình
+
+1. Cấu hình tệp `install-config.yaml`. Thay đổi các biến số tương ứng cho phù hợp với môi trường của bạn, bao gồm `pullSecret` và `sshKey`:
+
+```yaml
+apiVersion: v1
+baseDomain: <domain>
+metadata:
+  name: <cluster_name>
+networking:
+  machineNetwork:
+  - cidr: <public_cidr>
+  networkType: OVNKubernetes
+compute:
+- name: worker
+  replicas: 2
+controlPlane:
+  name: master
+  replicas: 3
+  platform:
+    baremetal: {}
+platform:
+  baremetal:
+    additionalNTPServers:
+      - <ntp_domain_or_ip>
+    apiVIPs:
+      - <api_ip>
+    ingressVIPs:
+      - <wildcard_ip>
+    provisioningNetworkCIDR: <CIDR>
+    bootstrapExternalStaticIP: <bootstrap_static_ip_address>
+    bootstrapExternalStaticGateway: <bootstrap_static_gateway>
+    bootstrapExternalStaticDNS: <bootstrap_static_dns>
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: ipmi://<out_of_band_ip>
+          username: <user>
+          password: <password>
+        bootMACAddress: <NIC1_mac_address>
+        rootDeviceHints:
+         deviceName: "<installation_disk_drive_path>"
+      - name: <openshift_master_1>
+        role: master
+        bmc:
+          address: ipmi://<out_of_band_ip>
+          username: <user>
+          password: <password>
+        bootMACAddress: <NIC1_mac_address>
+        rootDeviceHints:
+         deviceName: "<installation_disk_drive_path>"
+      - name: <openshift_master_2>
+        role: master
+        bmc:
+          address: ipmi://<out_of_band_ip>
+          username: <user>
+          password: <password>
+        bootMACAddress: <NIC1_mac_address>
+        rootDeviceHints:
+         deviceName: "<installation_disk_drive_path>"
+      - name: <openshift_worker_0>
+        role: worker
+        bmc:
+          address: ipmi://<out_of_band_ip>
+          username: <user>
+          password: <password>
+        bootMACAddress: <NIC1_mac_address>
+      - name: <openshift_worker_1>
+        role: worker
+        bmc:
+          address: ipmi://<out_of_band_ip>
+          username: <user>
+          password: <password>
+        bootMACAddress: <NIC1_mac_address>
+        rootDeviceHints:
+         deviceName: "<installation_disk_drive_path>"
+pullSecret: '<pull_secret>'
+sshKey: '<ssh_pub_key>'
+```
+
+Trong đó:
+
+  * `compute.replicas`: Xác định giá trị cho tham số `compute.replicas`. Tham số này dùng để điều chỉnh quy mô các máy tính toán (compute machines) dựa trên số lượng nút tính toán (compute nodes) thuộc cụm OpenShift Container Platform. Các giá trị hợp lệ cho tham số replicas bao gồm `0` và các số nguyên lớn hơn hoặc bằng `2`. Nếu đặt số lượng bản sao (replicas) là `0`, hệ thống sẽ triển khai một cụm gồm ba nút, chỉ bao gồm ba máy thuộc mặt phẳng điều khiển (control plane). Cụm ba nút là loại cụm có quy mô nhỏ hơn, tiết kiệm tài nguyên hơn, phù hợp cho các mục đích thử nghiệm, phát triển và vận hành thực tế (production). Lưu ý rằng bạn không thể cài đặt cụm chỉ với một nút tính toán duy nhất.
+  * `platform.baremetal.additionalNTPServers`: Cho phép chỉ định danh sách các tên miền hoặc địa chỉ IP của máy chủ NTP bổ sung. Các thông tin này sẽ được thêm vào cấu hình của từng máy chủ trong cụm trong trường hợp đồng hồ của các máy chủ này không đồng bộ với nhau.
+  * `platform.baremetal.bootstrapExternalStaticIP`: Xác định giá trị cho tham số `bootstrapExternalStaticIP`. Khi triển khai cụm sử dụng địa chỉ IP tĩnh, bạn cần thiết lập tham số này để chỉ định địa chỉ IP tĩnh cho máy ảo khởi động (bootstrap VM) trong trường hợp mạng bare metal không có máy chủ DHCP.
+  * `platform.baremetal.bootstrapExternalStaticGateway`: Xác định giá trị cho tham số `bootstrapExternalStaticGateway`. Khi triển khai cụm sử dụng địa chỉ IP tĩnh, bạn cần thiết lập tham số này để chỉ định địa chỉ IP của cổng kết nối (gateway) cho máy ảo khởi động (bootstrap VM) trong trường hợp mạng bare metal không có máy chủ DHCP.
+  * `platform.baremetal.bootstrapExternalStaticDNS`: Xác định giá trị cho tham số `bootstrapExternalStaticDNS`. Khi triển khai cụm sử dụng địa chỉ IP tĩnh, bạn cần thiết lập tham số này để chỉ định địa chỉ DNS cho máy ảo khởi động (bootstrap VM) trong trường hợp mạng bare metal không có máy chủ DHCP.
+  * `platform.baremetal.hosts.bmc.address`: Xác định giá trị cho tham số `platform.baremetal.hosts.bmc.address`. Vui lòng tham khảo các phần về đánh địa chỉ BMC để biết thêm các tùy chọn khác.
+  * `platform.baremetal.hosts.rootDeviceHints.deviceName`: Xác định giá trị cho tham số `platform.baremetal.hosts.rootDeviceHints.deviceName`. Để thiết lập đường dẫn đến ổ đĩa cài đặt, hãy nhập tên nhân (kernel name) của ổ đĩa đó. Ví dụ: `/dev/sda`.
+
+> **Quan trọng:** Do thứ tự phát hiện ổ đĩa không được đảm bảo, tên ổ đĩa trong nhân hệ điều hành (kernel name) có thể thay đổi giữa các lần khởi động trên các máy tính có nhiều ổ đĩa. Ví dụ: `/dev/sda` có thể trở thành `/dev/sdb` và ngược lại. Để tránh vấn đề này, bạn phải sử dụng các thuộc tính ổ đĩa cố định (persistent attributes), chẳng hạn như World Wide Name (WWN) của ổ đĩa hoặc đường dẫn `/dev/disk/by-path/`. Bạn nên sử dụng liên kết `/dev/disk/by-path/<device_path>` để trỏ đến vị trí lưu trữ. Nếu muốn sử dụng WWN của ổ đĩa, hãy thay thế tham số `deviceName` bằng tham số `wwnWithExtension`. Tùy thuộc vào tham số mà bạn chọn, hãy nhập một trong các giá trị sau:
+> 
+> * Tên ổ đĩa. Ví dụ: `/dev/sda` hoặc `/dev/disk/by-path/`. 
+> * WWN của ổ đĩa. Ví dụ: "0x64cd98f04fde100024684cf3034da5c2". Hãy đảm bảo đặt giá trị WWN của ổ đĩa trong dấu ngoặc kép để hệ thống hiểu đó là một chuỗi ký tự (string) thay vì một giá trị thập lục phân (hexadecimal).
+> 
+> Việc không tuân thủ các yêu cầu này đối với tham số `rootDeviceHints` có thể dẫn đến lỗi sau: `ironic-inspector inspection failed: No disks satisfied root device hints`
+
+> **Lưu ý:** Trước phiên bản OpenShift Container Platform 4.12, chương trình cài đặt cụm (cluster) chỉ chấp nhận địa chỉ IPv4 hoặc IPv6 cho các thiết lập cấu hình `apiVIP` và `ingressVIP`. Kể từ phiên bản OpenShift Container Platform 4.12 trở đi, các thiết lập cấu hình này đã lỗi thời (deprecated). Thay vào đó, hãy sử dụng định dạng danh sách trong các thiết lập cấu hình `apiVIPs` và `ingressVIPs` để chỉ định các địa chỉ IPv4, IPv6, hoặc cả hai định dạng địa chỉ IP này.
+
+2. Tạo một thư mục để lưu trữ cấu hình cụm:
+
+```shell
+$ mkdir ~/clusterconfigs
+```
+
+3. Sao chép tệp `install-config.yaml` vào thư mục mới:
+
+```shell
+$ cp install-config.yaml ~/clusterconfigs
+```
+
+4. Đảm bảo tất cả các nút phần cứng vật lý (bare metal node) đều đã được tắt nguồn trước khi cài đặt cụm OpenShift Container Platform:
+
+```shell
+$ ipmitool -I lanplus -U <user> -P <password> -H <management-server-ip> power off
+```
+
+5. Xóa các tài nguyên bootstrap cũ nếu còn sót lại từ lần triển khai trước đó:
+
+```shell
+for i in $(sudo virsh list | tail -n +3 | grep bootstrap | awk {'print $2'});
+do
+  sudo virsh destroy $i;
+  sudo virsh undefine $i;
+  sudo virsh vol-delete $i --pool $i;
+  sudo virsh vol-delete $i.ign --pool $i;
+  sudo virsh pool-destroy $i;
+  sudo virsh pool-undefine $i;
+done
+```
+
+##### 3.3.15.1. Các tham số cấu hình cài đặt bổ sung
+Một số tham số, chẳng hạn như tên miền cụm (cluster domain name), là bắt buộc phải có trong tệp `install-config.yaml` khi cài đặt cụm trên nền tảng phần cứng vật lý (bare metal). Các tham số khác, ví dụ như CIDR của mạng cung cấp (provisioning network), là tùy chọn.
+
+**Bảng 3.9. Các tham số bắt buộc**
+
+| Tham số                                               | Mặc định | Mô tả                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+|-------------------------------------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `baseDomain`                                          |          | Tên miền cho cụm. Ví dụ: `example.com`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `bootMode`                                            | UEFI     | Chế độ khởi động (boot mode) cho một nút (node). Các tùy chọn bao gồm: `legacy`, `UEFI` và `UEFISecureBoot`. Nếu tham số bootMode không được thiết lập, Ironic sẽ tự động xác định và thiết lập giá trị này trong quá trình kiểm tra (inspect) nút đó. Lưu ý: Đối với các phần cứng chỉ cho phép đọc (read-only) thiết lập `BootMode` — chẳng hạn như thiết bị của HP hoặc Cisco — bạn không được để trống tham số này. Bạn phải thiết lập thủ công hệ thống sang chế độ UEFI trước khi tiến hành cài đặt, đồng thời chỉ định rõ tham số này là UEFI.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `platform: baremetal: bootstrapExternalStaticDNS`     |          | DNS mạng tĩnh của nút khởi động (bootstrap node). Bạn phải thiết lập giá trị này khi triển khai cụm sử dụng các địa chỉ IP tĩnh trong trường hợp mạng vật lý (bare-metal network) không có máy chủ Giao thức Cấu hình Máy chủ Động (DHCP). Nếu bạn không thiết lập giá trị này, chương trình cài đặt sẽ sử dụng giá trị từ `bootstrapExternalStaticGateway`; điều này sẽ gây ra sự cố nếu địa chỉ IP của cổng kết nối (gateway) và DNS khác nhau.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `platform: baremetal: bootstrapExternalStaticIP`      |          | Địa chỉ IP tĩnh cho máy ảo (VM) khởi động (bootstrap). Bạn phải thiết lập giá trị này khi triển khai một cụm (cluster) sử dụng các địa chỉ IP tĩnh trong trường hợp mạng vật lý (bare metal network) không có máy chủ DHCP.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `platform: baremetal: bootstrapExternalStaticGateway` |          | Địa chỉ IP tĩnh của cổng kết nối (gateway) dành cho máy ảo khởi động (bootstrap VM). Bạn bắt buộc phải thiết lập giá trị này khi triển khai cụm máy chủ sử dụng các địa chỉ IP tĩnh trong trường hợp mạng vật lý (bare metal network) không có máy chủ DHCP.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `sshKey`                                              |          | Tham số `sshKey` thiết lập khóa nằm trong tệp `~/.ssh/id_rsa.pub`, vốn là khóa cần thiết để truy cập vào các nút điều khiển (control plane nodes) và các nút tính toán (compute nodes). Thông thường, khóa này được lấy từ nút cung cấp tài nguyên (`provisioner` node).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `pullSecret`                                          |          | Tham số `pullSecret` thiết lập một bản sao của pull secret (bí mật kéo ảnh) – dữ liệu đã được tải xuống từ trang [Install OpenShift on Bare Metal](https://console.redhat.com/openshift/install/metal/user-provisioned) trong quá trình chuẩn bị cho nút cung cấp (provisioner node).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `metadata: name:`                                     |          | Tên cụm OpenShift Container Platform. Ví dụ: `openshift`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `networking: machineNetwork: - cidr:`                 |          | CIDR (Classless Inter-Domain Routing - Định tuyến miền không phân lớp) công khai của mạng bên ngoài. Ví dụ: `10.0.0.0/24`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `compute: - name: worker`                             |          | Cụm OpenShift Container Platform yêu cầu phải có tên cho mỗi nút tính toán, ngay cả khi số lượng nút bằng không.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `compute: replicas: 2`                                |          | Replicas xác định số lượng nút tính toán trong cụm OpenShift Container Platform.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `controlPlane: name: master`                          |          | Cụm OpenShift Container Platform yêu cầu một tên gọi cho các nút mặt phẳng điều khiển (control plane nodes).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `controlPlane: replicas: 3`                           |          | Tham số "replicas" xác định số lượng các nút mặt phẳng điều khiển (control plane nodes) có trong cụm OpenShift Container Platform.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `provisioningNetworkInterface`                        |          | Tên của giao diện mạng trên các nút được kết nối với mạng cung cấp (provisioning network). Đối với OpenShift Container Platform phiên bản 4.9 trở về sau, hãy sử dụng tham số `bootMACAddress` để cho phép Ironic xác định địa chỉ IP của card mạng (NIC), thay vì sử dụng tham số `provisioningNetworkInterface` để xác định tên của card mạng đó.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `defaultMachinePlatform`                              |          | Cấu hình mặc định được sử dụng cho các nhóm máy không có cấu hình nền tảng.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `apiVIPs`                                             |          | (Tùy chọn) Địa chỉ IP ảo dùng cho giao tiếp với Kubernetes API. Bạn phải cung cấp thiết lập này trong tệp `install-config.yaml` dưới dạng một địa chỉ IP dành riêng (nằm trong dải IP được xác định bởi tham số `MachineNetwork`), hoặc cấu hình trước trong hệ thống DNS để tên miền mặc định được phân giải chính xác. Khi thêm giá trị vào tham số `apiVIPs` trong tệp `install-config.yaml`, hãy sử dụng địa chỉ IP ảo thay vì tên miền đầy đủ (FQDN). Đối với mạng hỗ trợ cả hai giao thức (dual-stack), địa chỉ IP chính có thể là IPv4 hoặc IPv6. Nếu không được thiết lập, chương trình cài đặt sẽ sử dụng `api.<cluster_name>.<base_domain>` để truy vấn địa chỉ IP từ DNS. Lưu ý: Trước phiên bản OpenShift Container Platform 4.12, chương trình cài đặt cụm (cluster) chỉ chấp nhận một địa chỉ IPv4 hoặc IPv6 duy nhất cho tham số `apiVIP`. Kể từ phiên bản OpenShift Container Platform 4.12 trở đi, tham số `apiVIP` đã bị loại bỏ (deprecated). Thay vào đó, hãy sử dụng tham số `apiVIPs` với định dạng danh sách để chỉ định địa chỉ IPv4, IPv6 hoặc cả hai loại địa chỉ này.                                                              |
+| `bmcCACert`                                           |          | `redfish` và `redfish-virtualmedia` cần tham số này để quản lý các địa chỉ BMC khi sử dụng chứng chỉ tự ký với thiết lập `disableCertificateVerification` là `False`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `ingressVIPs`                                         |          | (Tùy chọn) Địa chỉ IP ảo cho lưu lượng truy cập đi vào (ingress traffic). Bạn phải cung cấp thiết lập này trong tệp `install-config.yaml` dưới dạng một địa chỉ IP dành riêng (reserved IP) nằm trong tham số `MachineNetwork`, hoặc cấu hình trước trong hệ thống DNS để tên mặc định được phân giải chính xác. Khi thêm giá trị vào thiết lập cấu hình `ingressVIPs` trong tệp `install-config.yaml`, hãy sử dụng địa chỉ IP ảo thay vì tên miền đầy đủ (FQDN). Đối với mạng dual-stack (hỗ trợ cả IPv4 và IPv6), địa chỉ IP chính có thể là mạng IPv4 hoặc mạng IPv6. Nếu không được thiết lập, chương trình cài đặt sẽ sử dụng `test.apps.<cluster_name>.<base_domain>` để xác định địa chỉ IP thông qua DNS. Lưu ý: Trước phiên bản OpenShift Container Platform 4.12, chương trình cài đặt cụm (cluster) chỉ chấp nhận một địa chỉ IPv4 hoặc một địa chỉ IPv6 cho tham số `ingressVIP`. Kể từ phiên bản OpenShift Container Platform 4.12 trở đi, tham số `ingressVIP` đã bị loại bỏ (deprecated). Thay vào đó, hãy sử dụng định dạng danh sách cho tham số `ingressVIPs` để chỉ định địa chỉ IPv4, địa chỉ IPv6, hoặc cả hai định dạng địa chỉ IP này. |
+
+**Bảng 3.10. Các tham số tùy chọn**
+
+| Tham số                                                                    | Mặc định                                          | Mô tả                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|----------------------------------------------------------------------------|---------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `platform: baremetal: additionalNTPServers: - <ip_address_or_domain_name>` |                                                   | Một danh sách tùy chọn gồm các máy chủ NTP bổ sung để thêm vào từng máy chủ (host). Bạn có thể sử dụng địa chỉ IP hoặc tên miền để chỉ định từng máy chủ NTP. Các máy chủ NTP bổ sung này do người dùng tự xác định, cho phép đồng bộ hóa thời gian trước khi cài đặt trong trường hợp đồng hồ trên các máy chủ trong cụm (cluster) không đồng bộ với nhau.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `provisioningDHCPRange`                                                    | `172.22.0.10,172.22.0.100`                        | Xác định dải IP cho các nút trên mạng cung cấp (provisioning network).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `provisioningNetworkCIDR`                                                  | `172.22.0.0/24`                                   | CIDR của mạng được sử dụng cho quá trình cung cấp (provisioning). Nếu không sử dụng dải địa chỉ mặc định trên mạng cung cấp, bạn bắt buộc phải thiết lập tham số cấu hình này.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `clusterProvisioningIP`                                                    | Địa chỉ IP thứ ba của `provisioningNetworkCIDR`.  | Địa chỉ IP trong cụm nơi các dịch vụ cung cấp (provisioning services) hoạt động. Mặc định là địa chỉ IP thứ ba của mạng con cung cấp (provisioning subnet). Ví dụ: `172.22.0.3`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `bootstrapProvisioningIP`                                                  | Địa chỉ IP thứ hai của `provisioningNetworkCIDR`. | Địa chỉ IP trên máy ảo bootstrap – nơi các dịch vụ cung cấp (provisioning services) chạy trong khi chương trình cài đặt triển khai các nút mặt phẳng điều khiển (control plane nodes). Theo mặc định, đây là địa chỉ IP thứ hai trong mạng con cung cấp (provisioning subnet). Ví dụ: `172.22.0.2` hoặc `2620:52:0:1307::2`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `externalBridge`                                                           | `baremetal`                                       | Tên của cầu nối (bridge) trên nền tảng phần cứng vật lý (bare metal) của hypervisor, được kết nối với mạng dành cho các thiết bị phần cứng vật lý.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `provisioningBridge`                                                       | `provisioning`                                    | Tên của cầu nối cấp phát (provisioning bridge) trên máy chủ `provisioner`, được kết nối với mạng cấp phát (provisioning network).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `architecture`                                                             |                                                   | Xác định kiến trúc máy chủ cho cụm của bạn. Các giá trị hợp lệ là `amd64` hoặc `arm64`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `defaultMachinePlatform`                                                   |                                                   | Cấu hình mặc định được sử dụng cho các nhóm máy không có cấu hình nền tảng.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `bootstrapOSImage`                                                         |                                                   | Một URL dùng để thay thế hình ảnh hệ điều hành mặc định cho nút khởi động (bootstrap node). URL này phải chứa mã băm SHA-256 của hình ảnh đó. Ví dụ: https://mirror.openshift.com/rhcos-<version>-qemu.qcow2.gz?sha256=<uncompressed_sha256>.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `provisioningNetwork`                                                      |                                                   | Tham số `provisioningNetwork` xác định xem cụm (cluster) có sử dụng mạng cung cấp (provisioning network) hay không. Nếu có, tham số này cũng xác định liệu cụm đó có quản lý mạng này hay không. Disabled (Đã tắt): Thiết lập tham số này thành `Disabled` để loại bỏ yêu cầu về mạng cung cấp. Khi ở trạng thái `Disabled`, bạn chỉ được phép sử dụng phương thức cung cấp dựa trên phương tiện ảo (virtual media) hoặc cài đặt cụm bằng công cụ Assisted Installer. Nếu chọn `Disabled` và có sử dụng tính năng quản lý nguồn (power management), thì các bộ điều khiển quản lý cơ sở (BMC) phải có thể truy cập được từ mạng máy chủ vật lý (bare metal network). Ngoài ra, bạn cũng cần cung cấp hai địa chỉ IP trên mạng máy chủ vật lý để các dịch vụ cung cấp sử dụng. Managed (Được quản lý): Thiết lập tham số này thành `Managed` (đây là tùy chọn mặc định) để cho phép hệ thống quản lý toàn diện mạng cung cấp, bao gồm các dịch vụ như DHCP, TFTP, v.v. Unmanaged (Không được quản lý): Thiết lập tham số này thành `Unmanaged` để kích hoạt mạng cung cấp nhưng yêu cầu người dùng phải tự cấu hình thủ công các dịch vụ như DHCP. Phương thức cung cấp qua phương tiện ảo (virtual media) được khuyến nghị sử dụng, tuy nhiên bạn vẫn có thể dùng PXE nếu cần thiết. |
+| `httpProxy`                                                                |                                                   | Hãy đặt tham số này thành proxy HTTP phù hợp được sử dụng trong môi trường của bạn.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `httpsProxy`                                                               |                                                   | Hãy đặt tham số này thành proxy HTTPS phù hợp được sử dụng trong môi trường của bạn.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `noProxy`                                                                  |                                                   | Hãy đặt tham số này thành danh sách các ngoại lệ phù hợp cho việc sử dụng proxy trong môi trường của bạn.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+
+###### 3.3.15.1.1. Các máy chủ (Hosts)
+Tham số `hosts` là danh sách các tài nguyên phần cứng vật lý (bare metal) riêng biệt được sử dụng để xây dựng cụm (cluster).
+
+**Bảng 3.11. Các máy chủ**
+
+| Tên                                    | Mặc định | Mô tả                                                                                                                                                                                                                                                                                                                                                            |
+|----------------------------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `name`                                 |          | Tên của tài nguyên `BareMetalHost` cần liên kết với các thông tin chi tiết này. Ví dụ: `openshift-master-0`.                                                                                                                                                                                                                                                     |
+| `role`                                 |          | Vai trò của nút máy vật lý (bare metal node). Có thể là `master` (nút thuộc mặt phẳng điều khiển - control plane) hoặc `worker` (nút thực hiện tính toán - compute node).                                                                                                                                                                                        |
+| `bmc`                                  |          | Thông tin chi tiết về kết nối dành cho bộ điều khiển quản lý bo mạch chủ (baseboard management controller - BMC). Xem phần về đánh địa chỉ BMC để biết thêm thông tin chi tiết.                                                                                                                                                                                  |
+| `bmc: address:`                        |          | Giao thức và địa chỉ của BMC dưới dạng URL.                                                                                                                                                                                                                                                                                                                      |
+| `bmc: username:`                       |          | Tên người dùng của BMC.                                                                                                                                                                                                                                                                                                                                          |
+| `bmc: password:`                       |          | Mật khẩu của BMC.                                                                                                                                                                                                                                                                                                                                                |
+| `bmc: disableCertificateVerification:` | `False`  | `redfish` và `redfish-virtualmedia` cần tham số này để quản lý các địa chỉ BMC. Đối với OpenShift Container Platform phiên bản 4.16 trở về trước, giá trị này cần được đặt là `True` khi sử dụng chứng chỉ tự ký. OpenShift Container Platform hỗ trợ các chứng chỉ tự ký kèm theo quy trình xác thực chứng chỉ khi được sử dụng cùng với tham số `bmcVerifyCA`. |
+| `platform: baremetal: bmcVerifyCA:`    |          | Chứng chỉ CA cục bộ hoặc tự ký mà chương trình cài đặt sẽ sử dụng để bảo mật quá trình giao tiếp với BMC. Nếu bạn chỉ định chứng chỉ CA của riêng mình, hãy đảm bảo rằng tham số `disableCertificateVerification` được đặt thành `False` để chứng chỉ CA do người dùng cung cấp được xác thực.                                                                   |
+| `bootMACAddress`                       |          | Địa chỉ MAC của card mạng (NIC) mà máy chủ sử dụng cho mạng cung cấp (provisioning network). Ironic truy xuất địa chỉ IP thông qua tham số `bootMACAddress`, sau đó thực hiện liên kết với máy chủ đó. Lưu ý: Bạn phải cung cấp một địa chỉ MAC hợp lệ từ máy chủ nếu đã vô hiệu hóa mạng cung cấp.                                                              |
+| `networkConfig`                        |          | Hãy thiết lập tham số tùy chọn này để cấu hình giao diện mạng của một máy chủ.                                                                                                                                                                                                                                                                                   |
+
+##### 3.3.15.2. Định địa chỉ BMC
+Intelligent Platform Management Interface (IPMI) và giao thức khởi động qua mạng Redfish là hai phương thức phổ biến để định địa chỉ cho Baseboard Management Controller (BMC).
+
+> **Lưu ý:** Để triển khai các cụm (cluster) với mặt phẳng điều khiển (control plane) được ảo hóa chạy trên các máy ảo (VM) OpenShift Virtualization thay vì trên các máy chủ vật lý, bạn có thể sử dụng KubeVirt Redfish để hiển thị các máy ảo này dưới dạng các điểm cuối (endpoint) Redfish. Bạn có thể áp dụng phương pháp này để triển khai các mặt phẳng điều khiển ảo hóa với cơ sở hạ tầng do trình cài đặt cung cấp (installer-provisioned infrastructure). Xem phần "Tìm hiểu về các mặt phẳng điều khiển ảo hóa" để biết thêm thông tin.
+
+Hầu hết các nhà cung cấp đều hỗ trợ định địa chỉ Baseboard Management Controller (BMC) thông qua Intelligent Platform Management Interface (IPMI). IPMI không mã hóa dữ liệu truyền tải, do đó chỉ phù hợp để sử dụng trong trung tâm dữ liệu trên một mạng quản lý chuyên dụng hoặc mạng đã được bảo mật. Hãy kiểm tra với nhà cung cấp của bạn xem họ có hỗ trợ khởi động qua mạng bằng Redfish hay không.
+
+Redfish cung cấp khả năng quản lý đơn giản và bảo mật cho các môi trường CNTT hội tụ, lai (hybrid) và Trung tâm dữ liệu định nghĩa bằng phần mềm (Software Defined Data Center - SDDC). Redfish được thiết kế để con người có thể đọc hiểu và máy tính có thể xử lý; giao thức này tận dụng các tiêu chuẩn web và internet phổ biến để hiển thị thông tin trực tiếp cho các chuỗi công cụ hiện đại. Nếu phần cứng của bạn không hỗ trợ khởi động qua mạng bằng Redfish, hãy sử dụng IPMI.
+
+Bạn có thể thay đổi địa chỉ BMC trong quá trình cài đặt khi nút (node) đang ở trạng thái `Registering`. Nếu cần thay đổi địa chỉ BMC sau khi nút đã chuyển khỏi trạng thái `Registering`, bạn phải ngắt kết nối nút đó khỏi Ironic, chỉnh sửa tài nguyên `BareMetalHost`, rồi kết nối lại nút đó với Ironic. Xem phần Chỉnh sửa tài nguyên `BareMetalHost` để biết chi tiết.
+
+###### 3.3.15.2.1. IPMI
+IPMI sử dụng định dạng địa chỉ `ipmi://<out_of_band_ip>:<port>`; nếu không chỉ định cổng, hệ thống sẽ mặc định sử dụng cổng `623`. Ví dụ dưới đây minh họa cấu hình IPMI trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: ipmi://<out_of_band_ip>
+          username: <user>
+          password: <password>
+```
+
+> **Quan trọng:** Khi thực hiện khởi động PXE bằng cách sử dụng IPMI để định địa chỉ BMC, bạn bắt buộc phải có mạng cung cấp (provisioning network). Không thể thực hiện khởi động PXE cho các máy chủ nếu thiếu mạng cung cấp. Nếu triển khai mà không có mạng cung cấp, bạn phải sử dụng tùy chọn định địa chỉ BMC qua phương tiện ảo (virtual media), chẳng hạn như `redfish-virtualmedia` hoặc `idrac-virtualmedia`. Để biết thêm chi tiết, vui lòng tham khảo mục "Redfish virtual media for HPE iLO" trong phần "BMC addressing for HPE iLO" hoặc mục "Redfish virtual media for Dell iDRAC" trong phần "BMC addressing for Dell iDRAC".
+
+###### 3.3.15.2.2. Khởi động qua mạng bằng Redfish
+Để kích hoạt Redfish, hãy sử dụng `redfish://` hoặc `redfish+http://` (nếu muốn tắt TLS). Chương trình cài đặt yêu cầu cung cấp tên máy chủ (hostname) hoặc địa chỉ IP, cùng với đường dẫn đến ID hệ thống. Ví dụ dưới đây minh họa cấu hình Redfish trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: redfish://<out_of_band_ip>/redfish/v1/Systems/1
+          username: <user>
+          password: <password>
+```
+
+Bạn nên có chứng chỉ xác thực cho các địa chỉ quản lý ngoài băng tần (out-of-band management). Trên OpenShift Container Platform phiên bản 4.16 trở về trước, nếu sử dụng chứng chỉ tự ký (self-signed certificate), bạn bắt buộc phải thêm tham số `disableCertificateVerification: True` vào cấu hình BMC. Ví dụ dưới đây minh họa cấu hình Redfish với tham số `disableCertificateVerification: True` được thiết lập trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: redfish://<out_of_band_ip>/redfish/v1/Systems/1
+          username: <user>
+          password: <password>
+          disableCertificateVerification: True
+```
+
+Trên OpenShift Container Platform 4.17 trở về sau, bạn có thể thêm `disableCertificateVerification: False` vào cấu hình BMC để xác thực các chứng chỉ tự ký khi sử dụng kết hợp với tham số `bmcCACert`. Ví dụ dưới đây minh họa cách cấu hình chứng chỉ CA cho BMC.
+
+```yaml
+platform:
+  baremetal:
+    bmcCACert:
+      -----BEGIN CERTIFICATE-----
+      ......
+      ......
+      ......
+      -----END CERTIFICATE-----
+      -----BEGIN CERTIFICATE-----
+      ......
+      ......
+      ......
+      -----END CERTIFICATE-----
+      -----BEGIN CERTIFICATE-----
+      ......
+      ......
+      ......
+      -----END CERTIFICATE-----
+     hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: redfish://<out_of_band_ip>/redfish/v1/Systems/1
+          username: <user>
+          password: <password>
+          disableCertificateVerification: False
+```
+
+##### 3.3.15.3. Xác minh khả năng hỗ trợ các API Redfish
+Khi thực hiện cài đặt thông qua API Redfish — trong trường hợp sử dụng cơ sở hạ tầng do trình cài đặt cung cấp (installer-provisioned infrastructure) trên phần cứng vật lý (bare metal) — chương trình cài đặt sẽ gọi đến một số điểm cuối (endpoint) Redfish trên bộ điều khiển quản lý bo mạch chủ (BMC). Nếu sử dụng Redfish, hãy đảm bảo rằng BMC của bạn hỗ trợ tất cả các API Redfish cần thiết trước khi tiến hành cài đặt.
+
+**Quy trình**
+
+1. Thiết lập địa chỉ IP hoặc tên máy chủ (hostname) và ID của BMC:
+  * Thiết lập địa chỉ IP hoặc tên máy chủ của BMC bằng cách chạy lệnh sau:
+
+  ```shell
+  $ export SERVER=<ip_address>
+  ```
+
+  Thay thế `<ip_address>` bằng địa chỉ IP hoặc tên máy chủ của BMC.
+
+  * Thiết lập ID của hệ thống bằng cách chạy lệnh sau:
+
+  ```shell
+  $ export SystemID=<system_id>
+  ```
+
+  Hãy thay thế `<system_id>` bằng ID hệ thống. Ví dụ: `System.Embedded.1` hoặc `1`. Xem các phần dành riêng cho nhà cung cấp về BMC dưới đây để biết thêm chi tiết.
+
+2. Kiểm tra danh sách các API Redfish:
+  * Kiểm tra tính năng hỗ trợ bật nguồn bằng cách chạy lệnh sau:
+
+  ```shell
+  $ curl -u $USER:$PASS -X POST -H'Content-Type: application/json' -H'Accept: application/json' \
+    -d '{"ResetType": "On"}' https://$SERVER/redfish/v1/Systems/$SystemID/Actions/ComputerSystem.Reset
+  ```
+
+  * Kiểm tra khả năng hỗ trợ `tắt nguồn` (power off) bằng cách chạy lệnh sau:
+
+  ```shell
+  $ curl -u $USER:$PASS -X POST -H'Content-Type: application/json' -H'Accept: application/json' \
+    -d '{"ResetType": "ForceOff"}' https://$SERVER/redfish/v1/Systems/$SystemID/Actions/ComputerSystem.Reset
+  ```
+
+  * Hãy kiểm tra phương thức khởi động tạm thời sử dụng `pxe` bằng cách chạy lệnh sau:
+
+  ```shell
+  $ curl -u $USER:$PASS -X PATCH -H "Content-Type: application/json" \
+    -H "If-Match: <ETAG>"  https://$Server/redfish/v1/Systems/$SystemID/ \
+    -d '{"Boot": {"BootSourceOverrideTarget": "pxe", "BootSourceOverrideEnabled": "Once"}}
+  ```
+
+  * Kiểm tra trạng thái thiết lập chế độ khởi động firmware (sử dụng Legacy hoặc UEFI) bằng cách chạy lệnh sau:
+
+  ```shell
+  $ curl -u $USER:$PASS -X PATCH -H "Content-Type: application/json" \
+    -H "If-Match: <ETAG>"  https://$Server/redfish/v1/Systems/$SystemID/ \
+    -d '{"Boot": {"BootSourceOverrideMode":"UEFI"}}
+  ```
+
+3. Kiểm tra danh sách các API phương tiện ảo (virtual media) của Redfish:
+  * Kiểm tra khả năng thiết lập thiết bị khởi động tạm thời sử dụng `cd` hoặc `dvd` bằng cách chạy lệnh sau:  
+
+  ```shell
+  $ curl -u $USER:$PASS -X PATCH -H "Content-Type: application/json" \
+    -H "If-Match: <ETAG>" https://$Server/redfish/v1/Systems/$SystemID/ \
+    -d '{"Boot": {"BootSourceOverrideTarget": "cd", "BootSourceOverrideEnabled": "Once"}}'
+  ```
+
+  * Phương tiện ảo có thể sử dụng `POST` hoặc `PATCH`, tùy thuộc vào phần cứng của bạn. Hãy kiểm tra khả năng gắn phương tiện ảo bằng cách chạy một trong các lệnh sau:
+
+  ```shell
+  $ curl -u $USER:$PASS -X POST \
+    -H "Content-Type: application/json" https://$Server/redfish/v1/Managers/$ManagerID/VirtualMedia/$VmediaId \
+    -d '{"Image": "https://example.com/test.iso", "TransferProtocolType": "HTTPS", "UserName": "", "Password":""}'
+  $ curl -u $USER:$PASS -X PATCH -H "Content-Type: application/json" \
+    -H "If-Match: <ETAG>" https://$Server/redfish/v1/Managers/$ManagerID/VirtualMedia/$VmediaId \
+    -d '{"Image": "https://example.com/test.iso", "TransferProtocolType": "HTTPS", "UserName": "", "Password":""}'
+  ```
+
+> **Lưu ý:** Các lệnh PowerOn (bật nguồn) và PowerOff (tắt nguồn) đối với các API Redfish cũng được áp dụng tương tự cho các API phương tiện ảo (virtual media) của Redfish. Trên một số phần cứng, bạn có thể chỉ tìm thấy tài nguyên VirtualMedia (phương tiện ảo) trong mục Systems/$SystemID thay vì Managers/$ManagerID. Đối với tài nguyên VirtualMedia, các trường UserName (tên người dùng) và Password (mật khẩu) là tùy chọn.
+
+> **Quan trọng:** HTTPS và HTTP là các loại giao thức duy nhất được hỗ trợ cho tham số TransferProtocolTypes (các loại giao thức truyền tải).
+
+##### 3.3.15.4. Cấu hình địa chỉ BMC cho Dell iDRAC
+Bạn có thể định cấu hình tham số `bmc` để sử dụng giao thức phương tiện ảo (virtual media) của iDRAC, giao thức khởi động qua mạng Redfish hoặc giao thức IPMI nhằm kết nối với hệ thống Dell iDRAC.
+
+Thiết lập cấu hình địa chỉ cho mỗi mục `bmc` là một URL dùng để kết nối với các nút (node) trong cụm OpenShift Container Platform; URL này bao gồm loại bộ điều khiển (trong phần lược đồ URL - URL scheme) và vị trí của nó trên mạng. Đối với mỗi mục `bmc`, thông tin người dùng được cấu hình phải là tài khoản có đặc quyền Quản trị viên (Administrator).
+
+###### 3.3.15.4.1. Các định dạng địa chỉ BMC cho Dell iDRAC
+
+| Giao thức                       | Định dạng địa chỉ                                                            |
+|---------------------------------|------------------------------------------------------------------------------|
+| Phương tiện ảo iDRAC            | `idrac-virtualmedia://<out_of_band_ip>/redfish/v1/Systems/System.Embedded.1` |
+| Khởi động qua mạng bằng Redfish | `redfish://<out_of_band_ip>/redfish/v1/Systems/System.Embedded.1`            |
+| IPMI                            | `ipmi://<out_of_band_ip>`                                                    |
+
+> **Quan trọng:** Hãy sử dụng `idrac-virtualmedia` làm giao thức cho phương tiện ảo (virtual media) Redfish. Giao thức `redfish-virtualmedia` sẽ không hoạt động trên phần cứng của Dell. Giao thức `idrac-virtualmedia` của Dell sử dụng tiêu chuẩn Redfish kết hợp với các phần mở rộng dành riêng cho nhà sản xuất (OEM) của Dell.
+
+Vui lòng xem các phần tiếp theo để biết thêm chi tiết.
+
+###### 3.3.15.4.2. Phương tiện ảo (virtual media) Redfish cho Dell iDRAC
+Đối với phương tiện ảo Redfish trên các máy chủ Dell, hãy sử dụng `idrac-virtualmedia://` trong phần thiết lập địa chỉ. 
+Việc sử dụng `redfish-virtualmedia://` sẽ không hoạt động.
+
+> **Lưu ý:** Hãy sử dụng `idrac-virtualmedia://` làm giao thức cho phương tiện ảo Redfish. Việc sử dụng `redfish-virtualmedia://` sẽ không hoạt động trên phần cứng Dell, vì giao thức `idrac-virtualmedia://` tương ứng với loại phần cứng `idrac` và giao thức Redfish trong Ironic. Giao thức `idrac-virtualmedia://` của Dell sử dụng tiêu chuẩn Redfish kèm theo các phần mở rộng OEM của Dell. Ironic cũng hỗ trợ loại `idrac` với giao thức WSMAN. Do đó, bạn phải chỉ định `idrac-virtualmedia://` để tránh các hành vi không mong muốn khi chọn sử dụng Redfish với phương tiện ảo trên phần cứng Dell.
+
+Ví dụ dưới đây minh họa cách sử dụng phương tiện ảo iDRAC trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: idrac-virtualmedia://<out_of_band_ip>/redfish/v1/Systems/System.Embedded.1
+          username: <user>
+          password: <password>
+```
+
+Bạn nên có chứng chỉ xác thực cho các địa chỉ quản lý ngoài băng tần (out-of-band management). Đối với OpenShift Container Platform phiên bản 4.16 trở về trước, nếu sử dụng chứng chỉ tự ký (self-signed certificate), bạn phải thêm tham số `disableCertificateVerification: True` vào cấu hình BMC. Đối với OpenShift Container Platform phiên bản 4.17 trở về sau, bạn có thể đặt `disableCertificateVerification: False` khi sử dụng kết hợp với thiết lập cấu hình `bmcCACert`.
+
+> **Lưu ý:** Hãy đảm bảo rằng tính năng **AutoAttach** đã được bật trên các nút (node) của cụm OpenShift Container Platform thông qua bảng điều khiển iDRAC. Đường dẫn menu là: **Configuration** > **Virtual Media** > **Attach Mode** > **AutoAttach**.
+
+Ví dụ dưới đây minh họa cấu hình Redfish bằng cách sử dụng tham số `disableCertificateVerification: True` trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: idrac-virtualmedia://<out_of_band_ip>/redfish/v1/Systems/System.Embedded.1
+          username: <user>
+          password: <password>
+          disableCertificateVerification: True
+```
+
+Ví dụ sau đây minh họa cấu hình Redfish bằng cách sử dụng tham số cấu hình `disableCertificateVerification: False` cùng với tham số cấu hình `bmcCACert` trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    bmcCACert:
+      -----BEGIN CERTIFICATE-----
+      ......
+      ......
+      ......
+      -----END CERTIFICATE-----
+      -----BEGIN CERTIFICATE-----
+      ......
+      ......
+      ......
+      -----END CERTIFICATE-----
+      -----BEGIN CERTIFICATE-----
+      ......
+      ......
+      ......
+      -----END CERTIFICATE-----
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: idrac-virtualmedia://<out_of_band_ip>/redfish/v1/Systems/System.Embedded.1
+          username: <user>
+          password: <password>
+          disableCertificateVerification: False
+```
+
+###### 3.3.15.4.3. Khởi động qua mạng bằng Redfish cho iDRAC
+Để kích hoạt Redfish, hãy sử dụng `redfish://` hoặc `redfish+http://` (nếu muốn tắt bảo mật lớp truyền tải - TLS). Chương trình cài đặt yêu cầu cung cấp tên máy chủ (hostname) hoặc địa chỉ IP, cùng với đường dẫn đến ID hệ thống. Ví dụ dưới đây minh họa cấu hình Redfish trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: redfish://<out_of_band_ip>/redfish/v1/Systems/System.Embedded.1
+          username: <user>
+          password: <password>
+```
+
+Bạn nên có chứng chỉ xác thực cho các địa chỉ quản lý ngoài băng tần (out-of-band management). Đối với OpenShift Container Platform phiên bản 4.16 trở về trước, nếu sử dụng chứng chỉ tự ký (self-signed certificate), bạn phải thêm tham số `disableCertificateVerification: True` vào cấu hình BMC. Đối với OpenShift Container Platform phiên bản 4.17 trở về sau, bạn có thể đặt `disableCertificateVerification: False` khi kết hợp với thiết lập cấu hình `bmcCACert`.
+
+Ví dụ dưới đây minh họa cấu hình Redfish bằng cách sử dụng tham số `disableCertificateVerification: True` trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: redfish://<out_of_band_ip>/redfish/v1/Systems/System.Embedded.1
+          username: <user>
+          password: <password>
+          disableCertificateVerification: True
+```
+
+Ví dụ sau đây minh họa cấu hình Redfish bằng cách sử dụng tham số cấu hình `disableCertificateVerification: False` cùng với tham số cấu hình `bmcCACert` trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    bmcCACert:
+      -----BEGIN CERTIFICATE-----
+      ......
+      ......
+      ......
+      -----END CERTIFICATE-----
+      -----BEGIN CERTIFICATE-----
+      ......
+      ......
+      ......
+      -----END CERTIFICATE-----
+      -----BEGIN CERTIFICATE-----
+      ......
+      ......
+      ......
+      -----END CERTIFICATE-----
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: redfish://<out_of_band_ip>/redfish/v1/Systems/System.Embedded.1
+          username: <user>
+          password: <password>
+          disableCertificateVerification: False
+```
+
+> **Lưu ý:** Trên Dell iDRAC 9, với phiên bản firmware `04.40.00.00` và tất cả các bản phát hành cho đến chuỗi phiên bản `5.xx`, tồn tại một vấn đề đã biết đối với các quy trình cài đặt trên phần cứng vật lý (bare metal). Plugin bảng điều khiển ảo (virtual console) mặc định sử dụng eHTML5 (phiên bản nâng cao của HTML5), gây ra lỗi trong quy trình **InsertVirtualMedia**. Để tránh vấn đề này, hãy thiết lập plugin sử dụng HTML5. Đường dẫn menu là: **Configuration** > **Virtual console** > **Plug-in Type** > **HTML5**.  
+> Đảm bảo rằng tính năng **AutoAttach** đã được bật cho các nút (node) trong cụm OpenShift Container Platform thông qua bảng điều khiển iDRAC. Đường dẫn menu là: **Configuration** > **Virtual Media** > **Attach Mode** > **AutoAttach**.
