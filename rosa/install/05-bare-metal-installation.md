@@ -10754,8 +10754,8 @@ Các tham số cấu hình cài đặt tùy chọn được mô tả trong bản
 * `sshKey:` Khóa SSH dùng để xác thực quyền truy cập vào các máy trong cụm (cluster) của bạn.
 Lưu ý: Đối với các cụm OpenShift Container Platform trong môi trường thực tế (production) mà bạn có thể cần thực hiện gỡ lỗi cài đặt hoặc khôi phục sau sự cố, hãy chỉ định khóa SSH mà tiến trình `ssh-agent` của bạn đang sử dụng. Giá trị: Ví dụ: `sshKey: ssh-ed25519 AAAA...`
 
-## 3. Cơ sở hạ tầng do trình cài đặt cung cấp
-### 3.1. Tổng quan
+## III. Cơ sở hạ tầng do trình cài đặt cung cấp
+### III.1. Tổng quan
 Quá trình cài đặt trên các nút phần cứng vật lý (bare metal) do trình cài đặt (installer) thực hiện sẽ triển khai và cấu hình cơ sở hạ tầng cần thiết để vận hành cụm OpenShift Container Platform. Việc nắm rõ các thành phần trong quá trình cài đặt trên phần cứng vật lý sẽ giúp bạn chuẩn bị cơ sở hạ tầng một cách phù hợp để đảm bảo quá trình cài đặt diễn ra thành công.
 
 Sơ đồ dưới đây minh họa giai đoạn 1 của quá trình triển khai:
@@ -10787,7 +10787,7 @@ Sau thời điểm này, nút (node) được trình cung cấp (provisioner) s�
 
 > **Lưu ý:** Đối với các quy trình cài đặt cơ sở hạ tầng do trình cài đặt (installer) cung cấp, CoreDNS sẽ mở cổng 53 ở cấp độ nút, cho phép truy cập từ các mạng khác có khả năng định tuyến đến đó.
 
-### 3.2. Các điều kiện tiên quyết
+### III.2. Các điều kiện tiên quyết
 Bạn cần đáp ứng một số điều kiện tiên quyết trước khi cài đặt cụm (cluster) trên hạ tầng vật lý (bare metal) bằng phương pháp sử dụng hạ tầng do trình cài đặt cung cấp (installer-provisioned infrastructure).
 
 Việc cài đặt OpenShift Container Platform thông qua hạ tầng do trình cài đặt cung cấp yêu cầu:
@@ -10802,7 +10802,7 @@ Việc cài đặt OpenShift Container Platform thông qua hạ tầng do trình
 
 Trước khi bắt đầu cài đặt OpenShift Container Platform bằng phương pháp sử dụng hạ tầng do trình cài đặt cung cấp, hãy đảm bảo rằng môi trường phần cứng đáp ứng các yêu cầu sau.
 
-#### 3.2.1. Yêu cầu đối với các nút (node)
+#### III.2.1. Yêu cầu đối với các nút (node)
 Trước khi bắt đầu quá trình cài đặt OpenShift Container Platform thông qua trình cài đặt (installer-provisioned installation), hãy đảm bảo rằng môi trường phần cứng đã được thiết lập đúng cách.
 
 Quá trình cài đặt này đòi hỏi một số yêu cầu về phần cứng cho các nút (node):
@@ -10832,7 +10832,7 @@ Quá trình cài đặt này đòi hỏi một số yêu cầu về phần cứn
 
   > **Lưu ý:** Red Hat không hỗ trợ việc quản lý các khóa tự tạo (self-generated keys) hoặc các loại khóa khác cho Secure Boot.
 
-#### 3.2.2. Các yêu cầu tối thiểu về tài nguyên để cài đặt cụm (cluster)
+#### III.2.2. Các yêu cầu tối thiểu về tài nguyên để cài đặt cụm (cluster)
 Để đảm bảo cụm OpenShift Container Platform của bạn vận hành đúng như mong đợi, mỗi máy trong cụm phải đáp ứng các yêu cầu tối thiểu về CPU, bộ nhớ và lưu trữ.
 
 **Bảng 3.1. Các yêu cầu tối thiểu về tài nguyên**
@@ -10855,27 +10855,27 @@ Quá trình cài đặt này đòi hỏi một số yêu cầu về phần cứn
 
 Nếu một loại instance (instance type) trên nền tảng của bạn đáp ứng các yêu cầu tối thiểu dành cho các máy trong cụm (cluster machines), thì loại instance đó được hỗ trợ để sử dụng trong OpenShift Container Platform.
 
-#### 3.2.3. Các yêu cầu cài đặt cụm bare-metal cho OpenShift Virtualization
+#### III.2.3. Các yêu cầu cài đặt cụm bare-metal cho OpenShift Virtualization
 Hãy định cấu hình cụm bare-metal của bạn một cách chính xác trong quá trình cài đặt để hỗ trợ OpenShift Virtualization, vì một số thiết lập bắt buộc sẽ không thể thay đổi sau khi đã hoàn tất cài đặt.
 
-##### 3.2.3.1. Các yêu cầu về tính sẵn sàng cao (HA) đối với OpenShift Virtualization
+##### III.2.3.1. Các yêu cầu về tính sẵn sàng cao (HA) đối với OpenShift Virtualization
 Khi thảo luận về các tính năng sẵn sàng cao (High Availability - HA) trong ngữ cảnh của OpenShift Virtualization, thuật ngữ này chỉ đề cập đến mô hình sao chép (replication model) của các thành phần cốt lõi trong cụm (cluster). Mô hình này được xác định bởi các trường `controlPlaneTopology` và `infrastructureTopology` trong tài nguyên tùy chỉnh (Custom Resource - CR) có tên là `Infrastructure`. Việc thiết lập các trường này thành `HighlyAvailable` sẽ cung cấp cơ chế dự phòng cho các thành phần; điều này khác với tính năng HA dành cho ứng dụng trên toàn bộ cụm. Ngược lại, nếu thiết lập các trường này thành `SingleReplica`, cơ chế dự phòng cho các thành phần sẽ bị vô hiệu hóa, đồng nghĩa với việc các tính năng HA của OpenShift Virtualization cũng sẽ không khả dụng.
 
 Nếu dự định sử dụng các tính năng HA của OpenShift Virtualization, bạn bắt buộc phải có ba nút (node) thuộc mặt phẳng điều khiển (control plane) tại thời điểm cài đặt cụm. Trạng thái `controlPlaneTopology` trong tài nguyên `Infrastructure` của cụm phải được đặt là `HighlyAvailable`.
 
 > **Lưu ý:** Bạn có thể cài đặt OpenShift Virtualization trên một cụm chỉ gồm một nút duy nhất (single-node cluster), nhưng cấu hình này không hỗ trợ các tính năng HA.
 
-##### 3.2.3.2. Các yêu cầu đối với tính năng di chuyển trực tiếp (live migration) trong OpenShift Virtualization
+##### III.2.3.2. Các yêu cầu đối với tính năng di chuyển trực tiếp (live migration) trong OpenShift Virtualization
 Nếu dự định sử dụng tính năng di chuyển trực tiếp, bạn cần có nhiều worker node. Trạng thái `infrastructureTopology` trong tài nguyên tùy chỉnh (CR) `Infrastructure` của cụm phải được thiết lập là `HighlyAvailable`. Khuyến nghị nên có tối thiểu ba worker node. 
 
 > **Lưu ý:** Bạn có thể cài đặt OpenShift Virtualization trên một cụm chỉ có một node (single-node cluster), nhưng cấu hình OpenShift một node này không hỗ trợ tính năng di chuyển trực tiếp. 
 
 Tính năng di chuyển trực tiếp yêu cầu phải có bộ lưu trữ dùng chung (shared storage). Bộ lưu trữ dành cho OpenShift Virtualization phải hỗ trợ và sử dụng chế độ truy cập `ReadWriteMany` (RWX).
 
-##### 3.2.3.3. Các yêu cầu SR-IOV đối với OpenShift Virtualization
+##### III.2.3.3. Các yêu cầu SR-IOV đối với OpenShift Virtualization
 Nếu bạn dự định sử dụng công nghệ Single Root I/O Virtualization (SR-IOV), hãy đảm bảo rằng các bộ điều khiển giao diện mạng (NIC) của bạn được OpenShift Container Platform hỗ trợ.
 
-#### 3.2.4. Các yêu cầu về firmware khi cài đặt bằng phương thức virtual media (phương tiện ảo)
+#### III.2.4. Các yêu cầu về firmware khi cài đặt bằng phương thức virtual media (phương tiện ảo)
 Chương trình cài đặt cho các cụm OpenShift Container Platform (được triển khai thông qua trình cài đặt) phụ thuộc vào khả năng tương thích giữa phần cứng, firmware và phương thức virtual media của Redfish. Quá trình cài đặt có thể không thành công nếu firmware của nút (node) không tương thích.
 
 Các bảng dưới đây liệt kê những phiên bản firmware đã được kiểm thử và xác nhận là hoạt động tốt với các cụm OpenShift Container Platform được triển khai bằng phương thức virtual media của Redfish.
@@ -10909,7 +10909,7 @@ Các bảng dưới đây liệt kê những phiên bản firmware đã được
 
 > **Lưu ý:** Luôn xác nhận rằng máy chủ của bạn hỗ trợ Red Hat Enterprise Linux CoreOS (RHCOS) trên nền tảng phần cứng và phần mềm UCS. Để biết thêm thông tin, hãy xem "[UCSHCL](https://ucshcltool.cloudapps.cisco.com/public/)".
 
-#### 3.2.5. Các yêu cầu phần cứng đối với NC-SI trên môi trường bare metal
+#### III.2.5. Các yêu cầu phần cứng đối với NC-SI trên môi trường bare metal
 Để triển khai OpenShift Container Platform phiên bản 4.19 trở lên với giao diện Network Controller Sideband Interface (NC-SI) trên môi trường bare metal, bạn phải sử dụng phần cứng có bộ điều khiển quản lý bo mạch chủ (Baseboard Management Controller - BMC) và card giao tiếp mạng (Network Interface Card - NIC) hỗ trợ NC-SI.
 
 NC-SI cho phép BMC chia sẻ NIC của hệ thống với máy chủ (host); tính năng DisablePowerOff là yêu cầu bắt buộc để ngăn chặn tình trạng mất kết nối với BMC khi hệ thống bị tắt nguồn.
@@ -10939,7 +10939,7 @@ NC-SI cho phép BMC chia sẻ NIC của hệ thống với máy chủ (host); t�
 
 > **Lưu ý:** Hãy kiểm tra thông tin hỗ trợ NC-SI trong tài liệu của nhà cung cấp, vì khả năng tương thích phụ thuộc vào cấu hình của BMC, NIC và chương trình cơ sở (firmware). Các NIC hỗ trợ NC-SI đòi hỏi phải có BMC tương thích để kích hoạt chức năng chia sẻ NIC.
 
-#### 3.2.6. Các yêu cầu về mạng
+#### III.2.6. Các yêu cầu về mạng
 Quá trình cài đặt OpenShift Container Platform theo phương thức do trình cài đặt cung cấp (installer-provisioned installation) đòi hỏi phải đáp ứng một số yêu cầu về mạng.
 
 Thứ nhất, phương thức này bao gồm một mạng cung cấp (provisioning network) tùy chọn — loại mạng không có khả năng định tuyến — được sử dụng để thiết lập hệ điều hành trên từng nút phần cứng vật lý (bare-metal node). Thứ hai, phương thức này yêu cầu một mạng dành cho phần cứng vật lý (bare-metal network) có khả năng định tuyến.
@@ -10952,12 +10952,12 @@ Thứ nhất, phương thức này bao gồm một mạng cung cấp (provisioni
 > * Một công cụ đã được ghi lại trong tài liệu, chẳng hạn như NMState hoặc Kubernetes-NMState. 
 > * Các công cụ khác có thể được hỗ trợ để thực hiện một tác vụ cụ thể. Red Hat không hỗ trợ các công cụ này cho các cấu hình mạng tổng quát.
 
-##### 3.2.6.1. Một địa chỉ IP cho mỗi mạng con (subnet)
+##### III.2.6.1. Một địa chỉ IP cho mỗi mạng con (subnet)
 Đối với giao diện chính, hãy gán một địa chỉ IP cho mỗi mạng con. Cấu hình này đảm bảo rằng quá trình chọn địa chỉ IP cho nút (node) có thể xử lý lưu lượng truy cập mà không gặp phải các vấn đề liên quan đến việc điều phối lưu lượng.
 
 Bạn có thể gán nhiều địa chỉ IP từ cùng một mạng con cho một giao diện duy nhất; quy trình này được gọi là "IP aliasing" (tạo bí danh IP). Tuy nhiên, cơ chế chọn địa chỉ IP cho nút sẽ không thể xác định một cách nhất quán địa chỉ nào cần được sử dụng, dẫn đến xung đột định tuyến và việc chọn địa chỉ IP trở nên khó dự đoán.
 
-##### 3.2.6.2. Đảm bảo các cổng cần thiết đã được mở
+##### III.2.6.2. Đảm bảo các cổng cần thiết đã được mở
 Một số cổng nhất định phải được mở giữa các nút (node) trong cụm (cluster) để quá trình cài đặt do trình cài đặt cung cấp (installer-provisioned installation) có thể hoàn tất thành công. Trong một số trường hợp, chẳng hạn như khi sử dụng các mạng con (subnet) riêng biệt cho các nút worker ở vùng biên xa (far edge), bạn phải đảm bảo rằng các nút nằm trong những mạng con này có thể giao tiếp với các nút ở những mạng con khác thông qua các cổng bắt buộc sau đây.
 
 **Bảng 3.7. Các cổng bắt buộc**
@@ -10978,10 +10978,10 @@ Một số cổng nhất định phải được mở giữa các nút (node) tr
 | `8083`     | Khi sử dụng tùy chọn lưu trữ đệm hình ảnh (image caching) với TLS, cổng `8083` trên nút cung cấp (provisioner node) phải được mở và có thể truy cập được từ các giao diện BMC của các nút trong cụm.                                                                                                                                                                                                                                                                    |
 | `9999`     | Theo mặc định, Ironic Python Agent (IPA) lắng nghe trên cổng TCP `9999` để tiếp nhận các lệnh gọi API từ dịch vụ Ironic conductor. Quá trình giao tiếp giữa nút phần cứng vật lý (bare-metal node) — nơi IPA đang chạy — và dịch vụ Ironic conductor được thực hiện thông qua cổng này.                                                                                                                                                                                 |
 
-##### 3.2.6.3. Tăng MTU mạng
+##### III.2.6.3. Tăng MTU mạng
 Trước khi triển khai OpenShift Container Platform, hãy tăng đơn vị truyền tải tối đa (MTU) của mạng lên mức 1500 hoặc cao hơn. Nếu MTU thấp hơn 1500, image Ironic được sử dụng để khởi động nút (node) có thể không giao tiếp được với pod Ironic inspector, dẫn đến quá trình kiểm tra (inspection) bị thất bại. Nếu tình trạng này xảy ra, quá trình cài đặt sẽ dừng lại do các nút không sẵn sàng cho việc cài đặt.
 
-##### 3.2.6.4. Cấu hình các card mạng (NIC)
+##### III.2.6.4. Cấu hình các card mạng (NIC)
 OpenShift Container Platform triển khai với hai mạng:
 
 * provisioning (mạng cung cấp): Đây là một mạng tùy chọn, không có khả năng định tuyến (non-routable), được sử dụng để cung cấp (provision) hệ điều hành nền tảng trên mỗi nút (node) thuộc cụm OpenShift Container Platform. Đối với mạng này, giao diện mạng (network interface) trên mỗi nút trong cụm phải được cấu hình trong BIOS hoặc UEFI để hỗ trợ khởi động qua PXE (PXE boot). 
@@ -10994,7 +10994,7 @@ Mạng cung cấp là tùy chọn, nhưng lại bắt buộc nếu sử dụng p
 
 > **Quan trọng:** Khi sử dụng VLAN, mỗi card mạng (NIC) phải nằm trên một VLAN riêng biệt tương ứng với mạng đó.
 
-##### 3.2.6.5. Các yêu cầu về DNS
+##### III.2.6.5. Các yêu cầu về DNS
 Các client truy cập vào các node của cụm OpenShift Container Platform thông qua mạng bare-metal. Quản trị viên mạng phải cấu hình một tên miền phụ (subdomain) hoặc vùng phụ (subzone), trong đó phần mở rộng tên chuẩn (canonical name extension) chính là tên của cụm.
 
 ```
@@ -11029,12 +11029,12 @@ Quy trình cài đặt do trình cài đặt tự động cung cấp (installer-
 
 > **Mẹo:** Bạn có thể sử dụng lệnh `dig` để kiểm tra quá trình phân giải DNS.
 
-##### 3.2.6.6. Các yêu cầu đối với Giao thức Cấu hình Host Động (DHCP)
+##### III.2.6.6. Các yêu cầu đối với Giao thức Cấu hình Host Động (DHCP)
 Theo mặc định, quy trình cài đặt do trình cài đặt (installer) thực hiện sẽ triển khai `ironic-dnsmasq` với tính năng DHCP được bật cho mạng cung cấp (provisioning network). Không được phép có bất kỳ máy chủ DHCP nào khác chạy trên mạng cung cấp khi thiết lập cấu hình `provisioningNetwork` ở trạng thái `managed` (đây là giá trị mặc định). Nếu bạn đã có một máy chủ DHCP đang chạy trên mạng cung cấp, bạn phải đặt thiết lập cấu hình `provisioningNetwork` thành `unmanaged` trong tệp `install-config.yaml`.
 
 Các quản trị viên mạng phải dành riêng (dự phòng) các địa chỉ IP trên một máy chủ DHCP bên ngoài cho từng nút (node) trong cụm OpenShift Container Platform trên mạng baremetal (mạng dành cho phần cứng vật lý).
 
-##### 3.2.6.7. Dự phòng địa chỉ IP cho các nút (node) thông qua máy chủ DHCP
+##### III.2.6.7. Dự phòng địa chỉ IP cho các nút (node) thông qua máy chủ DHCP
 Đối với mạng bare-metal (hệ thống vật lý không qua lớp ảo hóa), quản trị viên mạng cần dự phòng một số địa chỉ IP, bao gồm:
 
 1. Hai địa chỉ IP ảo (virtual IP) duy nhất:
@@ -11068,25 +11068,25 @@ Bảng dưới đây cung cấp ví dụ về các tên miền đủ điều ki�
 
 > **Lưu ý:** Nếu bạn không tạo các đặt trước DHCP (DHCP reservations), chương trình cài đặt sẽ yêu cầu phân giải DNS ngược (reverse DNS resolution) để thiết lập tên máy chủ (hostname) cho nút API Kubernetes, nút cung cấp tài nguyên (provisioner node), các nút mặt phẳng điều khiển (control plane nodes) và các nút worker (worker nodes).
 
-##### 3.2.6.8. Các yêu cầu đối với nút cung cấp (provisioner node)
+##### III.2.6.8. Các yêu cầu đối với nút cung cấp (provisioner node)
 Bạn phải chỉ định địa chỉ MAC cho nút cung cấp trong cấu hình cài đặt của mình. Thông số `bootMacAddress` thường gắn liền với quá trình khởi động qua mạng (PXE). Tuy nhiên, dịch vụ cung cấp Ironic cũng yêu cầu thông số `bootMacAddress` để nhận diện các nút trong quá trình kiểm tra cụm (cluster) hoặc khi triển khai lại các nút trong cụm đó.
 
 Nút cung cấp cần kết nối lớp 2 (layer 2) để thực hiện khởi động qua mạng, phân giải DHCP và DNS, cũng như giao tiếp trong mạng cục bộ. Nút cung cấp cũng cần kết nối lớp 3 (layer 3) để hỗ trợ khởi động thông qua phương tiện ảo (virtual media).
 
-##### 3.2.6.9. Network Time Protocol (NTP)
+##### III.2.6.9. Network Time Protocol (NTP)
 Mỗi nút (node) OpenShift Container Platform trong cụm (cluster) đều phải có quyền truy cập vào một máy chủ NTP. Các nút OpenShift Container Platform sử dụng NTP để đồng bộ hóa đồng hồ của chúng. Chẳng hạn, các nút trong cụm sử dụng chứng chỉ SSL/TLS cần được xác thực; quá trình xác thực này có thể thất bại nếu ngày giờ giữa các nút không đồng bộ với nhau.
 
 > **Quan trọng:** Hãy thiết lập định dạng ngày giờ nhất quán trong cài đặt BIOS của từng nút trong cụm, nếu không, quá trình cài đặt có thể bị lỗi.
 
 Đối với các cụm không kết nối với internet (disconnected clusters), bạn có thể cấu hình lại các nút điều khiển (control plane nodes) để đóng vai trò là máy chủ NTP, đồng thời cấu hình các nút worker (worker nodes) để lấy thông tin thời gian từ các nút điều khiển đó.
 
-##### 3.2.6.10. Truy cập cổng cho địa chỉ IP quản lý ngoài băng tần (out-of-band)
+##### III.2.6.10. Truy cập cổng cho địa chỉ IP quản lý ngoài băng tần (out-of-band)
 Địa chỉ IP quản lý ngoài băng tần nằm trên một mạng tách biệt với nút (node). Để đảm bảo hệ thống quản lý ngoài băng tần có thể giao tiếp với nút cung cấp (provisioner node) trong quá trình cài đặt, địa chỉ IP quản lý ngoài băng tần phải được cấp quyền truy cập vào cổng `6180` trên nút cung cấp và trên các nút thuộc mặt phẳng điều khiển (control plane) của OpenShift Container Platform. Cổng TLS `6183` là bắt buộc đối với việc cài đặt thông qua phương tiện ảo (virtual media), chẳng hạn như khi sử dụng Redfish.
 
-#### 3.2.7. Cấu hình các nút (node)
+#### III.2.7. Cấu hình các nút (node)
 Bạn có thể cấu hình các nút cho quá trình cài đặt OpenShift Container Platform trên hạ tầng vật lý (bare metal) – với quy trình cài đặt do trình cài đặt (installer) tự động thiết lập – bằng cách sử dụng mạng cung cấp (provisioning network), mạng hạ tầng vật lý (baremetal network), hoặc thông qua cơ chế khởi động an toàn (secure boot) được cấu hình thủ công.
 
-##### 3.2.7.1. Cấu hình nút khi sử dụng mạng cung cấp (provisioning network)
+##### III.2.7.1. Cấu hình nút khi sử dụng mạng cung cấp (provisioning network)
 Mỗi nút trong cụm (cluster) cần được cấu hình như sau để đảm bảo quá trình cài đặt diễn ra đúng cách.
 
 > **Cảnh báo:** Sự không đồng nhất giữa các nút sẽ dẫn đến lỗi trong quá trình cài đặt.
@@ -11113,7 +11113,7 @@ Cấu hình mặt phẳng điều khiển (control plane) và các nút worker n
 |-----------------------------------------|------------------|
 | NIC1 đã bật PXE (mạng cung cấp dịch vụ) | 1                |
 
-##### 3.2.7.2. Cấu hình nút không sử dụng mạng cung cấp (provisioning network)
+##### III.2.7.2. Cấu hình nút không sử dụng mạng cung cấp (provisioning network)
 Quá trình cài đặt yêu cầu một card mạng (NIC).
 
 | NIC  | Network        | VLAN                  |
@@ -11124,7 +11124,7 @@ NICx là một mạng có khả năng định tuyến (`baremetal`), được s�
 
 > **Quan trọng:** Mạng `provisioning` là tùy chọn, nhưng lại bắt buộc nếu sử dụng phương thức khởi động qua PXE (PXE booting). Nếu triển khai mà không có mạng `provisioning`, bạn phải sử dụng tùy chọn định địa chỉ BMC thông qua phương tiện ảo (virtual media), chẳng hạn như `redfish-virtualmedia` hoặc `idrac-virtualmedia`.
 
-##### 3.2.7.3. Cấu hình thủ công tính năng Secure Boot cho các nút (node)
+##### III.2.7.3. Cấu hình thủ công tính năng Secure Boot cho các nút (node)
 Secure Boot ngăn không cho một nút khởi động trừ khi nó xác minh được rằng nút đó chỉ sử dụng các phần mềm đáng tin cậy, chẳng hạn như các trình điều khiển firmware UEFI, các ứng dụng EFI và hệ điều hành.
 
 > **Lưu ý:** Red Hat chỉ hỗ trợ cấu hình thủ công tính năng Secure Boot khi triển khai bằng phương thức virtual media (phương tiện ảo) của Redfish.
@@ -11139,7 +11139,7 @@ Secure Boot ngăn không cho một nút khởi động trừ khi nó xác minh �
 
 > **Quan trọng:** Red Hat không hỗ trợ tính năng Secure Boot khi sử dụng các khóa (key) do người dùng tự tạo.
 
-#### 3.2.8. Quản trị ngoài băng tần (Out-of-band management)
+#### III.2.8. Quản trị ngoài băng tần (Out-of-band management)
 Quản trị ngoài băng tần sử dụng các bộ điều khiển quản trị bo mạch chủ (Baseboard Management Controllers - BMC) để cho phép nút cung cấp (provisioner node) truy cập vào các nút trong cụm (cluster nodes) của bạn.
 
 Thông thường, các nút sẽ có thêm một giao diện mạng (NIC) dành riêng cho BMC. Các BMC này phải có thể truy cập được từ nút cung cấp.
@@ -11154,7 +11154,7 @@ Việc thiết lập hệ thống quản trị ngoài băng tần nằm ngoài p
 > * mạng cung cấp (provisioning network)
 > * mạng quản trị (management network) được định tuyến thông qua một trong các giao diện mạng
 
-#### 3.2.9. Dữ liệu cần thiết cho quá trình cài đặt
+#### III.2.9. Dữ liệu cần thiết cho quá trình cài đặt
 Trước khi triển khai OpenShift Container Platform, hãy thu thập các thông tin thiết yếu cần thiết cho môi trường của bạn.
 
 Thu thập các thông tin sau từ tất cả các nút (node) trong cụm (cluster):
@@ -11169,7 +11169,7 @@ Thu thập các thông tin sau từ tất cả các nút (node) trong cụm (clu
 * Khi không sử dụng mạng `provisioning`:
   * Địa chỉ MAC của card mạng (NIC) cho mạng `baremetal`
 
-#### 3.2.10. Danh mục kiểm tra xác thực cho các nút (node)
+#### III.2.10. Danh mục kiểm tra xác thực cho các nút (node)
 Sử dụng danh mục kiểm tra dưới đây để xác thực các nút trước khi cài đặt OpenShift Container Platform trên hạ tầng vật lý (bare metal). 
 
 * Khi sử dụng mạng `provisioning` (mạng cung cấp tài nguyên)
@@ -11190,7 +11190,7 @@ Sử dụng danh mục kiểm tra dưới đây để xác thực các nút trư
   * ❏ (Tùy chọn) Đã tạo một mạng quản trị riêng biệt. 
   * ❏ Dữ liệu cần thiết cho quá trình cài đặt.
 
-#### 3.2.11. Tổng quan về quá trình cài đặt
+#### III.2.11. Tổng quan về quá trình cài đặt
 Chương trình cài đặt hỗ trợ chế độ tương tác. Tuy nhiên, bạn có thể chuẩn bị trước tệp `install-config.yaml` chứa các thông tin chi tiết về việc cung cấp tài nguyên (provisioning) cho tất cả các máy chủ vật lý (bare-metal host), cùng các thông tin liên quan đến cụm (cluster).
 
 Chương trình cài đặt sẽ tải tệp `install-config.yaml`, sau đó người quản trị sẽ tạo các tệp cấu hình (manifests) và xác minh tất cả các điều kiện tiên quyết.
@@ -11234,15 +11234,15 @@ Thành phần Bare-Metal Operator tiếp tục thực hiện triển khai các n
 
 Sau khi quá trình cài đặt hoàn tất, các nút chuyển sang trạng thái "hoạt động" (active). Lúc này, bạn có thể tiến hành các cấu hình sau cài đặt và thực hiện các tác vụ vận hành khác (Day 2 tasks).
 
-### 3.3. Thiết lập môi trường cho quá trình cài đặt OpenShift
+### III.3. Thiết lập môi trường cho quá trình cài đặt OpenShift
 Trước khi có thể cài đặt cụm OpenShift Container Platform trên hạ tầng vật lý (bare metal), bạn cần thiết lập môi trường phục vụ cho quá trình cài đặt.
 
-#### 3.3.1. Cài đặt RHEL trên nút cung cấp (provisioner node)
+#### III.3.1. Cài đặt RHEL trên nút cung cấp (provisioner node)
 Sau khi hoàn tất cấu hình các điều kiện tiên quyết, bước tiếp theo là cài đặt RHEL 9.x trên nút cung cấp (provisioner node). Trình cài đặt sẽ sử dụng nút cung cấp này làm bộ điều phối (orchestrator) trong quá trình thiết lập cụm OpenShift Container Platform.
 
 Hướng dẫn cài đặt RHEL trên nút cung cấp nằm ngoài phạm vi của tài liệu này. Tuy nhiên, bạn có thể thực hiện việc này thông qua một số phương thức, chẳng hạn như sử dụng máy chủ RHEL Satellite, PXE hoặc các phương tiện cài đặt (installation media).
 
-#### 3.3.2. Chuẩn bị nút cung cấp (provisioner node) để cài đặt OpenShift Container Platform
+#### III.3.2. Chuẩn bị nút cung cấp (provisioner node) để cài đặt OpenShift Container Platform
 Bắt đầu thiết lập môi trường cho việc cài đặt cụm (cluster) bằng cách chuẩn bị nút cung cấp (provisioner node).
 
 **Quy trình**
@@ -11319,7 +11319,7 @@ $ vim pull-secret.txt
 
 Trong trình duyệt web, hãy truy cập [phần cài đặt OpenShift trên nền tảng phần cứng vật lý (bare metal) với cơ sở hạ tầng do trình cài đặt cung cấp (installer-provisioned infrastructure)](https://console.redhat.com/openshift/install/metal/installer-provisioned). Nhấp vào **Copy pull secret**. Dán nội dung đó vào tệp `pull-secret.txt` và lưu tệp này trong thư mục chính (home directory) của người dùng `kni`.
 
-#### 3.3.3. Kiểm tra đồng bộ hóa với máy chủ NTP
+#### III.3.3. Kiểm tra đồng bộ hóa với máy chủ NTP
 Chương trình cài đặt OpenShift Container Platform sẽ cài đặt dịch vụ Network Time Protocol (NTP) có tên là `chrony` trên các nút (node) của cụm (cluster). Để hoàn tất quá trình cài đặt, mỗi nút phải có quyền truy cập vào một máy chủ thời gian NTP. Bạn có thể xác minh trạng thái đồng bộ hóa với máy chủ NTP thông qua dịch vụ `chrony`.
 
 Đối với các cụm không kết nối internet (disconnected clusters), bạn cần cấu hình các máy chủ NTP trên các nút thuộc mặt phẳng điều khiển (control plane nodes). Để biết thêm thông tin, hãy xem phần "Cấu hình NTP cho các cụm không kết nối internet".
@@ -11364,7 +11364,7 @@ PING time.cloudflare.com (162.159.200.123) 56(84) bytes of data.
 ...
 ```
 
-##### 3.3.4. Cấu hình mạng
+##### III.3.4. Cấu hình mạng
 Trước khi cài đặt, bạn phải cấu hình các thiết lập mạng cho nút cung cấp (provisioner node). Các cụm do trình cài đặt thiết lập (installer-provisioned clusters) sẽ được triển khai cùng với một cầu nối (bridge) và các tài nguyên mạng trên nền tảng phần cứng vật lý (bare-metal), cùng với tùy chọn bổ sung là cầu nối và các tài nguyên mạng dành riêng cho việc cung cấp (provisioning).
 
 **Hình 3.4. Cấu hình mạng**
@@ -11545,7 +11545,7 @@ Wired connection 2  c1fb12b1-88a6-3c07-93b9-187c99204c43  ethernet  eth1
 lo                  aa030e0f-21ca-498f-b6ce-bac7d4d793f0  loopback  lo
 ```
 
-#### 3.3.5. Công cụ baremetal-runtimecfg
+#### III.3.5. Công cụ baremetal-runtimecfg
 Để ngăn ngừa việc gán sai địa chỉ IP, hãy tìm hiểu cách công cụ `baremetal-runtimecfg` xác định địa chỉ IP của nút (node) trong mối tương quan giữa mạng vật lý của bạn và mặt phẳng điều khiển (control plane) của Kubernetes.
 
 Công cụ `baremetal-runtimecfg` sử dụng trình tự logic lựa chọn sau đây để xác định địa chỉ IP cho một nút:
@@ -11570,7 +11570,7 @@ Nếu một nút có nhiều địa chỉ IP trên giao diện mạng chính (v�
 * Khi khởi động lại nút, nếu cả địa chỉ IP chính và địa chỉ IP phụ (trên cùng mạng con) đều là các lựa chọn khả thi, `baremetal-runtimecfg` có thể chọn địa chỉ IP phụ dựa trên các tiêu chí sắp xếp của nó. 
 * Nếu `baremetal-runtimecfg` không thiết lập địa chỉ IP cho nút đó đối với dịch vụ Kubelet, thì Kubelet sẽ tự chọn một địa chỉ IP gắn liền với tuyến đường mặc định.
 
-#### 3.3.6. Tạo đối tượng manifest bao gồm cầu nối br-ex tùy chỉnh
+#### III.3.6. Tạo đối tượng manifest bao gồm cầu nối br-ex tùy chỉnh
 Theo mặc định, OpenShift Container Platform tự động cấu hình cầu nối Open vSwitch (OVS) `br-ex` trên các nút bare-metal (phần cứng vật lý). Đối với các yêu cầu mạng nâng cao, bạn có thể ghi đè hành vi mặc định này trên các nền tảng bare-metal. Để thực hiện việc này, hãy tạo một đối tượng MachineConfig bao gồm tệp cấu hình NMState.
 
 > **Lưu ý:** Bạn có thể sử dụng Butane để tạo các cấu hình máy (machine config). Để biết thêm thông tin, hãy xem phần "Tạo đối tượng MachineConfig bằng cách sử dụng Butane".
@@ -11711,7 +11711,7 @@ Trong đó:
 
 * Mở rộng quy mô các nút tính toán (compute node) bằng cách áp dụng đối tượng manifest — bao gồm cấu hình cầu nối `br-ex` tùy chỉnh — cho từng nút tính toán hiện có trong cụm (cluster) của bạn. Để biết thêm thông tin, hãy xem phần "Mở rộng cụm".
 
-##### 3.3.6.1. Mở rộng quy mô các tập hợp máy (machine set) thành các nút tính toán (compute node)
+##### III.3.6.1. Mở rộng quy mô các tập hợp máy (machine set) thành các nút tính toán (compute node)
 Để mở rộng quy mô các tập hợp máy thành các nút tính toán, bạn phải áp dụng cấu hình cầu nối `br-ex` tùy chỉnh cho tất cả các nút tính toán trong cụm OpenShift Container Platform của mình. Sau đó, bạn cần chỉnh sửa tài nguyên tùy chỉnh (CR) `MachineConfig` và sửa đổi các vai trò (roles) của nó.
 
 Ngoài ra, bạn phải tạo một CR `BareMetalHost` để xác định thông tin cho máy vật lý (bare-metal) của mình, chẳng hạn như tên máy chủ (hostname), thông tin xác thực và các tham số cần thiết khác. Sau khi định cấu hình các tài nguyên này, bạn cần mở rộng quy mô các tập hợp máy để chúng có thể áp dụng cấu hình tài nguyên đó cho từng nút tính toán và khởi động lại các nút này.
@@ -11769,7 +11769,7 @@ $ oc scale machineset <machineset_name> --replicas=<n>
 
 Trong đó: `<machineset_name>` chỉ định tên của tập hợp máy (machine set). `<n>` chỉ định số lượng nút tính toán (compute node).
 
-#### 3.3.7. Thiết lập kết nối giữa các mạng con (subnet)
+#### III.3.7. Thiết lập kết nối giữa các mạng con (subnet)
 Trong một thiết lập cụm OpenShift Container Platform điển hình, tất cả các nút (node) — bao gồm cả các nút điều khiển (control plane node) và các nút tính toán (compute node) — đều nằm trong cùng một mạng. Tuy nhiên, đối với các kịch bản điện toán biên (edge computing), việc đặt các nút tính toán gần hơn với biên mạng có thể mang lại nhiều lợi ích.
 
 Cách tiếp cận này thường đòi hỏi sử dụng các phân đoạn mạng hoặc mạng con (subnet) khác nhau cho các nút ở xa so với mạng con được sử dụng bởi các nút điều khiển và các nút tính toán cục bộ. Thiết lập như vậy có thể giúp giảm độ trễ tại biên mạng và tăng cường khả năng mở rộng.
@@ -11904,7 +11904,7 @@ Trong quy trình này, cụm bao gồm hai mạng con:
 
   Nếu lệnh `ping` thành công, điều đó có nghĩa là các nút tính toán từ xa trong mạng con thứ hai có thể kết nối tới mặt phẳng điều khiển (control plane) trong mạng con thứ nhất. Nếu bạn không nhận được phản hồi, hãy kiểm tra lại các cấu hình mạng và thực hiện lại quy trình đó cho nút này.
 
-#### 3.3.8. Tải xuống trình cài đặt OpenShift Container Platform
+#### III.3.8. Tải xuống trình cài đặt OpenShift Container Platform
 Hãy sử dụng phiên bản stable-4.x của chương trình cài đặt cùng với kiến trúc hệ thống mà bạn đã chọn để triển khai phiên bản ổn định (stable) của OpenShift Container Platform.
 
 **Quy trình**
@@ -11917,7 +11917,7 @@ $ export RELEASE_ARCH=<architecture>
 $ export RELEASE_IMAGE=$(curl -s https://mirror.openshift.com/pub/openshift-v4/$RELEASE_ARCH/clients/ocp/$VERSION/release.txt | grep 'Pull From: quay.io' | awk -F ' ' '{print $3}')
 ```
 
-#### 3.3.9. Giải nén trình cài đặt OpenShift Container Platform
+#### III.3.9. Giải nén trình cài đặt OpenShift Container Platform
 Sau khi tải trình cài đặt OpenShift Container Platform về, hãy giải nén nó để chuẩn bị cho quá trình cài đặt cụm (cluster).
 
 **Quy trình**
@@ -11946,7 +11946,7 @@ $ oc adm release extract --registry-config "${pullsecret_file}" \
 $ sudo cp openshift-baremetal-install /usr/local/bin
 ```
 
-#### 3.3.10. Tạo bộ nhớ đệm (cache) cho các hình ảnh RHCOS
+#### III.3.10. Tạo bộ nhớ đệm (cache) cho các hình ảnh RHCOS
 Để sử dụng tính năng lưu trữ hình ảnh (image caching), bạn cần tải xuống hình ảnh Red Hat Enterprise Linux CoreOS (RHCOS) mà máy ảo bootstrap sử dụng để cung cấp (provision) các nút (node) trong cụm (cluster). Việc lưu trữ hình ảnh là tùy chọn, nhưng đặc biệt hữu ích khi chạy chương trình cài đặt trên mạng có băng thông hạn chế.
 
 > **Lưu ý:** Chương trình cài đặt không còn yêu cầu hình ảnh RHCOS `clusterOSImage` nữa vì hình ảnh phù hợp đã có sẵn trong gói phát hành (release payload).
@@ -12048,7 +12048,7 @@ Thay thế `<bootstrap_os_image>` bằng giá trị của $BOOTSTRAP_OS_IMAGE.
 
 Xem phần "Cấu hình tệp install-config.yaml" để biết thêm chi tiết.
 
-#### 3.3.11. Các dịch vụ dành cho bộ cân bằng tải do người dùng quản lý
+#### III.3.11. Các dịch vụ dành cho bộ cân bằng tải do người dùng quản lý
 Bạn có thể định cấu hình cụm OpenShift Container Platform để sử dụng bộ cân bằng tải do người dùng quản lý thay cho bộ cân bằng tải mặc định.
 
 > **Quan trọng:** Việc định cấu hình bộ cân bằng tải do người dùng quản lý phụ thuộc vào bộ cân bằng tải từ nhà cung cấp của bạn.
@@ -12087,7 +12087,7 @@ Trước khi định cấu hình bộ cân bằng tải do người dùng quản
   * Định cấu hình để mỗi nút luôn nhận được cùng một địa chỉ IP từ DHCP mỗi khi nút đó yêu cầu cấp phát IP (DHCP lease). Tùy thuộc vào nhà cung cấp, cơ chế này có thể được thực hiện thông qua việc đặt trước địa chỉ IP (IP reservation) hoặc gán IP tĩnh qua DHCP. 
 * Bạn cần định nghĩa thủ công từng nút chạy Ingress Controller trong bộ cân bằng tải do người dùng quản lý dành cho dịch vụ back-end của Ingress Controller. Ví dụ: nếu Ingress Controller di chuyển sang một nút chưa được định nghĩa, kết nối có thể bị gián đoạn.
 
-##### 3.3.11.1. Cấu hình bộ cân bằng tải do người dùng quản lý
+##### III.3.11.1. Cấu hình bộ cân bằng tải do người dùng quản lý
 Bạn có thể cấu hình cụm OpenShift Container Platform để sử dụng bộ cân bằng tải do người dùng quản lý thay cho bộ cân bằng tải mặc định.
 
 > **Quan trọng:** Trước khi cấu hình bộ cân bằng tải do người dùng quản lý, hãy đảm bảo rằng bạn đã đọc phần "Các dịch vụ dành cho bộ cân bằng tải do người dùng quản lý".
@@ -12455,7 +12455,7 @@ Trong đó:
   cache-control: private
   ```
 
-#### 3.3.12. Thiết lập tên máy chủ (hostname) cho các nút trong cụm thông qua DHCP
+#### III.3.12. Thiết lập tên máy chủ (hostname) cho các nút trong cụm thông qua DHCP
 Trên các máy chạy hệ điều hành Red Hat Enterprise Linux CoreOS (RHCOS), `NetworkManager` đảm nhận việc thiết lập tên máy chủ (hostname). Theo mặc định, DHCP sẽ cung cấp tên máy chủ cho `NetworkManager`; đây cũng là phương pháp được khuyến nghị.
 
 `NetworkManager` sẽ thực hiện tra cứu DNS ngược (reverse DNS lookup) để lấy tên máy chủ trong các trường hợp sau:
@@ -12468,7 +12468,7 @@ Quá trình tra cứu DNS ngược diễn ra sau khi mạng đã được khởi
 
 > **Mẹo:** Bạn có thể tránh được sự chậm trễ trong việc thiết lập tên máy chủ bằng cách sử dụng DHCP để cung cấp tên máy chủ cho từng nút trong cụm. Ngoài ra, việc thiết lập tên máy chủ thông qua DHCP còn giúp tránh các lỗi cấu hình thủ công đối với bản ghi DNS trong các môi trường triển khai DNS theo cơ chế "split-horizon" (DNS phân tách theo nguồn truy vấn).
 
-#### 3.3.13. Các điều kiện tiên quyết để cấu hình nút trọng tài cục bộ (local arbiter node)
+#### III.3.13. Các điều kiện tiên quyết để cấu hình nút trọng tài cục bộ (local arbiter node)
 Để duy trì tính sẵn sàng cao (HA) đồng thời giảm chi phí cơ sở hạ tầng cho cụm (cluster) của mình, bạn có thể cấu hình cụm OpenShift Container Platform với hai nút mặt phẳng điều khiển (control plane node) và một nút trọng tài cục bộ (local arbiter node).
 
 Nút trọng tài cục bộ là một máy chủ có chi phí thấp hơn, được đặt cùng vị trí và tham gia vào các quyết định thiết lập hạn ngạch (quorum) của mặt phẳng điều khiển. Khác với nút mặt phẳng điều khiển tiêu chuẩn, nút trọng tài không chạy toàn bộ các dịch vụ của mặt phẳng điều khiển. Bạn có thể sử dụng cấu hình này để duy trì tính sẵn sàng cao trong cụm của mình chỉ với hai nút mặt phẳng điều khiển được thiết lập đầy đủ, thay vì ba nút.
@@ -12496,7 +12496,7 @@ Các nút mặt phẳng điều khiển phải đáp ứng các yêu cầu hệ 
 
 Ngoài ra, các nút mặt phẳng điều khiển cũng phải có đủ dung lượng lưu trữ cho khối lượng công việc (workload).
 
-#### 3.3.14. Cấu hình nút trọng tài (arbiter node) cục bộ bằng cơ sở hạ tầng do trình cài đặt cung cấp
+#### III.3.14. Cấu hình nút trọng tài (arbiter node) cục bộ bằng cơ sở hạ tầng do trình cài đặt cung cấp
 Để duy trì tính sẵn sàng cao (HA) đồng thời giảm chi phí cơ sở hạ tầng cho cụm (cluster) của mình, bạn có thể cấu hình cụm OpenShift Container Platform với hai nút mặt phẳng điều khiển (control plane node) và một nút trọng tài cục bộ.
 
 **Điều kiện tiên quyết**
@@ -12558,7 +12558,7 @@ trong đó:
 
 2. Lưu tệp `install-config.yaml` đã sửa đổi.
 
-#### 3.3.15. Cấu hình tệp install-config.yaml
+#### III.3.15. Cấu hình tệp install-config.yaml
 Tệp `install-config.yaml` cần có thêm một số thông tin chi tiết. Phần lớn các thông tin này cung cấp cho chương trình cài đặt và cụm (cluster) được tạo ra những dữ liệu cần thiết về phần cứng hiện có, giúp hệ thống có thể quản lý phần cứng đó một cách toàn diện.
 
 > **Lưu ý:** Chương trình cài đặt không còn yêu cầu tệp ảnh RHCOS (clusterOSImage) nữa, vì tệp ảnh phù hợp đã được bao gồm sẵn trong gói phát hành (release payload).
@@ -12695,7 +12695,7 @@ do
 done
 ```
 
-##### 3.3.15.1. Các tham số cấu hình cài đặt bổ sung
+##### III.3.15.1. Các tham số cấu hình cài đặt bổ sung
 Một số tham số, chẳng hạn như tên miền cụm (cluster domain name), là bắt buộc phải có trong tệp `install-config.yaml` khi cài đặt cụm trên nền tảng phần cứng vật lý (bare metal). Các tham số khác, ví dụ như CIDR của mạng cung cấp (provisioning network), là tùy chọn.
 
 **Bảng 3.9. Các tham số bắt buộc**
@@ -12740,7 +12740,7 @@ Một số tham số, chẳng hạn như tên miền cụm (cluster domain name)
 | `httpsProxy`                                                               |                                                   | Hãy đặt tham số này thành proxy HTTPS phù hợp được sử dụng trong môi trường của bạn.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `noProxy`                                                                  |                                                   | Hãy đặt tham số này thành danh sách các ngoại lệ phù hợp cho việc sử dụng proxy trong môi trường của bạn.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
-###### 3.3.15.1.1. Các máy chủ (Hosts)
+###### III.3.15.1.1. Các máy chủ (Hosts)
 Tham số `hosts` là danh sách các tài nguyên phần cứng vật lý (bare metal) riêng biệt được sử dụng để xây dựng cụm (cluster).
 
 **Bảng 3.11. Các máy chủ**
@@ -12758,7 +12758,7 @@ Tham số `hosts` là danh sách các tài nguyên phần cứng vật lý (bare
 | `bootMACAddress`                       |          | Địa chỉ MAC của card mạng (NIC) mà máy chủ sử dụng cho mạng cung cấp (provisioning network). Ironic truy xuất địa chỉ IP thông qua tham số `bootMACAddress`, sau đó thực hiện liên kết với máy chủ đó. Lưu ý: Bạn phải cung cấp một địa chỉ MAC hợp lệ từ máy chủ nếu đã vô hiệu hóa mạng cung cấp.                                                              |
 | `networkConfig`                        |          | Hãy thiết lập tham số tùy chọn này để cấu hình giao diện mạng của một máy chủ.                                                                                                                                                                                                                                                                                   |
 
-##### 3.3.15.2. Định địa chỉ BMC
+##### III.3.15.2. Định địa chỉ BMC
 Intelligent Platform Management Interface (IPMI) và giao thức khởi động qua mạng Redfish là hai phương thức phổ biến để định địa chỉ cho Baseboard Management Controller (BMC).
 
 > **Lưu ý:** Để triển khai các cụm (cluster) với mặt phẳng điều khiển (control plane) được ảo hóa chạy trên các máy ảo (VM) OpenShift Virtualization thay vì trên các máy chủ vật lý, bạn có thể sử dụng KubeVirt Redfish để hiển thị các máy ảo này dưới dạng các điểm cuối (endpoint) Redfish. Bạn có thể áp dụng phương pháp này để triển khai các mặt phẳng điều khiển ảo hóa với cơ sở hạ tầng do trình cài đặt cung cấp (installer-provisioned infrastructure). Xem phần "Tìm hiểu về các mặt phẳng điều khiển ảo hóa" để biết thêm thông tin.
@@ -12769,7 +12769,7 @@ Redfish cung cấp khả năng quản lý đơn giản và bảo mật cho các 
 
 Bạn có thể thay đổi địa chỉ BMC trong quá trình cài đặt khi nút (node) đang ở trạng thái `Registering`. Nếu cần thay đổi địa chỉ BMC sau khi nút đã chuyển khỏi trạng thái `Registering`, bạn phải ngắt kết nối nút đó khỏi Ironic, chỉnh sửa tài nguyên `BareMetalHost`, rồi kết nối lại nút đó với Ironic. Xem phần Chỉnh sửa tài nguyên `BareMetalHost` để biết chi tiết.
 
-###### 3.3.15.2.1. IPMI
+###### III.3.15.2.1. IPMI
 IPMI sử dụng định dạng địa chỉ `ipmi://<out_of_band_ip>:<port>`; nếu không chỉ định cổng, hệ thống sẽ mặc định sử dụng cổng `623`. Ví dụ dưới đây minh họa cấu hình IPMI trong tệp `install-config.yaml`.
 
 ```yaml
@@ -12786,7 +12786,7 @@ platform:
 
 > **Quan trọng:** Khi thực hiện khởi động PXE bằng cách sử dụng IPMI để định địa chỉ BMC, bạn bắt buộc phải có mạng cung cấp (provisioning network). Không thể thực hiện khởi động PXE cho các máy chủ nếu thiếu mạng cung cấp. Nếu triển khai mà không có mạng cung cấp, bạn phải sử dụng tùy chọn định địa chỉ BMC qua phương tiện ảo (virtual media), chẳng hạn như `redfish-virtualmedia` hoặc `idrac-virtualmedia`. Để biết thêm chi tiết, vui lòng tham khảo mục "Redfish virtual media for HPE iLO" trong phần "BMC addressing for HPE iLO" hoặc mục "Redfish virtual media for Dell iDRAC" trong phần "BMC addressing for Dell iDRAC".
 
-###### 3.3.15.2.2. Khởi động qua mạng bằng Redfish
+###### III.3.15.2.2. Khởi động qua mạng bằng Redfish
 Để kích hoạt Redfish, hãy sử dụng `redfish://` hoặc `redfish+http://` (nếu muốn tắt TLS). Chương trình cài đặt yêu cầu cung cấp tên máy chủ (hostname) hoặc địa chỉ IP, cùng với đường dẫn đến ID hệ thống. Ví dụ dưới đây minh họa cấu hình Redfish trong tệp `install-config.yaml`.
 
 ```yaml
@@ -12847,7 +12847,7 @@ platform:
           disableCertificateVerification: False
 ```
 
-##### 3.3.15.3. Xác minh khả năng hỗ trợ các API Redfish
+##### III.3.15.3. Xác minh khả năng hỗ trợ các API Redfish
 Khi thực hiện cài đặt thông qua API Redfish — trong trường hợp sử dụng cơ sở hạ tầng do trình cài đặt cung cấp (installer-provisioned infrastructure) trên phần cứng vật lý (bare metal) — chương trình cài đặt sẽ gọi đến một số điểm cuối (endpoint) Redfish trên bộ điều khiển quản lý bo mạch chủ (BMC). Nếu sử dụng Redfish, hãy đảm bảo rằng BMC của bạn hỗ trợ tất cả các API Redfish cần thiết trước khi tiến hành cài đặt.
 
 **Quy trình**
@@ -12924,12 +12924,12 @@ Khi thực hiện cài đặt thông qua API Redfish — trong trường hợp s
 
 > **Quan trọng:** HTTPS và HTTP là các loại giao thức duy nhất được hỗ trợ cho tham số TransferProtocolTypes (các loại giao thức truyền tải).
 
-##### 3.3.15.4. Cấu hình địa chỉ BMC cho Dell iDRAC
+##### III.3.15.4. Cấu hình địa chỉ BMC cho Dell iDRAC
 Bạn có thể định cấu hình tham số `bmc` để sử dụng giao thức phương tiện ảo (virtual media) của iDRAC, giao thức khởi động qua mạng Redfish hoặc giao thức IPMI nhằm kết nối với hệ thống Dell iDRAC.
 
 Thiết lập cấu hình địa chỉ cho mỗi mục `bmc` là một URL dùng để kết nối với các nút (node) trong cụm OpenShift Container Platform; URL này bao gồm loại bộ điều khiển (trong phần lược đồ URL - URL scheme) và vị trí của nó trên mạng. Đối với mỗi mục `bmc`, thông tin người dùng được cấu hình phải là tài khoản có đặc quyền Quản trị viên (Administrator).
 
-###### 3.3.15.4.1. Các định dạng địa chỉ BMC cho Dell iDRAC
+###### III.3.15.4.1. Các định dạng địa chỉ BMC cho Dell iDRAC
 
 | Giao thức                       | Định dạng địa chỉ                                                            |
 |---------------------------------|------------------------------------------------------------------------------|
@@ -12941,7 +12941,7 @@ Thiết lập cấu hình địa chỉ cho mỗi mục `bmc` là một URL dùng
 
 Vui lòng xem các phần tiếp theo để biết thêm chi tiết.
 
-###### 3.3.15.4.2. Phương tiện ảo (virtual media) Redfish cho Dell iDRAC
+###### III.3.15.4.2. Phương tiện ảo (virtual media) Redfish cho Dell iDRAC
 Đối với phương tiện ảo Redfish trên các máy chủ Dell, hãy sử dụng `idrac-virtualmedia://` trong phần thiết lập địa chỉ. 
 Việc sử dụng `redfish-virtualmedia://` sẽ không hoạt động.
 
@@ -13011,7 +13011,7 @@ platform:
           disableCertificateVerification: False
 ```
 
-###### 3.3.15.4.3. Khởi động qua mạng bằng Redfish cho iDRAC
+###### III.3.15.4.3. Khởi động qua mạng bằng Redfish cho iDRAC
 Để kích hoạt Redfish, hãy sử dụng `redfish://` hoặc `redfish+http://` (nếu muốn tắt bảo mật lớp truyền tải - TLS). Chương trình cài đặt yêu cầu cung cấp tên máy chủ (hostname) hoặc địa chỉ IP, cùng với đường dẫn đến ID hệ thống. Ví dụ dưới đây minh họa cấu hình Redfish trong tệp `install-config.yaml`.
 
 ```yaml
@@ -13077,7 +13077,7 @@ platform:
 > **Lưu ý:** Trên Dell iDRAC 9, với phiên bản firmware `04.40.00.00` và tất cả các bản phát hành cho đến chuỗi phiên bản `5.xx`, tồn tại một vấn đề đã biết đối với các quy trình cài đặt trên phần cứng vật lý (bare metal). Plugin bảng điều khiển ảo (virtual console) mặc định sử dụng eHTML5 (phiên bản nâng cao của HTML5), gây ra lỗi trong quy trình **InsertVirtualMedia**. Để tránh vấn đề này, hãy thiết lập plugin sử dụng HTML5. Đường dẫn menu là: **Configuration** > **Virtual console** > **Plug-in Type** > **HTML5**.  
 > Đảm bảo rằng tính năng **AutoAttach** đã được bật cho các nút (node) trong cụm OpenShift Container Platform thông qua bảng điều khiển iDRAC. Đường dẫn menu là: **Configuration** > **Virtual Media** > **Attach Mode** > **AutoAttach**.
 
-##### 3.3.15.5. Định địa chỉ BMC cho HPE iLO
+##### III.3.15.5. Định địa chỉ BMC cho HPE iLO
 Bạn có thể kết nối với hệ thống HPE iLO thông qua giao thức phương tiện ảo (virtual media) Redfish, giao thức khởi động qua mạng (network boot) Redfish hoặc giao thức IPMI.
 
 Trường địa chỉ cho mỗi mục nhập BMC là một URL dùng để kết nối tới các nút (node) trong cụm OpenShift Container Platform; URL này bao gồm thông tin về loại bộ điều khiển (controller) và vị trí của nó trên mạng.
@@ -13088,7 +13088,7 @@ Trường địa chỉ cho mỗi mục nhập BMC là một URL dùng để kế
 | Khởi động qua mạng bằng Redfish | `redfish://<out_of_band_ip>/redfish/v1/Systems/1`              |
 | IPMI                            | `ipmi://<out_of_band_ip>`                                      |
 
-###### 3.3.15.5.1. Phương tiện ảo (virtual media) Redfish cho HPE iLO
+###### III.3.15.5.1. Phương tiện ảo (virtual media) Redfish cho HPE iLO
 Để kích hoạt phương tiện ảo Redfish cho các máy chủ HPE, hãy sử dụng `redfish-virtualmedia://` trong phần thiết lập địa chỉ. Ví dụ dưới đây minh họa cách sử dụng phương tiện ảo Redfish trong tệp `install-config.yaml`.
 
 ```yaml
@@ -13153,7 +13153,7 @@ platform:
 
 > **Lưu ý:** Tính năng phương tiện ảo (virtual media) của Redfish không được hỗ trợ trên các hệ thống thế hệ thứ 9 chạy iLO4, vì Ironic không hỗ trợ iLO4 với phương tiện ảo.
 
-###### 3.3.15.5.2. Khởi động qua mạng bằng Redfish cho HPE iLO
+###### III.3.15.5.2. Khởi động qua mạng bằng Redfish cho HPE iLO
 Để kích hoạt Redfish, hãy sử dụng `redfish://` hoặc `redfish+http://` (nếu muốn tắt TLS). Chương trình cài đặt yêu cầu cung cấp tên máy chủ (hostname) hoặc địa chỉ IP, cùng với đường dẫn đến ID hệ thống (system ID). Ví dụ dưới đây minh họa cấu hình Redfish trong tệp `install-config.yaml`.
 
 ```yaml
@@ -13216,7 +13216,7 @@ platform:
           disableCertificateVerification: True
 ```
 
-##### 3.3.15.6. Định địa chỉ BMC cho Fujitsu iRMC
+##### III.3.15.6. Định địa chỉ BMC cho Fujitsu iRMC
 Bạn có thể kết nối với hệ thống Fujitsu iRMC thông qua giao thức iRMC hoặc giao thức IPMI. Trường `address` cho mỗi mục `bmc` là một URL dùng để kết nối tới các nút (node) trong cụm OpenShift Container Platform; URL này bao gồm thông tin về loại bộ điều khiển (controller) trong phần lược đồ (scheme) và vị trí của nó trên mạng.
 
 | Giao thức | Định dạng địa chỉ         |
@@ -13240,7 +13240,7 @@ platform:
 
 > **Lưu ý:** Hiện tại, Fujitsu hỗ trợ firmware iRMC S5 phiên bản 3.05P trở lên đối với quy trình cài đặt trên phần cứng trần (bare metal) thông qua trình cài đặt (installer).
 
-##### 3.3.15.7. Định địa chỉ BMC cho Cisco Integrated Management Controller
+##### III.3.15.7. Định địa chỉ BMC cho Cisco Integrated Management Controller
 Bạn có thể kết nối với hệ thống Cisco Integrated Management Controller (CIMC) bằng giao thức phương tiện ảo (virtual media) Redfish. Trường địa chỉ cho mỗi mục nhập BMC là một URL dùng để kết nối với các nút (node) trong cụm OpenShift Container Platform; URL này bao gồm thông tin về loại bộ điều khiển (controller) và vị trí của nó trên mạng.
 
 Đối với các máy chủ Cisco UCS dòng C và dòng X, Red Hat hỗ trợ Cisco Integrated Management Controller (CIMC).
@@ -13278,7 +13278,7 @@ platform:
           disableCertificateVerification: True
 ```
 
-##### 3.3.15.8. Các gợi ý về thiết bị gốc (Root device hints)
+##### III.3.15.8. Các gợi ý về thiết bị gốc (Root device hints)
 Tham số `rootDeviceHints` cho phép trình cài đặt triển khai ảnh hệ thống Red Hat Enterprise Linux CoreOS (RHCOS) vào một thiết bị cụ thể.
 
 Trình cài đặt sẽ kiểm tra các thiết bị theo thứ tự phát hiện được, sau đó so sánh các giá trị thu thập từ thiết bị với các giá trị gợi ý (hint values). Trình cài đặt sẽ chọn thiết bị đầu tiên khớp với các giá trị gợi ý đó. Cấu hình có thể kết hợp nhiều gợi ý cùng lúc, nhưng một thiết bị phải thỏa mãn tất cả các gợi ý này thì mới được trình cài đặt chọn.
@@ -13312,7 +13312,7 @@ Ví dụ sử dụng
     deviceName: "/dev/sda"
 ```
 
-##### 3.3.15.9. Thiết lập các tùy chọn proxy
+##### III.3.15.9. Thiết lập các tùy chọn proxy
 Bạn có thể triển khai cụm OpenShift Container Platform trong khi sử dụng proxy bằng cách chỉnh sửa tệp `install-config.yaml`.
 
 **Quy trình**
@@ -13339,7 +13339,7 @@ noProxy: .example.com,172.22.0.0/24,10.10.0.0/24
   * Nếu cụm (cluster) sử dụng mạng cung cấp tài nguyên (provisioning network), bạn phải đưa mạng này vào thiết lập `noProxy`; nếu không, chương trình cài đặt sẽ bị lỗi. 
   * Thiết lập tất cả các thông số proxy dưới dạng các biến môi trường (environment variables) trên nút thực hiện cung cấp tài nguyên (provisioner node). Ví dụ: `HTTP_PROXY`, `HTTPS_PROXY` và `NO_PROXY`.
 
-##### 3.3.15.10. Triển khai không sử dụng mạng cung cấp (provisioning network)
+##### III.3.15.10. Triển khai không sử dụng mạng cung cấp (provisioning network)
 Bạn có thể triển khai cụm OpenShift Container Platform mà không cần mạng cung cấp (provisioning network) bằng cách thay đổi tệp `install-config.yaml`.
 
 **Quy trình**
@@ -13360,7 +13360,7 @@ Thêm thiết lập cấu hình `provisioningNetwork` (nếu cần) và đặt g
 
 > **Quan trọng:** Mạng cung cấp (provisioning network) là yêu cầu bắt buộc đối với quá trình khởi động qua PXE. Nếu bạn triển khai mà không có mạng cung cấp, bạn phải sử dụng tùy chọn định địa chỉ BMC thông qua phương tiện ảo (virtual media), chẳng hạn như `redfish-virtualmedia` hoặc `idrac-virtualmedia`. Để biết thêm chi tiết, hãy tham khảo mục "Redfish virtual media for HPE iLO" trong phần "BMC addressing for HPE iLO" hoặc mục "Redfish virtual media for Dell iDRAC" trong phần "BMC addressing for Dell iDRAC".
 
-##### 3.3.15.11. Triển khai đánh địa chỉ IP với mạng dual-stack (ngăn xếp kép)
+##### III.3.15.11. Triển khai đánh địa chỉ IP với mạng dual-stack (ngăn xếp kép)
 Khi triển khai đánh địa chỉ IP với mạng dual-stack cho máy ảo (VM) khởi động (bootstrap VM), máy ảo này sẽ hoạt động với một phiên bản IP duy nhất.
 
 > **Lưu ý:** Các ví dụ dưới đây áp dụng cho DHCP. Các cụm (cluster) sử dụng dual-stack dựa trên DHCP có thể được triển khai với một địa chỉ IP ảo (VIP) IPv4 và một VIP IPv6 ngay từ giai đoạn đầu (Day 1). Việc triển khai một cụm với các địa chỉ IP tĩnh đòi hỏi phải cấu hình địa chỉ IP cho máy ảo khởi động (bootstrap VM), cũng như các VIP cho API và ingress. Để cấu hình dual-stack với các địa chỉ IP tĩnh trong tệp `install-config`, bạn cần thiết lập một VIP cho API và một VIP cho ingress. Các VIP bổ sung (secondary VIP) có thể được thêm vào sau khi quá trình triển khai hoàn tất.
@@ -13410,7 +13410,7 @@ platform:
 
 > **Lưu ý:** Đối với cụm có cấu hình mạng dual-stack (ngăn xếp kép), bạn phải gán cả địa chỉ IPv4 và IPv6 cho cùng một giao diện mạng.
 
-##### 3.3.15.12. Cấu hình các giao diện mạng của máy chủ (host)
+##### III.3.15.12. Cấu hình các giao diện mạng của máy chủ (host)
 Trước khi cài đặt, bạn có thể thiết lập tùy chọn `networkConfig` trong tệp `install-config.yaml` để sử dụng NMState nhằm cấu hình các giao diện mạng của máy chủ.
 
 Trường hợp sử dụng phổ biến nhất cho tính năng này là chỉ định địa chỉ IP tĩnh trên mạng bare-metal (phần cứng vật lý), nhưng bạn cũng có thể cấu hình các mạng khác, chẳng hạn như mạng lưu trữ (storage network). Tính năng này hỗ trợ các chức năng khác của NMState như VLAN, VXLAN, bridge (cầu nối), bond (liên kết), định tuyến (route), MTU và các thiết lập trình phân giải DNS (DNS resolver).
@@ -13505,7 +13505,7 @@ Thay thế các giá trị `<nic1_name>`, `<ip_address>`, `<dns_ip_address>`, `<
 
 > **Quan trọng:** Sau khi triển khai cụm (cluster), bạn không thể sửa đổi thiết lập `networkConfig` trong tệp `install-config.yaml` để thay đổi cấu hình giao diện mạng của host. Hãy sử dụng Kubernetes NMState Operator để thực hiện các thay đổi đối với giao diện mạng của host sau khi đã triển khai.
 
-##### 3.3.15.13. Cấu hình các giao diện mạng máy chủ cho các mạng con (subnet)
+##### III.3.15.13. Cấu hình các giao diện mạng máy chủ cho các mạng con (subnet)
 Đối với các kịch bản điện toán biên (edge computing), việc đặt các nút tính toán (compute node) gần biên hơn có thể mang lại nhiều lợi ích. Để đặt các nút từ xa (remote node) vào các mạng con, bạn có thể sử dụng các phân đoạn mạng hoặc mạng con khác biệt so với mạng con dành cho mặt phẳng điều khiển (control plane) và các nút tính toán cục bộ.
 
 Việc thiết lập các mạng con cho các kịch bản điện toán biên giúp giảm độ trễ tại biên và tăng cường khả năng mở rộng.
@@ -13556,7 +13556,7 @@ Trong đó:
   * `networkConfig.interfaces.ipv4.gateway`: Chỉ định địa chỉ IP của cổng kết nối (gateway).
   * `networkConfig.dns-resolver.config.server`: Chỉ định địa chỉ IP của máy chủ DNS.
 
-##### 3.3.15.14. Cấu hình các chế độ tạo địa chỉ cho SLAAC trong mạng dual-stack (ngăn xếp kép)
+##### III.3.15.14. Cấu hình các chế độ tạo địa chỉ cho SLAAC trong mạng dual-stack (ngăn xếp kép)
 Đối với các cụm (cluster) sử dụng ngăn xếp kép (dual-stack) áp dụng cơ chế Tự động cấu hình địa chỉ không trạng thái (Stateless Address AutoConfiguration - SLAAC), bạn phải chỉ định một giá trị chung cho thiết lập mạng `ipv6.addr-gen-mode`.
 
 Bạn có thể thiết lập giá trị này bằng cách sử dụng NMState để cấu hình RAM disk và các tệp cấu hình cụm. Nếu bạn không cấu hình `ipv6.addr-gen-mode` đồng nhất tại các vị trí này, có thể xảy ra tình trạng không khớp địa chỉ IPv6 giữa các tài nguyên CSR và các tài nguyên BareMetalHost trong cụm.
@@ -13612,7 +13612,7 @@ hosts:
 
 Thay thế `<address_mode>` bằng loại chế độ tạo địa chỉ cần thiết cho các địa chỉ IPv6 trong cụm. Các giá trị hợp lệ bao gồm `eui64`, `stable-privacy` hoặc `random`.
 
-##### 3.3.15.15. Cấu hình các giao diện mạng máy chủ cho card mạng (NIC) hai cổng
+##### III.3.15.15. Cấu hình các giao diện mạng máy chủ cho card mạng (NIC) hai cổng
 Trước khi cài đặt, bạn có thể thiết lập tham số `networkConfig` trong tệp `install-config.yaml` để cấu hình các giao diện mạng máy chủ thông qua NMState, nhằm hỗ trợ card mạng (NIC) hai cổng.
 
 OpenShift Virtualization chỉ hỗ trợ các chế độ liên kết (bond mode) sau:
@@ -13743,7 +13743,7 @@ Trong đó:
 
 > **Quan trọng:** Sau khi triển khai cụm (cluster), bạn không thể thay đổi cấu hình `networkConfig` trong tệp `install-config.yaml` để điều chỉnh giao diện mạng của máy chủ (host). Hãy sử dụng Kubernetes NMState Operator để thực hiện các thay đổi đối với giao diện mạng của máy chủ sau khi đã triển khai.
 
-##### 3.3.15.16. Cấu hình nhiều nút cụm (cluster node)
+##### III.3.15.16. Cấu hình nhiều nút cụm (cluster node)
 Bạn có thể cấu hình đồng thời các nút cụm trong OpenShift Container Platform với các thiết lập giống hệt nhau.
 
 Việc cấu hình nhiều nút cụm giúp tránh phải thêm thông tin dư thừa cho từng nút vào tệp `install-config.yaml`. Tệp này chứa các tham số cụ thể để áp dụng cùng một cấu hình cho nhiều nút trong cụm.
@@ -13777,7 +13777,7 @@ hosts:
 
 > **Lưu ý:** Việc cấu hình nhiều nút cụm (cluster node) chỉ khả dụng đối với các triển khai ban đầu trên cơ sở hạ tầng do trình cài đặt cung cấp (installer-provisioned infrastructure).
 
-##### 3.3.15.17. Cấu hình Secure Boot được quản lý (managed Secure Boot)
+##### III.3.15.17. Cấu hình Secure Boot được quản lý (managed Secure Boot)
 Bạn có thể bật tính năng Secure Boot được quản lý khi triển khai cụm (cluster) thông qua trình cài đặt (installer-provisioned cluster) bằng cách sử dụng phương thức định địa chỉ Redfish BMC, chẳng hạn như `redfish`, `redfish-virtualmedia` hoặc `idrac-virtualmedia`.
 
 **Quy trình**
@@ -13807,10 +13807,10 @@ hosts:
 
 > **Lưu ý:** Red Hat không hỗ trợ Secure Boot thông qua giao thức IPMI, vì IPMI không cung cấp các cơ chế quản lý cho Secure Boot.
 
-#### 3.3.16. Các tệp cấu hình manifest
+#### III.3.16. Các tệp cấu hình manifest
 Bạn có thể tùy chỉnh quá trình cài đặt cụm (cluster) của mình bằng cách chỉnh sửa các tệp cấu hình manifest.
 
-##### 3.3.16.1. Tạo các tệp manifest cho OpenShift Container Platform
+##### III.3.16.1. Tạo các tệp manifest cho OpenShift Container Platform
 Tạo các tệp manifest để bắt đầu tùy chỉnh quá trình cài đặt cụm (cluster) của bạn.
 
 **Quy trình**
@@ -13829,7 +13829,7 @@ WARNING Making control-plane schedulable by setting MastersSchedulable to true f
 WARNING Discarding the OpenShift Manifest that was provided in the target directory because its dependencies are dirty and it needs to be regenerated
 ```
 
-##### 3.3.16.2. Cấu hình NTP cho các cụm không kết nối mạng
+##### III.3.16.2. Cấu hình NTP cho các cụm không kết nối mạng
 Bạn có thể cấu hình các máy chủ NTP trên các nút mặt phẳng điều khiển (control plane nodes) và thiết lập các nút tính toán (compute nodes) làm máy khách NTP (NTP clients) để đảm bảo đồng bộ hóa thời gian trong các cụm không kết nối mạng — nơi không thể truy cập vào các máy chủ NTP bên ngoài.
 
 OpenShift Container Platform cài đặt dịch vụ Giao thức Thời gian Mạng (NTP) có tên là `chrony` trên các nút của cụm.
@@ -13953,7 +13953,7 @@ Trong đó:
 $ butane 99-worker-chrony-conf-override.bu -o 99-worker-chrony-conf-override.yaml
 ```
 
-##### 3.3.16.3. Cấu hình các thành phần mạng để chạy trên mặt phẳng điều khiển (control plane)
+##### III.3.16.3. Cấu hình các thành phần mạng để chạy trên mặt phẳng điều khiển (control plane)
 Bạn có thể cấu hình các thành phần mạng để chỉ chạy trên các nút thuộc mặt phẳng điều khiển (control plane nodes).
 
 Theo mặc định, OpenShift Container Platform cho phép bất kỳ nút nào trong nhóm cấu hình máy (machine config pool) lưu trữ địa chỉ IP ảo `ingressVIP`. Tuy nhiên, trong một số môi trường, các nút tính toán (compute nodes) được triển khai trên các mạng con (subnet) tách biệt với các nút thuộc mặt phẳng điều khiển; điều này đòi hỏi phải cấu hình để địa chỉ IP ảo `ingressVIP` chỉ chạy trên các nút thuộc mặt phẳng điều khiển.
@@ -14033,7 +14033,7 @@ $ sed -i "s;mastersSchedulable: false;mastersSchedulable: true;g" clusterconfigs
 
 > **Lưu ý:** Nếu các nút mặt phẳng điều khiển (control plane nodes) không thể lập lịch sau khi hoàn tất quy trình này, việc triển khai cụm sẽ thất bại.
 
-##### 3.3.16.4. Triển khai các bộ định tuyến (router) trên các nút tính toán (compute node)
+##### III.3.16.4. Triển khai các bộ định tuyến (router) trên các nút tính toán (compute node)
 Để xử lý lưu lượng truy cập bên ngoài cho các dịch vụ trong cụm OpenShift Container Platform của bạn, hãy tạo một tệp YAML thiết lập số lượng bản sao (replica) bộ định tuyến phù hợp.
 
 Trong quá trình cài đặt, chương trình cài đặt sẽ triển khai các pod bộ định tuyến trên các nút tính toán. Theo mặc định, chương trình cài đặt sẽ triển khai hai pod bộ định tuyến.
@@ -14070,7 +14070,7 @@ spec:
 $ cp ~/router-replicas.yaml clusterconfigs/openshift/99_router-replicas.yaml
 ```
 
-##### 3.3.16.5. Cấu hình BIOS
+##### III.3.16.5. Cấu hình BIOS
 Bạn có thể cấu hình BIOS trong quá trình cài đặt.
 
 **Quy trình**
@@ -14096,7 +14096,7 @@ spec:
 
 4. Tạo cụm (cluster).
 
-##### 3.3.16.6. Cấu hình RAID
+##### III.3.16.6. Cấu hình RAID
 Bạn có thể cấu hình mảng đĩa độc lập dự phòng (RAID) bằng cách sử dụng bộ điều khiển quản lý bo mạch chủ (BMC) trong quá trình cài đặt.
 
 > **Lưu ý:** Nếu bạn muốn cấu hình RAID phần cứng cho nút (node), hãy đảm bảo rằng nút đó có bộ điều khiển RAID được hỗ trợ. OpenShift Container Platform 4.22 không hỗ trợ RAID phần mềm.
@@ -14146,7 +14146,7 @@ $ vim clusterconfigs/openshift/99_openshift-cluster-api_hosts-*.yaml
 
 3. Tạo cụm (cluster).
 
-##### 3.3.16.7. Cấu hình lưu trữ trên các node
+##### III.3.16.7. Cấu hình lưu trữ trên các node
 Bạn có thể thực hiện các thay đổi đối với hệ điều hành trên các node của OpenShift Container Platform bằng cách tạo các đối tượng `MachineConfig`, vốn được quản lý bởi `Machine Config Operator` (MCO).
 
 Thông số kỹ thuật của `MachineConfig` bao gồm một cấu hình `ignition` (ignition config) dùng để thiết lập các máy tại thời điểm khởi động lần đầu. Đối tượng cấu hình này có thể được sử dụng để sửa đổi các tệp tin, dịch vụ `systemd` và các tính năng khác của hệ điều hành đang chạy trên các máy thuộc OpenShift Container Platform.
@@ -14187,7 +14187,7 @@ spec:
 $ cp ~/<MachineConfig_manifest> ~/clusterconfigs/openshift
 ```
 
-#### 3.3.17. Tạo registry trong môi trường không kết nối internet (disconnected registry)
+#### III.3.17. Tạo registry trong môi trường không kết nối internet (disconnected registry)
 Trong một số trường hợp, bạn có thể muốn cài đặt cụm OpenShift Container Platform bằng cách sử dụng bản sao cục bộ của registry cài đặt. Việc này có thể giúp tăng hiệu quả mạng trong trường hợp các nút (node) của cụm nằm trên một mạng không có quyền truy cập internet.
 
 Để thiết lập một bản sao cục bộ (hay còn gọi là registry phản chiếu - mirror registry), bạn cần chuẩn bị các thành phần sau:
@@ -14201,7 +14201,7 @@ Trong một số trường hợp, bạn có thể muốn cài đặt cụm OpenS
 > * Việc tạo registry trong môi trường không kết nối internet trên một nút registry là tùy chọn. Nếu bạn cần thực hiện việc này, bạn phải hoàn thành tất cả các mục con dưới đây. 
 > * Nếu bạn đã chuẩn bị sẵn một registry phản chiếu cho quá trình cài đặt trong môi trường không kết nối internet (thông qua việc sao chép/phản chiếu các image), bạn có thể chuyển thẳng đến phần "Sửa đổi tệp install-config.yaml để sử dụng registry trong môi trường không kết nối internet". Để biết thêm thông tin về cách chuẩn bị registry phản chiếu cho quá trình cài đặt trong môi trường không kết nối internet, hãy xem mục "Phản chiếu các image cho quá trình cài đặt trong môi trường không kết nối internet".
 
-##### 3.3.17.1. Chuẩn bị nút registry để lưu trữ registry được nhân bản (mirrored registry)
+##### III.3.17.1. Chuẩn bị nút registry để lưu trữ registry được nhân bản (mirrored registry)
 Chuẩn bị một nút registry để lưu trữ registry nhân bản cục bộ phục vụ cho việc cài đặt OpenShift Container Platform.
 
 Hãy hoàn tất các bước sau trước khi lưu trữ registry nhân bản trên hạ tầng vật lý (bare metal).
@@ -14228,7 +14228,7 @@ $ sudo yum -y install python3 podman httpd httpd-tools jq
 $ sudo mkdir -p /opt/registry/{auth,certs,data}
 ```
 
-##### 3.3.17.2. Sao chép kho lưu trữ hình ảnh (image repository) của OpenShift Container Platform sang một registry trong môi trường không kết nối internet (disconnected registry)
+##### III.3.17.2. Sao chép kho lưu trữ hình ảnh (image repository) của OpenShift Container Platform sang một registry trong môi trường không kết nối internet (disconnected registry)
 Hãy sao chép kho lưu trữ hình ảnh của OpenShift Container Platform sang một registry cục bộ để cung cấp các hình ảnh container cho môi trường không kết nối internet của bạn.
 
 Thực hiện các bước sau để sao chép kho lưu trữ hình ảnh của OpenShift Container Platform cho một registry trong môi trường không kết nối internet.
@@ -14380,7 +14380,7 @@ Thay vào đó, hãy sử dụng plugin `oc-mirror` phiên bản 2 (v2).
 $ openshift-baremetal-install
 ```
 
-##### 3.3.17.3. Chỉnh sửa tệp install-config.yaml để sử dụng registry trong môi trường không kết nối internet (disconnected registry)
+##### III.3.17.3. Chỉnh sửa tệp install-config.yaml để sử dụng registry trong môi trường không kết nối internet (disconnected registry)
 Trên nút cung cấp (provisioner node), tệp `install-config.yaml `cần sử dụng thông tin xác thực tải xuống (pull-secret) mới được tạo từ tệp `pull-secret-update.txt`. Tệp `install-config.yaml` cũng phải chứa chứng chỉ và thông tin về registry của nút registry trong môi trường không kết nối internet.
 
 **Quy trình**
@@ -14419,7 +14419,7 @@ Thay thế `registry.example.com` bằng tên miền đầy đủ của registry
 $ echo "  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev" >> install-config.yaml
 ```
 
-#### 3.3.18. Danh mục kiểm tra xác thực trước khi cài đặt
+#### III.3.18. Danh mục kiểm tra xác thực trước khi cài đặt
 Đảm bảo rằng tất cả các bước cần thiết đã được hoàn tất trước khi cài đặt OpenShift Container Platform. 
 
 * ❏ Đã tải xuống trình cài đặt OpenShift Container Platform. 
@@ -14433,10 +14433,10 @@ $ echo "  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev" >> install-con
 * ❏ (Tùy chọn) Đã tạo một registry trong môi trường không kết nối internet (disconnected registry). 
 * ❏ (Tùy chọn) Xác thực các thiết lập của registry trong môi trường không kết nối internet (nếu có sử dụng).
 
-### 3.4. Cài đặt cụm (cluster)
+### III.4. Cài đặt cụm (cluster)
 Bạn có thể cài đặt một cụm sau khi đã thiết lập môi trường cho việc cài đặt OpenShift Container Platform. Hãy đảm bảo rằng bạn đã hoàn tất các điều kiện tiên quyết trước khi tiến hành cài đặt cụm.
 
-#### 3.4.1. Dọn dẹp các cài đặt trước đó
+#### III.4.1. Dọn dẹp các cài đặt trước đó
 Bạn phải loại bỏ các thành phần (artifact) còn sót lại từ bất kỳ lần triển khai không thành công nào trước khi thử triển khai lại OpenShift Container Platform.
 
 **Quy trình**
@@ -14474,7 +14474,7 @@ $ cd ; /bin/rm -rf auth/ bootstrap.ign master.ign worker.ign metadata.json \
 $ ./openshift-baremetal-install --dir ~/clusterconfigs create manifests
 ```
 
-#### 3.4.2. Triển khai cụm thông qua trình cài đặt OpenShift Container Platform
+#### III.4.2. Triển khai cụm thông qua trình cài đặt OpenShift Container Platform
 Bạn có thể triển khai cụm bằng cách chạy trình cài đặt OpenShift Container Platform.
 
 **Quy trình**
@@ -14485,7 +14485,7 @@ Bạn có thể triển khai cụm bằng cách chạy trình cài đặt OpenSh
 $ ./openshift-baremetal-install --dir ~/clusterconfigs --log-level debug create cluster
 ```
 
-#### 3.4.3. Theo dõi tiến trình cài đặt
+#### III.4.3. Theo dõi tiến trình cài đặt
 Trong quá trình triển khai, bạn có thể kiểm tra trạng thái tổng thể của quá trình cài đặt bằng cách sử dụng lệnh `tail` đối với tệp nhật ký `.openshift_install.log` nằm trong thư mục cài đặt.
 
 **Quy trình**
@@ -14496,7 +14496,7 @@ Trong quá trình triển khai, bạn có thể kiểm tra trạng thái tổng 
 $ tail -f /path/to/install-dir/.openshift_install.log
 ```
 
-#### 3.4.4. Xác minh cấu hình địa chỉ IP tĩnh
+#### III.4.4. Xác minh cấu hình địa chỉ IP tĩnh
 Hãy đảm bảo rằng tất cả các bước cần thiết đã được hoàn tất và xác minh rằng cấu hình mạng đang hoạt động bình thường.
 
 Nếu thiết lập dành riêng địa chỉ IP (DHCP reservation) cho một nút (node) trong cụm (cluster) chỉ định thời hạn thuê (lease) là vô hạn, thì sau khi trình cài đặt (installer) cung cấp (provision) nút đó thành công, tập lệnh điều phối (dispatcher script) sẽ kiểm tra cấu hình mạng của nút này.
@@ -14511,10 +14511,10 @@ Tập lệnh điều phối có thể chạy trên các nút đã được cung 
 1. Kiểm tra cấu hình giao diện mạng trên nút đó. 
 2. Tắt máy chủ DHCP, khởi động lại nút OpenShift Container Platform và đảm bảo rằng cấu hình mạng hoạt động bình thường.
 
-### 3.5. Khắc phục sự cố cài đặt
+### III.5. Khắc phục sự cố cài đặt
 Khắc phục các sự cố trong quá trình cài đặt OpenShift Container Platform để xác định và giải quyết những lỗi phát sinh khi triển khai.
 
-#### 3.5.1. Khắc phục sự cố quy trình của chương trình cài đặt
+#### III.5.1. Khắc phục sự cố quy trình của chương trình cài đặt
 Trước khi khắc phục sự cố trong môi trường cài đặt, điều quan trọng là phải hiểu rõ quy trình tổng thể của quá trình cài đặt trên phần cứng vật lý (bare metal) thông qua trình cài đặt (installer-provisioned installation).
 
 Các sơ đồ dưới đây minh họa quy trình khắc phục sự cố với các bước chi tiết cho môi trường này.
@@ -14539,7 +14539,7 @@ Sơ đồ này minh họa quy trình xử lý sự cố cho các nút (node) tro
 
 Sơ đồ này minh họa quy trình khắc phục sự cố, từ trạng thái API không thể truy cập cho đến khi quá trình cài đặt được xác thực thành công.
 
-#### 3.5.2. Khắc phục sự cố tệp install-config.yaml
+#### III.5.2. Khắc phục sự cố tệp install-config.yaml
 Tệp cấu hình install-config.yaml đại diện cho tất cả các nút (node) thuộc cụm OpenShift Container Platform. Tệp này chứa các tùy chọn cần thiết, bao gồm (nhưng không giới hạn ở) apiVersion, baseDomain, imageContentSources và các địa chỉ IP ảo (virtual IP).
 
 Nếu xảy ra lỗi trong giai đoạn đầu triển khai cụm OpenShift Container Platform, nhiều khả năng lỗi nằm ở tệp cấu hình install-config.yaml.
@@ -14556,7 +14556,7 @@ $ curl -s -o /dev/null -I -w "%{http_code}\n" http://webserver.example.com:8080/
 
 Nếu kết quả đầu ra là 200, nghĩa là có phản hồi hợp lệ từ máy chủ web đang lưu trữ hình ảnh VM khởi động (bootstrap VM image).
 
-#### 3.5.3. Khắc phục sự cố liên quan đến máy ảo bootstrap
+#### III.5.3. Khắc phục sự cố liên quan đến máy ảo bootstrap
 Chương trình cài đặt OpenShift Container Platform sẽ khởi tạo một máy ảo (VM) bootstrap; máy ảo này đảm nhận việc cung cấp (provisioning) các nút (node) cho cụm OpenShift Container Platform.
 
 **Quy trình**
@@ -14636,7 +14636,7 @@ Nếu bạn không đăng nhập thành công vào máy ảo bootstrap, có th�
   * Bạn không thể kết nối tới máy ảo bootstrap thông qua mạng công cộng (public network). Khi cố gắng truy cập qua SSH bằng mạng `baremetal`, hãy kiểm tra kết nối trên máy chủ cung cấp (`provisioner` host), đặc biệt là tại cầu nối mạng baremetal (`baremetal` network bridge). 
   * Bạn gặp lỗi "Permission denied (publickey,password,keyboard-interactive)" (Từ chối quyền truy cập). Khi cố gắng truy cập vào máy ảo bootstrap, lỗi từ chối quyền có thể xảy ra. Hãy xác minh rằng khóa SSH của người dùng đang cố gắng đăng nhập vào máy ảo đã được thiết lập trong tệp `install-config.yaml`.
 
-##### 3.5.3.1. Máy ảo bootstrap không thể khởi động các nút trong cụm (cluster nodes)
+##### III.5.3.1. Máy ảo bootstrap không thể khởi động các nút trong cụm (cluster nodes)
 Trong quá trình triển khai, có khả năng máy ảo bootstrap không khởi động được các nút trong cụm, khiến máy ảo này không thể cung cấp (provision) hình ảnh RHCOS cho các nút đó.
 
 Tình huống này có thể xảy ra do:
@@ -14677,7 +14677,7 @@ Hãy tắt nguồn các nút cụm OpenShift Container Platform trước khi b�
 $ ipmitool -I lanplus -U root -P <password> -H <out_of_band_ip> power off
 ```
 
-##### 3.5.3.2. Kiểm tra nhật ký (logs)
+##### III.5.3.2. Kiểm tra nhật ký (logs)
 Khi gặp sự cố trong quá trình tải xuống hoặc truy cập các hình ảnh (images) RHCOS, trước tiên hãy xác minh xem URL trong tệp cấu hình `install-config.yaml` có chính xác hay không.
 
 Xem ví dụ dưới đây về máy chủ web nội bộ lưu trữ các hình ảnh RHCOS:
@@ -14730,7 +14730,7 @@ $ sudo podman ps
 $ sudo podman logs ironic
 ```
 
-#### 3.5.4. Điều tra tình trạng Kubernetes API không khả dụng
+#### III.5.4. Điều tra tình trạng Kubernetes API không khả dụng
 Khi Kubernetes API không khả dụng, hãy kiểm tra các nút (node) trong mặt phẳng điều khiển (control plane) để đảm bảo rằng chúng đang chạy các thành phần cần thiết. Ngoài ra, hãy kiểm tra cơ chế phân giải tên máy chủ (hostname resolution).
 
 **Quy trình**
@@ -14799,7 +14799,7 @@ api.<cluster_name>.example.com. 10800 IN  A 10.19.13.86
 
 Kết quả đầu ra trong ví dụ trên cho thấy địa chỉ IP phù hợp cho VIP `api.<cluster_name>.example.com` là `10.19.13.86`. Địa chỉ IP này cần nằm trên mạng `baremetal`.
 
-#### 3.5.5. Khắc phục sự cố không khởi tạo được cụm (cluster)
+#### III.5.5. Khắc phục sự cố không khởi tạo được cụm (cluster)
 Chương trình cài đặt sử dụng Cluster Version Operator để tạo tất cả các thành phần của một cụm OpenShift Container Platform. Khi chương trình cài đặt không khởi tạo được cụm, bạn có thể truy xuất các thông tin quan trọng nhất từ các đối tượng ClusterVersion và ClusterOperator.
 
 **Quy trình**
@@ -14980,7 +14980,7 @@ Ví dụ đầu ra
 [map[resource:kubeapiservers group:operator.openshift.io name:cluster] map[group: name:openshift-config resource:namespaces] map[group: name:openshift-config-managed resource:namespaces] map[group: name:openshift-kube-apiserver-operator resource:namespaces] map[group: name:openshift-kube-apiserver resource:namespaces]]
 ```
 
-#### 3.5.6. Khắc phục sự cố không lấy được URL của bảng điều khiển (console)
+#### III.5.6. Khắc phục sự cố không lấy được URL của bảng điều khiển (console)
 Chương trình cài đặt truy xuất URL cho bảng điều khiển OpenShift Container Platform bằng cách sử dụng `[route][route-object]` trong không gian tên (namespace) `openshift-console`.
 
 Nếu chương trình cài đặt không thể truy xuất URL cho bảng điều khiển, hãy thực hiện quy trình sau.
@@ -15047,7 +15047,7 @@ $ oc --kubeconfig=${INSTALL_DIR}/auth/kubeconfig get route console -n openshift-
   -o=jsonpath='{.spec.host}' console-openshift-console.apps.adahiya-1.devcluster.openshift.com
 ```
 
-#### 3.5.7. Khắc phục sự cố không thêm được chứng chỉ ingress vào kubeconfig
+#### III.5.7. Khắc phục sự cố không thêm được chứng chỉ ingress vào kubeconfig
 Nếu chương trình cài đặt không thêm được chứng chỉ ingress mặc định vào tệp ${INSTALL_DIR}/auth/kubeconfig, hãy truy xuất chứng chỉ đó từ cụm (cluster) rồi thêm vào.
 
 Thông thường, chương trình cài đặt sẽ tự động thêm chứng chỉ ingress mặc định vào danh sách các cơ quan cấp chứng chỉ (CA) khách tin cậy trong tệp `${INSTALL_DIR}/auth/kubeconfig`.
@@ -15087,7 +15087,7 @@ AQ==
 
 2. Thêm chứng chỉ vào trường `client-certificate-authority-data` trong tệp `${INSTALL_DIR}/auth/kubeconfig`.
 
-#### 3.5.8. Khắc phục sự cố truy cập SSH vào các nút (node) trong cụm
+#### III.5.8. Khắc phục sự cố truy cập SSH vào các nút (node) trong cụm
 Để tăng cường bảo mật, theo mặc định, bạn không thể truy cập SSH vào cụm từ bên ngoài. Tuy nhiên, bạn có thể truy cập các nút điều khiển (control plane node) và các nút worker (worker node) từ nút cung cấp (provisioner node). Nếu bạn không thể truy cập SSH vào các nút trong cụm từ nút cung cấp, có thể các nút đó đang chờ phản hồi từ máy ảo khởi động (bootstrap VM).
 
 Các nút điều khiển lấy cấu hình khởi động từ máy ảo khởi động; nếu không lấy được cấu hình này, chúng sẽ không thể khởi động thành công.
@@ -15097,7 +15097,7 @@ Các nút điều khiển lấy cấu hình khởi động từ máy ảo khởi
 1. Nếu có quyền truy cập vật lý vào các nút, hãy kiểm tra đầu ra trên bảng điều khiển (console output) của chúng để xác định xem quá trình khởi động đã hoàn tất thành công hay chưa. Nếu các nút vẫn đang trong quá trình lấy cấu hình khởi động, có thể đã xảy ra sự cố với máy ảo khởi động (bootstrap VM). 
 2. Đảm bảo rằng bạn đã cấu hình thiết lập `sshKey: '<ssh_pub_key>'` trong tệp `install-config.yaml`, trong đó `<ssh_pub_key>` là khóa công khai (public key) của người dùng `kni` trên nút cung cấp (provisioner node).
 
-#### 3.5.9. Các nút cụm (cluster nodes) không khởi động qua PXE
+#### III.5.9. Các nút cụm (cluster nodes) không khởi động qua PXE
 Khi các nút trong cụm OpenShift Container Platform không khởi động qua PXE, hãy thực hiện các bước kiểm tra khắc phục sự cố trên những nút đó.
 
 Quy trình này không áp dụng cho trường hợp cài đặt cụm OpenShift Container Platform mà không sử dụng mạng cung cấp (provisioning network).
@@ -15122,7 +15122,7 @@ Ví dụ:
   bootMACAddress: 24:6E:96:1B:96:90 # MAC of bootable provisioning NIC
   ```
 
-#### 3.5.10. Quá trình cài đặt không tạo ra các worker node
+#### III.5.10. Quá trình cài đặt không tạo ra các worker node
 Chương trình cài đặt không trực tiếp cung cấp (provision) các worker node. Thay vào đó, Machine API Operator sẽ thực hiện tăng hoặc giảm số lượng node trên các nền tảng được hỗ trợ.
 
 Nếu các worker node không được tạo sau 15 đến 20 phút (thời gian này phụ thuộc vào tốc độ kết nối internet của cụm), hãy kiểm tra Machine API Operator.
@@ -15156,7 +15156,7 @@ $ oc --kubeconfig=${INSTALL_DIR}/auth/kubeconfig \
   --container=machine-controller
 ```
 
-#### 3.5.11. Khắc phục sự cố với Cluster Network Operator
+#### III.5.11. Khắc phục sự cố với Cluster Network Operator
 Để khắc phục các sự cố liên quan đến Cluster Network Operator trong quá trình cài đặt, hãy xác minh rằng cấu hình mạng đã tồn tại và đang hoạt động.
 
 Cluster Network Operator triển khai các thành phần mạng từ giai đoạn đầu của quá trình cài đặt — sau khi các nút mặt phẳng điều khiển (control plane nodes) đã khởi chạy, nhưng trước khi chương trình cài đặt loại bỏ mặt phẳng điều khiển khởi động (bootstrap control plane). Các vấn đề phát sinh với Operator này có thể là dấu hiệu cho thấy chương trình cài đặt đang gặp lỗi.
@@ -15183,7 +15183,7 @@ Hãy xem xét các tệp manifest để xác định lý do tại sao chương t
 $ oc get po -n openshift-network-operator
 ```
 
-#### 3.5.12. Không thể phát hiện các máy chủ vật lý (bare-metal) mới thông qua BMC
+#### III.5.12. Không thể phát hiện các máy chủ vật lý (bare-metal) mới thông qua BMC
 Trong một số trường hợp, chương trình cài đặt không thể phát hiện các máy chủ vật lý mới và đưa ra thông báo lỗi, do không thể gắn (mount) tài nguyên lưu trữ phương tiện ảo (virtual media share) từ xa.
 
 Ví dụ:
@@ -15215,7 +15215,7 @@ Trong trường hợp này, nếu bạn đang sử dụng phương tiện ảo (
 
 > **Lưu ý:** Giải pháp này đã được kiểm thử trên OpenShift Container Platform 4.11 với Dell iDRAC 9 và phiên bản chương trình cơ sở (firmware) 5.10.50.
 
-#### 3.5.13. Khắc phục sự cố các worker node không thể tham gia cụm (cluster)
+#### III.5.13. Khắc phục sự cố các worker node không thể tham gia cụm (cluster)
 Nếu các worker node không thể tham gia cụm, hãy đảm bảo rằng tất cả các node đều có thể phân giải tên miền `api-int.<cluster_name>.<base_domain>`.
 
 Các cụm do trình cài đặt (installer) thiết lập sẽ đi kèm với một máy chủ DNS chứa bản ghi DNS cho URL `api-int.<cluster_name>.<base_domain>`. Nếu các node trong cụm sử dụng máy chủ DNS bên ngoài hoặc máy chủ DNS thượng nguồn (upstream) để phân giải URL này mà không có bản ghi tương ứng, các worker node có thể không tham gia được vào cụm.
@@ -15259,7 +15259,7 @@ $ sudo systemctl restart dnsmasq
 
 Các bản ghi này phải có thể phân giải được từ tất cả các nút trong cụm.
 
-#### 3.5.14. Dọn dẹp các cài đặt trước đó
+#### III.5.14. Dọn dẹp các cài đặt trước đó
 Bạn phải loại bỏ các thành phần còn sót lại từ bất kỳ lần triển khai không thành công nào trước khi thử triển khai lại OpenShift Container Platform.
 
 **Quy trình**
@@ -15297,7 +15297,7 @@ $ cd ; /bin/rm -rf auth/ bootstrap.ign master.ign worker.ign metadata.json \
 $ ./openshift-baremetal-install --dir ~/clusterconfigs create manifests
 ```
 
-#### 3.5.15. Các vấn đề khi tạo registry
+#### III.5.15. Các vấn đề khi tạo registry
 Khi tạo một registry không kết nối với mạng bên ngoài (disconnected registry), bạn có thể gặp lỗi "User Not Authorized" (Người dùng không được ủy quyền) trong quá trình sao chép (mirror) registry. Lỗi này có thể xảy ra nếu bạn quên thêm thông tin xác thực mới vào tệp `pull-secret.txt` hiện có.
 
 **Quy trình**
@@ -15329,10 +15329,10 @@ $ curl -k -u <user>:<password> https://registry.example.com:<registry_port>/v2/_
   {"repositories":["<Repo_Name>"]}
 ```
 
-#### 3.5.16. Các vấn đề khác
+#### III.5.16. Các vấn đề khác
 Hãy xem qua các vấn đề khác liên quan đến OpenShift Container Platform để xác định và giải quyết những lỗi triển khai ít gặp trong cụm (cluster) của bạn.
 
-##### 3.5.16.1. Khắc phục lỗi mạng runtime chưa sẵn sàng (runtime network not ready)
+##### III.5.16.1. Khắc phục lỗi mạng runtime chưa sẵn sàng (runtime network not ready)
 Hãy khắc phục lỗi mạng runtime chưa sẵn sàng trong cụm OpenShift Container Platform của bạn để khôi phục khả năng giao tiếp giữa các nút (node).
 
 Sau khi triển khai cụm, bạn có thể gặp phải lỗi sau:
@@ -15400,7 +15400,7 @@ $ kubectl -n openshift-network-operator logs -l "name=network-operator"
 
 Trên các cụm máy chủ có tính khả dụng cao với ba hoặc nhiều hơn ba nút điều khiển, Operator sẽ thực hiện bầu chọn lãnh đạo và tất cả các Operator khác sẽ ở chế độ ngủ. Để biết thêm chi tiết, hãy xem phần [Khắc phục sự cố](https://github.com/openshift/installer/blob/master/docs/user/troubleshooting.md).
 
-##### 3.5.16.2. Khắc phục thông báo lỗi "No disk found with matching rootDeviceHints"
+##### III.5.16.2. Khắc phục thông báo lỗi "No disk found with matching rootDeviceHints"
 Để đảm bảo trình cài đặt có thể xác định vị trí và cấu hình ổ đĩa lưu trữ đích trên nút (node) của bạn, hãy khắc phục lỗi "No disk found with matching rootDeviceHints".
 
 Sau khi triển khai cụm (cluster), bạn có thể gặp thông báo lỗi sau:
@@ -15426,7 +15426,7 @@ Nếu giải pháp thay thế `minSizeGigabytes` không đáp ứng được cá
 
 Một phương pháp khác để khắc phục vấn đề này là sử dụng ID sê-ri (serial ID) của ổ đĩa. Tuy nhiên, cần lưu ý rằng việc tìm kiếm ID sê-ri có thể khá phức tạp và có thể khiến tệp cấu hình trở nên khó đọc hơn. Nếu chọn cách này, hãy đảm bảo rằng bạn đã thu thập ID sê-ri bằng lệnh đã được hướng dẫn trước đó và đưa nó vào tệp cấu hình của mình.
 
-##### 3.5.16.3. Khắc phục lỗi các nút trong cụm không nhận được đúng địa chỉ IPv6 qua DHCP
+##### III.5.16.3. Khắc phục lỗi các nút trong cụm không nhận được đúng địa chỉ IPv6 qua DHCP
 Xử lý và giải quyết các vấn đề về cấu hình DHCP khiến các nút trong cụm OpenShift Container Platform không nhận được địa chỉ IPv6 đã được chỉ định.
 
 Nếu các nút trong cụm không nhận được đúng địa chỉ IPv6 qua DHCP, hãy kiểm tra theo quy trình dưới đây.
@@ -15446,7 +15446,7 @@ id:00:03:00:01:18:db:f2:8c:d5:9f,openshift-master-1,[2620:52:0:1302::6]
 3. Đảm bảo rằng các thông báo định tuyến đang hoạt động.
 4. Đảm bảo rằng máy chủ DHCP đang lắng nghe trên các giao diện cần thiết để cung cấp các dải địa chỉ IP.
 
-##### 3.5.16.4. Khắc phục lỗi các nút trong cụm (cluster nodes) không nhận được tên máy chủ (hostname) chính xác qua DHCP
+##### III.5.16.4. Khắc phục lỗi các nút trong cụm (cluster nodes) không nhận được tên máy chủ (hostname) chính xác qua DHCP
 Trong quá trình triển khai IPv6, các nút trong cụm phải nhận được tên máy chủ (hostname) thông qua DHCP. Đôi khi, NetworkManager không gán tên máy chủ ngay lập tức.
 
 Một nút thuộc mặt phẳng điều khiển (control plane node) có thể báo lỗi, chẳng hạn như:
@@ -15539,7 +15539,7 @@ Nếu nút cụm (cluster node) không nhận được tên máy chủ (hostname
   $ oc delete csr <wrong_csr>
   ```
 
-##### 3.5.16.5. Khắc phục lỗi các tuyến đường (route) không kết nối được tới điểm cuối (endpoint)
+##### III.5.16.5. Khắc phục lỗi các tuyến đường (route) không kết nối được tới điểm cuối (endpoint)
 Để khôi phục kết nối mạng bên ngoài cho các ứng dụng của bạn, hãy khắc phục sự cố các tuyến đường (route) trong OpenShift Container Platform không kết nối được tới các điểm cuối dịch vụ (service endpoint) của chúng.
 
 Trong quá trình cài đặt, có thể xảy ra xung đột Giao thức dự phòng bộ định tuyến ảo (Virtual Router Redundancy Protocol - VRRP).
@@ -15607,7 +15607,7 @@ Event(v1.ObjectReference{Kind:"Deployment", Namespace:"openshift-authentication-
 5. Hãy đảm bảo rằng tên cụm (cluster name) cho mỗi lần triển khai là duy nhất để tránh xảy ra xung đột.
 6. Tắt tất cả các nút (node) không thuộc phạm vi triển khai cụm nhưng lại đang sử dụng cùng tên cụm đó. Nếu không, pod xác thực (authentication pod) của cụm OpenShift Container Platform có thể sẽ không bao giờ khởi động thành công.
 
-##### 3.5.16.6. Khắc phục lỗi Ignition trong quá trình khởi động lần đầu (firstboot)
+##### III.5.16.6. Khắc phục lỗi Ignition trong quá trình khởi động lần đầu (firstboot)
 Hãy khắc phục các lỗi cấu hình Ignition xảy ra trong quá trình khởi động lần đầu (firstboot) của các nút (node) để tránh tình trạng triển khai cụm (cluster) bị thất bại.
 
 **Quy trình**
@@ -15625,7 +15625,7 @@ Failed Units: 1
 [core@worker-X ~]$ sudo systemctl restart machine-config-daemon-firstboot.service
 ```
 
-##### 3.5.16.7. Khắc phục lỗi đồng bộ hóa thời gian NTP
+##### III.5.16.7. Khắc phục lỗi đồng bộ hóa thời gian NTP
 Việc triển khai các cụm OpenShift Container Platform đòi hỏi các nút (node) trong cụm phải được đồng bộ hóa thời gian thông qua NTP. Nếu thời gian giữa các nút không đồng bộ—cụ thể là khi độ lệch thời gian vượt quá hai giây—quá trình triển khai có thể thất bại.
 
 **Quy trình**
@@ -15752,7 +15752,7 @@ System clock synchronized: no
 
     * Tiếp tục tạo cụm.
 
-#### 3.5.17. Kiểm tra quá trình cài đặt
+#### III.5.17. Kiểm tra quá trình cài đặt
 Sau khi cài đặt, hãy đảm bảo rằng chương trình cài đặt đã triển khai các node và pod thành công.
 
 **Quy trình**
