@@ -13076,3 +13076,2704 @@ platform:
 
 > **Lưu ý:** Trên Dell iDRAC 9, với phiên bản firmware `04.40.00.00` và tất cả các bản phát hành cho đến chuỗi phiên bản `5.xx`, tồn tại một vấn đề đã biết đối với các quy trình cài đặt trên phần cứng vật lý (bare metal). Plugin bảng điều khiển ảo (virtual console) mặc định sử dụng eHTML5 (phiên bản nâng cao của HTML5), gây ra lỗi trong quy trình **InsertVirtualMedia**. Để tránh vấn đề này, hãy thiết lập plugin sử dụng HTML5. Đường dẫn menu là: **Configuration** > **Virtual console** > **Plug-in Type** > **HTML5**.  
 > Đảm bảo rằng tính năng **AutoAttach** đã được bật cho các nút (node) trong cụm OpenShift Container Platform thông qua bảng điều khiển iDRAC. Đường dẫn menu là: **Configuration** > **Virtual Media** > **Attach Mode** > **AutoAttach**.
+
+##### 3.3.15.5. Định địa chỉ BMC cho HPE iLO
+Bạn có thể kết nối với hệ thống HPE iLO thông qua giao thức phương tiện ảo (virtual media) Redfish, giao thức khởi động qua mạng (network boot) Redfish hoặc giao thức IPMI.
+
+Trường địa chỉ cho mỗi mục nhập BMC là một URL dùng để kết nối tới các nút (node) trong cụm OpenShift Container Platform; URL này bao gồm thông tin về loại bộ điều khiển (controller) và vị trí của nó trên mạng.
+
+| Giao thức                       | Định dạng địa chỉ                                              |
+|---------------------------------|----------------------------------------------------------------|
+| Phương tiện ảo Redfish          | `redfish-virtualmedia://<out_of_band_ip>/redfish/v1/Systems/1` |
+| Khởi động qua mạng bằng Redfish | `redfish://<out_of_band_ip>/redfish/v1/Systems/1`              |
+| IPMI                            | `ipmi://<out_of_band_ip>`                                      |
+
+###### 3.3.15.5.1. Phương tiện ảo (virtual media) Redfish cho HPE iLO
+Để kích hoạt phương tiện ảo Redfish cho các máy chủ HPE, hãy sử dụng `redfish-virtualmedia://` trong phần thiết lập địa chỉ. Ví dụ dưới đây minh họa cách sử dụng phương tiện ảo Redfish trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: redfish-virtualmedia://<out_of_band_ip>/redfish/v1/Systems/1
+          username: <user>
+          password: <password>
+```
+
+Bạn nên có chứng chỉ xác thực cho các địa chỉ quản lý ngoài băng tần (out-of-band management). Đối với OpenShift Container Platform phiên bản 4.16 trở về trước, nếu sử dụng chứng chỉ tự ký (self-signed certificate), bạn phải thêm tham số `disableCertificateVerification: True` vào cấu hình BMC. Đối với OpenShift Container Platform phiên bản 4.17 trở về sau, bạn có thể đặt `disableCertificateVerification: False` khi sử dụng kết hợp với tham số `bmcCACert`.
+
+Ví dụ dưới đây minh họa cấu hình Redfish bằng cách sử dụng tham số `disableCertificateVerification: True` trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: redfish-virtualmedia://<out_of_band_ip>/redfish/v1/Systems/1
+          username: <user>
+          password: <password>
+          disableCertificateVerification: True
+```
+
+Ví dụ sau đây minh họa cấu hình Redfish bằng cách sử dụng tham số cấu hình `disableCertificateVerification: False` cùng với tham số cấu hình `bmcCACert` trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    bmcCACert:
+      -----BEGIN CERTIFICATE-----
+      ......
+      ......
+      ......
+      -----END CERTIFICATE-----
+      -----BEGIN CERTIFICATE-----
+      ......
+      ......
+      ......
+      -----END CERTIFICATE-----
+      -----BEGIN CERTIFICATE-----
+      ......
+      ......
+      ......
+      -----END CERTIFICATE-----
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: redfish-virtualmedia://<out_of_band_ip>/redfish/v1/Systems/1
+          username: <user>
+          password: <password>
+          disableCertificateVerification: False
+```
+
+> **Lưu ý:** Tính năng phương tiện ảo (virtual media) của Redfish không được hỗ trợ trên các hệ thống thế hệ thứ 9 chạy iLO4, vì Ironic không hỗ trợ iLO4 với phương tiện ảo.
+
+###### 3.3.15.5.2. Khởi động qua mạng bằng Redfish cho HPE iLO
+Để kích hoạt Redfish, hãy sử dụng `redfish://` hoặc `redfish+http://` (nếu muốn tắt TLS). Chương trình cài đặt yêu cầu cung cấp tên máy chủ (hostname) hoặc địa chỉ IP, cùng với đường dẫn đến ID hệ thống (system ID). Ví dụ dưới đây minh họa cấu hình Redfish trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: redfish://<out_of_band_ip>/redfish/v1/Systems/1
+          username: <user>
+          password: <password>
+```
+
+Bạn nên có chứng chỉ xác thực cho các địa chỉ quản lý ngoài băng tần (out-of-band management). Đối với OpenShift Container Platform phiên bản 4.16 trở về trước, nếu sử dụng chứng chỉ tự ký (self-signed certificate), bạn phải thêm tham số `disableCertificateVerification: True` vào cấu hình BMC. Đối với OpenShift Container Platform phiên bản 4.17 trở về sau, bạn có thể đặt `disableCertificateVerification: False` khi sử dụng kết hợp với tham số `bmcCACert`.
+
+Ví dụ dưới đây minh họa cấu hình Redfish bằng cách sử dụng tham số `disableCertificateVerification: True` trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: redfish://<out_of_band_ip>/redfish/v1/Systems/1
+          username: <user>
+          password: <password>
+          disableCertificateVerification: True
+```
+
+Ví dụ sau đây minh họa cấu hình Redfish bằng cách sử dụng tham số cấu hình `disableCertificateVerification: False` cùng với tham số cấu hình `bmcCACert` trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    bmcCACert:
+      -----BEGIN CERTIFICATE-----
+      ......
+      ......
+      ......
+      -----END CERTIFICATE-----
+      -----BEGIN CERTIFICATE-----
+      ......
+      ......
+      ......
+      -----END CERTIFICATE-----
+      -----BEGIN CERTIFICATE-----
+      ......
+      ......
+      ......
+      -----END CERTIFICATE-----
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: redfish://<out_of_band_ip>/redfish/v1/Systems/1
+          username: <user>
+          password: <password>
+          disableCertificateVerification: True
+```
+
+##### 3.3.15.6. Định địa chỉ BMC cho Fujitsu iRMC
+Bạn có thể kết nối với hệ thống Fujitsu iRMC thông qua giao thức iRMC hoặc giao thức IPMI. Trường `address` cho mỗi mục `bmc` là một URL dùng để kết nối tới các nút (node) trong cụm OpenShift Container Platform; URL này bao gồm thông tin về loại bộ điều khiển (controller) trong phần lược đồ (scheme) và vị trí của nó trên mạng.
+
+| Giao thức | Định dạng địa chỉ         |
+|-----------|---------------------------|
+| iRMC      | `irmc://<out-of-band-ip>` |
+| IPMI      | `ipmi://<out-of-band-ip>` |
+
+Các node Fujitsu có thể sử dụng `irmc://<out-of-band-ip>` và mặc định dùng cổng 443. Ví dụ dưới đây minh họa cấu hình iRMC trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: irmc://<out-of-band-ip>
+          username: <user>
+          password: <password>
+```
+
+> **Lưu ý:** Hiện tại, Fujitsu hỗ trợ firmware iRMC S5 phiên bản 3.05P trở lên đối với quy trình cài đặt trên phần cứng trần (bare metal) thông qua trình cài đặt (installer).
+
+##### 3.3.15.7. Định địa chỉ BMC cho Cisco Integrated Management Controller
+Bạn có thể kết nối với hệ thống Cisco Integrated Management Controller (CIMC) bằng giao thức phương tiện ảo (virtual media) Redfish. Trường địa chỉ cho mỗi mục nhập BMC là một URL dùng để kết nối với các nút (node) trong cụm OpenShift Container Platform; URL này bao gồm thông tin về loại bộ điều khiển (controller) và vị trí của nó trên mạng.
+
+Đối với các máy chủ Cisco UCS dòng C và dòng X, Red Hat hỗ trợ Cisco Integrated Management Controller (CIMC).
+
+| Giao thức             | Định dạng địa chỉ                                                           |
+|-----------------------|-----------------------------------------------------------------------------|
+| Redfish virtual media | `redfish-virtualmedia://<server_kvm_ip>/redfish/v1/Systems/<serial_number>` |
+
+Để kích hoạt phương tiện ảo (virtual media) qua Redfish cho các máy chủ Cisco UCS dòng C và dòng X, hãy sử dụng `redfish-virtualmedia://` trong phần thiết lập địa chỉ. Ví dụ sau đây minh họa cách sử dụng phương tiện ảo qua Redfish trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: redfish-virtualmedia://<server_kvm_ip>/redfish/v1/Systems/<serial_number>
+          username: <user>
+          password: <password>
+```
+
+Mặc dù bạn nên có chứng chỉ xác thực cho các địa chỉ quản lý ngoài băng tần (out-of-band management), nhưng nếu sử dụng chứng chỉ tự ký, bạn bắt buộc phải thêm tham số `disableCertificateVerification: True` vào cấu hình BMC. Ví dụ dưới đây minh họa cấu hình Redfish bằng cách sử dụng tham số `disableCertificateVerification: True` trong tệp `install-config.yaml`.
+
+```yaml
+platform:
+  baremetal:
+    hosts:
+      - name: openshift-master-0
+        role: master
+        bmc:
+          address: redfish-virtualmedia://<server_kvm_ip>/redfish/v1/Systems/<serial_number>
+          username: <user>
+          password: <password>
+          disableCertificateVerification: True
+```
+
+##### 3.3.15.8. Các gợi ý về thiết bị gốc (Root device hints)
+Tham số `rootDeviceHints` cho phép trình cài đặt triển khai ảnh hệ thống Red Hat Enterprise Linux CoreOS (RHCOS) vào một thiết bị cụ thể.
+
+Trình cài đặt sẽ kiểm tra các thiết bị theo thứ tự phát hiện được, sau đó so sánh các giá trị thu thập từ thiết bị với các giá trị gợi ý (hint values). Trình cài đặt sẽ chọn thiết bị đầu tiên khớp với các giá trị gợi ý đó. Cấu hình có thể kết hợp nhiều gợi ý cùng lúc, nhưng một thiết bị phải thỏa mãn tất cả các gợi ý này thì mới được trình cài đặt chọn.
+
+**Bảng 3.12. Trường con**
+
+| Trường con           | Mô tả                                                                                                                                                                                                                                      |
+|----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `deviceName`         | Một chuỗi chứa tên thiết bị Linux, chẳng hạn như `/dev/vda` hoặc `/dev/disk/by-path/`. Lưu ý: Bạn nên sử dụng liên kết `/dev/disk/by-path/<device_path>` để trỏ đến vị trí lưu trữ. Giá trị gợi ý phải khớp chính xác với giá trị thực tế. |
+| `hctl`               | Một chuỗi chứa địa chỉ bus SCSI, chẳng hạn như `0:0:0:0`. Gợi ý này phải khớp chính xác với giá trị thực tế.                                                                                                                               |
+| `model`              | Một chuỗi chứa định danh thiết bị dành riêng cho nhà cung cấp. Gợi ý này có thể là một chuỗi con của giá trị thực tế.                                                                                                                      |
+| `vendor`             | Một chuỗi chứa tên nhà cung cấp hoặc nhà sản xuất thiết bị. Gợi ý này có thể là một chuỗi con của giá trị thực tế.                                                                                                                         |
+| `serialNumber`       | Một chuỗi chứa số sê-ri của thiết bị. Gợi ý phải khớp chính xác với giá trị thực tế.                                                                                                                                                       |
+| `minSizeGigabytes`   | Một số nguyên biểu thị dung lượng tối thiểu của thiết bị, tính bằng gigabyte.                                                                                                                                                              |
+| `wwn`                | Một chuỗi chứa định danh lưu trữ duy nhất. Gợi ý này phải khớp chính xác với giá trị thực tế.                                                                                                                                              |
+| `wwnWithExtension`   | Một chuỗi chứa định danh lưu trữ duy nhất cùng với phần mở rộng của nhà cung cấp được nối thêm vào. Gợi ý này phải khớp chính xác với giá trị thực tế.                                                                                     |
+| `wwnVendorExtension` | Một chuỗi chứa định danh lưu trữ duy nhất của nhà cung cấp. Gợi ý này phải khớp chính xác với giá trị thực tế.                                                                                                                             |
+| `rotational`         | Một giá trị kiểu boolean cho biết thiết bị có nên là đĩa quay (true) hay không (false).                                                                                                                                                    |
+
+Ví dụ sử dụng
+
+```yaml
+- name: master-0
+  role: master
+  bmc:
+    address: ipmi://10.10.0.3:6203
+    username: admin
+    password: redhat
+  bootMACAddress: de:ad:be:ef:00:40
+  rootDeviceHints:
+    deviceName: "/dev/sda"
+```
+
+##### 3.3.15.9. Thiết lập các tùy chọn proxy
+Bạn có thể triển khai cụm OpenShift Container Platform trong khi sử dụng proxy bằng cách chỉnh sửa tệp `install-config.yaml`.
+
+**Quy trình**
+
+1. Thêm các giá trị proxy vào bên dưới mục cấu hình (key mapping) proxy:
+
+```yaml
+apiVersion: v1
+baseDomain: <domain>
+proxy:
+  httpProxy: http://USERNAME:PASSWORD@proxy.example.com:PORT
+  httpsProxy: https://USERNAME:PASSWORD@proxy.example.com:PORT
+  noProxy: <WILDCARD_OF_DOMAIN>,<PROVISIONING_NETWORK/CIDR>,<BMC_ADDRESS_RANGE/CIDR>
+```
+
+Dưới đây là ví dụ về `noProxy` với các giá trị đi kèm.
+
+```yaml
+noProxy: .example.com,172.22.0.0/24,10.10.0.0/24
+```
+
+2. Khi bật proxy, hãy thiết lập các giá trị phù hợp cho proxy trong các cặp khóa/giá trị tương ứng. Những lưu ý quan trọng:
+  * Nếu proxy không hỗ trợ HTTPS, hãy thay đổi giá trị của `httpsProxy` từ `https://` thành `http://`. 
+  * Nếu cụm (cluster) sử dụng mạng cung cấp tài nguyên (provisioning network), bạn phải đưa mạng này vào thiết lập `noProxy`; nếu không, chương trình cài đặt sẽ bị lỗi. 
+  * Thiết lập tất cả các thông số proxy dưới dạng các biến môi trường (environment variables) trên nút thực hiện cung cấp tài nguyên (provisioner node). Ví dụ: `HTTP_PROXY`, `HTTPS_PROXY` và `NO_PROXY`.
+
+##### 3.3.15.10. Triển khai không sử dụng mạng cung cấp (provisioning network)
+Bạn có thể triển khai cụm OpenShift Container Platform mà không cần mạng cung cấp (provisioning network) bằng cách thay đổi tệp `install-config.yaml`.
+
+**Quy trình**
+
+* Thực hiện các thay đổi sau đối với tệp `install-config.yaml`:
+
+```yaml
+platform:
+  baremetal:
+    apiVIPs:
+      - <api_VIP>
+    ingressVIPs:
+      - <ingress_VIP>
+    provisioningNetwork: "Disabled"
+```
+
+Thêm thiết lập cấu hình `provisioningNetwork` (nếu cần) và đặt giá trị thành `Disabled`.
+
+> **Quan trọng:** Mạng cung cấp (provisioning network) là yêu cầu bắt buộc đối với quá trình khởi động qua PXE. Nếu bạn triển khai mà không có mạng cung cấp, bạn phải sử dụng tùy chọn định địa chỉ BMC thông qua phương tiện ảo (virtual media), chẳng hạn như `redfish-virtualmedia` hoặc `idrac-virtualmedia`. Để biết thêm chi tiết, hãy tham khảo mục "Redfish virtual media for HPE iLO" trong phần "BMC addressing for HPE iLO" hoặc mục "Redfish virtual media for Dell iDRAC" trong phần "BMC addressing for Dell iDRAC".
+
+##### 3.3.15.11. Triển khai đánh địa chỉ IP với mạng dual-stack (ngăn xếp kép)
+Khi triển khai đánh địa chỉ IP với mạng dual-stack cho máy ảo (VM) khởi động (bootstrap VM), máy ảo này sẽ hoạt động với một phiên bản IP duy nhất.
+
+> **Lưu ý:** Các ví dụ dưới đây áp dụng cho DHCP. Các cụm (cluster) sử dụng dual-stack dựa trên DHCP có thể được triển khai với một địa chỉ IP ảo (VIP) IPv4 và một VIP IPv6 ngay từ giai đoạn đầu (Day 1). Việc triển khai một cụm với các địa chỉ IP tĩnh đòi hỏi phải cấu hình địa chỉ IP cho máy ảo khởi động (bootstrap VM), cũng như các VIP cho API và ingress. Để cấu hình dual-stack với các địa chỉ IP tĩnh trong tệp `install-config`, bạn cần thiết lập một VIP cho API và một VIP cho ingress. Các VIP bổ sung (secondary VIP) có thể được thêm vào sau khi quá trình triển khai hoàn tất.
+
+Đối với mạng dual-stack trong các cụm OpenShift Container Platform, bạn có thể cấu hình các điểm cuối (endpoint) địa chỉ IPv4 và IPv6 cho các nút (node) trong cụm. Để thực hiện việc này, hãy chỉnh sửa các thiết lập cấu hình `machineNetwork`, `clusterNetwork` và `serviceNetwork` trong tệp `install-config.yaml`. Mỗi thiết lập phải bao gồm hai mục nhập CIDR. Đối với cụm sử dụng IPv4 làm họ địa chỉ chính, hãy liệt kê thiết lập IPv4 trước. Đối với cụm sử dụng IPv6 làm họ địa chỉ chính, hãy liệt kê thiết lập IPv6 trước.
+
+```yaml
+machineNetwork:
+- cidr: {{ extcidrnet }}
+- cidr: {{ extcidrnet6 }}
+clusterNetwork:
+- cidr: 10.128.0.0/14
+  hostPrefix: 23
+- cidr: fd02::/48
+  hostPrefix: 64
+serviceNetwork:
+- 172.30.0.0/16
+- fd03::/112
+```
+
+> **Quan trọng:** Trên nền tảng bare metal (phần cứng vật lý), nếu bạn đã chỉ định cấu hình NMState trong phần `networkConfig` của tệp `install-config.yaml`, hãy thêm `interfaces.wait-ip: ipv4+ipv6` vào tệp YAML của NMState. Việc này giúp khắc phục sự cố ngăn cản quá trình triển khai cụm (cluster) trên mạng dual-stack (mạng hỗ trợ cả IPv4 và IPv6).
+> 
+> **Ví dụ tệp cấu hình YAML của NMState bao gồm tham số `wait-ip`**
+> 
+> ```yaml
+> networkConfig:
+>   nmstate:
+>     interfaces:
+>     - name: <interface_name>
+> # ...
+>       wait-ip: ipv4+ipv6
+> # ...
+> ```
+
+Để cung cấp giao diện truy cập cụm cho các ứng dụng sử dụng địa chỉ IPv4 và IPv6, hãy định cấu hình các điểm cuối địa chỉ IP ảo (VIP) IPv4 và IPv6 cho các dịch vụ Ingress VIP và API VIP. Để định cấu hình các điểm cuối địa chỉ IPv4 và IPv6, hãy chỉnh sửa các thiết lập cấu hình `apiVIPs` và `ingressVIPs` trong tệp `install-config.yaml`. Các thiết lập cấu hình `apiVIPs` và `ingressVIPs` sử dụng định dạng danh sách. Thứ tự trong danh sách xác định địa chỉ VIP chính và phụ cho mỗi dịch vụ.
+
+```yaml
+platform:
+  baremetal:
+    apiVIPs:
+      - <api_ipv4>
+      - <api_ipv6>
+    ingressVIPs:
+      - <wildcard_ipv4>
+      - <wildcard_ipv6>
+```
+
+> **Lưu ý:** Đối với cụm có cấu hình mạng dual-stack (ngăn xếp kép), bạn phải gán cả địa chỉ IPv4 và IPv6 cho cùng một giao diện mạng.
+
+##### 3.3.15.12. Cấu hình các giao diện mạng của máy chủ (host)
+Trước khi cài đặt, bạn có thể thiết lập tùy chọn `networkConfig` trong tệp `install-config.yaml` để sử dụng NMState nhằm cấu hình các giao diện mạng của máy chủ.
+
+Trường hợp sử dụng phổ biến nhất cho tính năng này là chỉ định địa chỉ IP tĩnh trên mạng bare-metal (phần cứng vật lý), nhưng bạn cũng có thể cấu hình các mạng khác, chẳng hạn như mạng lưu trữ (storage network). Tính năng này hỗ trợ các chức năng khác của NMState như VLAN, VXLAN, bridge (cầu nối), bond (liên kết), định tuyến (route), MTU và các thiết lập trình phân giải DNS (DNS resolver).
+
+> **Cảnh báo:** Không thiết lập tùy chọn `rotate` (không được hỗ trợ) trong phần cấu hình trình phân giải DNS cho cụm (cluster) của bạn. Tùy chọn này sẽ làm gián đoạn chức năng phân giải DNS của API nội bộ.
+
+**Điều kiện tiên quyết**
+
+* Cấu hình bản ghi DNS PTR với tên máy chủ (hostname) hợp lệ cho mỗi nút (node) sử dụng địa chỉ IP tĩnh. 
+* Cài đặt NMState CLI (`nmstate`).
+
+> **Quan trọng:** Nếu bạn sử dụng mạng cung cấp (provisioning network), hãy cấu hình mạng đó bằng công cụ `dnsmasq` trong Ironic. Để thực hiện triển khai hoàn toàn bằng IP tĩnh (fully static deployment), bạn bắt buộc phải sử dụng phương thức virtual media (phương tiện ảo).
+
+**Quy trình**
+
+1. Tùy chọn: Bạn nên kiểm tra cú pháp NMState bằng lệnh `nmstatectl gc` trước khi đưa cú pháp đó vào tệp `install-config.yaml`, vì chương trình cài đặt sẽ không tự kiểm tra cú pháp YAML của NMState. 
+
+> **Lưu ý:** Các lỗi trong cú pháp YAML có thể dẫn đến việc không áp dụng được cấu hình mạng. Ngoài ra, việc duy trì cú pháp YAML đã được kiểm chứng sẽ rất hữu ích khi áp dụng các thay đổi thông qua Kubernetes NMState sau khi triển khai hoặc khi mở rộng cụm. 
+
+  * Tạo một tệp YAML cho NMState:
+
+  ```yaml
+  interfaces:
+  - name: <nic1_name>
+    type: ethernet
+    state: up
+    ipv4:
+      address:
+      - ip: <ip_address>
+        prefix-length: 24
+      enabled: true
+  dns-resolver:
+    config:
+      server:
+      - <dns_ip_address>
+  routes:
+    config:
+    - destination: 0.0.0.0/0
+      next-hop-address: <next_hop_ip_address>
+      next-hop-interface: <next_hop_nic1_name>
+  ```
+
+  Thay thế `<nic1_name>`, `<ip_address>`, `<dns_ip_address>`, `<next_hop_ip_address>` và `<next_hop_nic1_name>` bằng các giá trị phù hợp.
+
+  * Kiểm tra tệp cấu hình bằng cách chạy lệnh sau:
+
+  ```shell
+  $ nmstatectl gc <nmstate_yaml_file>
+  ```
+
+  Thay thế `<nmstate_yaml_file>` bằng tên tệp cấu hình.
+
+2. Sử dụng thiết lập cấu hình `networkConfig` bằng cách thêm cấu hình NMState vào các host trong tệp `install-config.yaml`:
+
+```yaml
+hosts:
+  - name: openshift-master-0
+    role: master
+    bmc:
+      address: redfish+http://<out_of_band_ip>/redfish/v1/Systems/
+      username: <user>
+      password: <password>
+      disableCertificateVerification: null
+    bootMACAddress: <NIC1_mac_address>
+    bootMode: UEFI
+    rootDeviceHints:
+      deviceName: "/dev/sda"
+    networkConfig:
+      interfaces:
+      - name: <nic1_name>
+        type: ethernet
+        state: up
+        ipv4:
+          address:
+          - ip: <ip_address>
+            prefix-length: 24
+          enabled: true
+      dns-resolver:
+        config:
+          server:
+          - <dns_ip_address>
+      routes:
+        config:
+        - destination: 0.0.0.0/0
+          next-hop-address: <next_hop_ip_address>
+          next-hop-interface: <next_hop_nic1_name>
+```
+
+Đối với `hosts.networkconfig.interfaces`, hãy thêm cú pháp YAML của NMState để cấu hình các giao diện mạng (interface) của host.
+
+Thay thế các giá trị `<nic1_name>`, `<ip_address>`, `<dns_ip_address>`, `<next_hop_ip_address>` và `<next_hop_nic1_name>` bằng các giá trị phù hợp.
+
+> **Quan trọng:** Sau khi triển khai cụm (cluster), bạn không thể sửa đổi thiết lập `networkConfig` trong tệp `install-config.yaml` để thay đổi cấu hình giao diện mạng của host. Hãy sử dụng Kubernetes NMState Operator để thực hiện các thay đổi đối với giao diện mạng của host sau khi đã triển khai.
+
+##### 3.3.15.13. Cấu hình các giao diện mạng máy chủ cho các mạng con (subnet)
+Đối với các kịch bản điện toán biên (edge computing), việc đặt các nút tính toán (compute node) gần biên hơn có thể mang lại nhiều lợi ích. Để đặt các nút từ xa (remote node) vào các mạng con, bạn có thể sử dụng các phân đoạn mạng hoặc mạng con khác biệt so với mạng con dành cho mặt phẳng điều khiển (control plane) và các nút tính toán cục bộ.
+
+Việc thiết lập các mạng con cho các kịch bản điện toán biên giúp giảm độ trễ tại biên và tăng cường khả năng mở rộng.
+
+> **Quan trọng:** Khi sử dụng bộ cân bằng tải mặc định (OpenShiftManagedDefault) và thêm các nút từ xa vào cụm OpenShift Container Platform của bạn, tất cả các nút thuộc mặt phẳng điều khiển phải chạy trong cùng một mạng con. Nếu sử dụng nhiều hơn một mạng con, bạn cũng có thể cấu hình Ingress VIP để chạy trên các nút thuộc mặt phẳng điều khiển thông qua một tệp manifest. Xem phần "Cấu hình các thành phần mạng để chạy trên mặt phẳng điều khiển" để biết thêm chi tiết.
+
+Nếu bạn đã thiết lập các phân đoạn mạng hoặc mạng con riêng biệt cho các nút từ xa (như được mô tả trong phần "Thiết lập giao tiếp giữa các mạng con"), bạn phải chỉ định các mạng con này trong cấu hình `machineNetwork` nếu các nút worker sử dụng địa chỉ IP tĩnh, kết nối gộp (bond) hoặc các cấu hình mạng nâng cao khác. Khi thiết lập địa chỉ IP cho nút trong tham số `networkConfig` của mỗi nút từ xa, bạn cũng cần chỉ định cổng mặc định (gateway) và máy chủ DNS cho mạng con chứa các nút thuộc mặt phẳng điều khiển (trong trường hợp sử dụng địa chỉ IP tĩnh). Điều này đảm bảo rằng các nút từ xa có thể kết nối tới mạng con chứa mặt phẳng điều khiển và nhận lưu lượng mạng từ đó.
+
+> **Lưu ý:** Việc triển khai một cụm với nhiều mạng con đòi hỏi phải sử dụng phương thức truyền thông ảo (virtual media), chẳng hạn như `redfish-virtualmedia` hoặc `idrac-virtualmedia`, vì các nút từ xa không thể truy cập vào mạng cung cấp dịch vụ (provisioning network) cục bộ.
+
+**Quy trình**
+
+1. Thêm các mạng con vào `machineNetwork` trong tệp `install-config.yaml` khi sử dụng địa chỉ IP tĩnh:
+
+```yaml
+networking:
+  machineNetwork:
+  - cidr: 10.0.0.0/24
+  - cidr: 192.168.0.0/24
+  networkType: OVNKubernetes
+```
+
+2. Khi sử dụng địa chỉ IP tĩnh hoặc các cấu hình mạng nâng cao (chẳng hạn như liên kết cổng mạng - bonds), hãy thêm cấu hình gateway và DNS vào tham số `networkConfig` của từng nút tính toán tại biên (edge compute node) bằng cách sử dụng cú pháp NMState:
+
+```yaml
+networkConfig:
+  interfaces:
+  - name: <interface_name>
+    type: ethernet
+    state: up
+    ipv4:
+      enabled: true
+      dhcp: false
+      address:
+      - ip: <node_ip>
+        prefix-length: 24
+      gateway: <gateway_ip>
+  dns-resolver:
+    config:
+      server:
+      - <dns_ip>
+```
+
+Trong đó:
+
+  * `networkConfig.interfaces.name`: Chỉ định tên giao diện (interface).
+  * `networkConfig.interfaces.ipv4.address.ip`: Chỉ định địa chỉ IP của nút (node).
+  * `networkConfig.interfaces.ipv4.gateway`: Chỉ định địa chỉ IP của cổng kết nối (gateway).
+  * `networkConfig.dns-resolver.config.server`: Chỉ định địa chỉ IP của máy chủ DNS.
+
+##### 3.3.15.14. Cấu hình các chế độ tạo địa chỉ cho SLAAC trong mạng dual-stack (ngăn xếp kép)
+Đối với các cụm (cluster) sử dụng ngăn xếp kép (dual-stack) áp dụng cơ chế Tự động cấu hình địa chỉ không trạng thái (Stateless Address AutoConfiguration - SLAAC), bạn phải chỉ định một giá trị chung cho thiết lập mạng `ipv6.addr-gen-mode`.
+
+Bạn có thể thiết lập giá trị này bằng cách sử dụng NMState để cấu hình RAM disk và các tệp cấu hình cụm. Nếu bạn không cấu hình `ipv6.addr-gen-mode` đồng nhất tại các vị trí này, có thể xảy ra tình trạng không khớp địa chỉ IPv6 giữa các tài nguyên CSR và các tài nguyên BareMetalHost trong cụm.
+
+**Điều kiện tiên quyết**
+
+* Cài đặt giao diện dòng lệnh (CLI) của NMState (`nmstate`).
+
+**Quy trình**
+
+1. Tùy chọn: Bạn nên kiểm tra cú pháp YAML của NMState bằng lệnh `nmstatectl gc` trước khi đưa vào tệp `install-config.yaml`, vì chương trình cài đặt sẽ không thực hiện kiểm tra cú pháp YAML của NMState. 
+  * Tạo một tệp YAML cho NMState:
+
+  ```yaml
+  interfaces:
+  - name: eth0
+    ipv6:
+      addr-gen-mode: <address_mode>
+  ```
+
+  Hãy thay thế `<address_mode>` bằng loại chế độ tạo địa chỉ cần thiết cho các địa chỉ IPv6 trong cụm (cluster). Các giá trị hợp lệ bao gồm `eui64`, `stable-privacy` hoặc `random`.
+
+  * Kiểm tra tệp cấu hình bằng cách chạy lệnh sau:
+
+  ```shell
+  $ nmstatectl gc <nmstate_yaml_file>
+  ```
+
+  Thay thế `<nmstate_yaml_file>` bằng tên của tệp cấu hình kiểm thử.
+
+2. Thêm cấu hình NMState vào phần `hosts.networkConfig` bên trong tệp `install-config.yaml`:
+
+```yaml
+hosts:
+  - name: openshift-master-0
+    role: master
+    bmc:
+      address: redfish+http://<out_of_band_ip>/redfish/v1/Systems/
+      username: <user>
+      password: <password>
+      disableCertificateVerification: null
+    bootMACAddress: <NIC1_mac_address>
+    bootMode: UEFI
+    rootDeviceHints:
+      deviceName: "/dev/sda"
+    networkConfig:
+      interfaces:
+      - name: eth0
+        ipv6:
+          addr-gen-mode: <address_mode>
+...
+```
+
+Thay thế `<address_mode>` bằng loại chế độ tạo địa chỉ cần thiết cho các địa chỉ IPv6 trong cụm. Các giá trị hợp lệ bao gồm `eui64`, `stable-privacy` hoặc `random`.
+
+##### 3.3.15.15. Cấu hình các giao diện mạng máy chủ cho card mạng (NIC) hai cổng
+Trước khi cài đặt, bạn có thể thiết lập tham số `networkConfig` trong tệp `install-config.yaml` để cấu hình các giao diện mạng máy chủ thông qua NMState, nhằm hỗ trợ card mạng (NIC) hai cổng.
+
+OpenShift Virtualization chỉ hỗ trợ các chế độ liên kết (bond mode) sau:
+
+* mode=1 (active-backup)
+* mode=2 (balance-xor)
+* mode=4 (802.3ad)
+
+**Điều kiện tiên quyết**
+
+* Cấu hình bản ghi DNS `PTR` với tên máy chủ (hostname) hợp lệ cho mỗi nút (node) có địa chỉ IP tĩnh. 
+* Cài đặt công cụ dòng lệnh NMState (`nmstate`).
+
+> **Lưu ý:** Các lỗi trong cú pháp YAML có thể khiến việc áp dụng cấu hình mạng bị thất bại. Ngoài ra, việc duy trì cú pháp YAML chuẩn xác sẽ rất hữu ích khi áp dụng các thay đổi thông qua Kubernetes NMState sau quá trình triển khai hoặc khi mở rộng cụm (cluster).
+
+**Quy trình**
+
+1. Thêm cấu hình NMState vào trường `networkConfig` cho các máy chủ trong tệp `install-config.yaml`:
+
+```yaml
+hosts:
+  - name: worker-0
+    role: worker
+    bmc:
+      address: redfish+http://<out_of_band_ip>/redfish/v1/Systems/
+      username: <user>
+      password: <password>
+      disableCertificateVerification: false
+    bootMACAddress: <NIC1_mac_address>
+    bootMode: UEFI
+    networkConfig:
+      interfaces:
+       - name: eno1
+         type: ethernet
+         state: up
+         mac-address: 0c:42:a1:55:f3:06
+         ipv4:
+           enabled: true
+           dhcp: false
+         ethernet:
+           sr-iov:
+             total-vfs: 2
+         ipv6:
+           enabled: false
+           dhcp: false
+       - name: sriov:eno1:0
+         type: ethernet
+         state: up
+         ipv4:
+           enabled: false
+         ipv6:
+           enabled: false
+       - name: sriov:eno1:1
+         type: ethernet
+         state: down
+       - name: eno2
+         type: ethernet
+         state: up
+         mac-address: 0c:42:a1:55:f3:07
+         ipv4:
+           enabled: true
+         ethernet:
+           sr-iov:
+             total-vfs: 2
+         ipv6:
+           enabled: false
+       - name: sriov:eno2:0
+         type: ethernet
+         state: up
+         ipv4:
+           enabled: false
+         ipv6:
+           enabled: false
+       - name: sriov:eno2:1
+         type: ethernet
+         state: down
+       - name: bond0
+         type: bond
+         state: up
+         min-tx-rate: 100
+         max-tx-rate: 200
+         link-aggregation:
+           mode: active-backup
+           options:
+             primary: sriov:eno1:0
+           port:
+             - sriov:eno1:0
+             - sriov:eno2:0
+         ipv4:
+           address:
+             - ip: 10.19.16.57
+               prefix-length: 23
+           dhcp: false
+           enabled: true
+         ipv6:
+           enabled: false
+      dns-resolver:
+        config:
+          server:
+            - 10.11.5.160
+            - 10.2.70.215
+      routes:
+        config:
+          - destination: 0.0.0.0/0
+            next-hop-address: 10.19.17.254
+            next-hop-interface: bond0
+            table-id: 254
+```
+
+Trong đó:
+
+* `hosts.networkconfig`: Xác định giá trị cho tham số `hosts.networkconfig`. Trường `networkConfig` chứa thông tin về cấu hình mạng của host, bao gồm các trường con như `interfaces` (giao diện), `dns-resolver` (bộ phân giải DNS) và `routes` (các tuyến đường).
+* `hosts.networkconfig.interfaces`: Xác định một mảng các giao diện mạng được định nghĩa cho host.
+* `hosts.networkconfig.interfaces.name`: Xác định tên của giao diện.
+* `hosts.networkconfig.interfaces.type`: Xác định loại giao diện. Ví dụ này tạo ra một giao diện ethernet.
+* hosts.networkconfig.interfaces.ipv4.dhcp: Xác định giá trị cho tham số `dhcp`. Hãy đặt giá trị này là false để vô hiệu hóa DHCP cho chức năng vật lý (Physical Function - PF) nếu không thực sự cần thiết.
+* `hosts.networkconfig.interfaces.ethernet.sr-iov.total-vfs`: Xác định giá trị cho tham số `sr-iov.total-vfs`. Thiết lập số lượng các chức năng ảo (Virtual Functions - VF) của SR-IOV cần khởi tạo.
+* `hosts.networkconfig.interfaces.state`: Xác định giá trị cho tham số `state`. Hãy đặt giá trị này là `up` (kích hoạt).
+* `hosts.networkconfig.interfaces.ipv4.enabled`: Xác định giá trị cho tham số `ipv4.enabled`. Hãy đặt giá trị này là `false` để vô hiệu hóa việc gán địa chỉ IPv4 cho VF được gắn vào bond (nhóm giao diện).
+* `hosts.networkconfig.interfaces.min-tx-rate`: Xác định giá trị cho tham số `min-tx-rate`. Thiết lập tốc độ truyền tối thiểu (tính bằng Mbps) cho VF. Giá trị mẫu này thiết lập tốc độ là 100 Mbps. 
+  * Giá trị này phải nhỏ hơn hoặc bằng tốc độ truyền tối đa. 
+  * Các card mạng (NIC) của Intel không hỗ trợ tham số `min-tx-rate`.
+* `hosts.networkconfig.interfaces.max-tx-rate`: Xác định giá trị cho tham số `max-tx-rate`. Thiết lập tốc độ truyền tối đa (tính bằng Mbps) cho VF. Giá trị mẫu này thiết lập tốc độ là 200 Mbps.
+* `hosts.networkconfig.interfaces.link-aggregation.mode`: Xác định chế độ bond (gộp giao diện) cần thiết.
+* `hosts.networkconfig.interfaces.link-aggregation.options.primary`: Chỉ định cổng ưu tiên cho giao diện gộp (bonding interface). Giao diện gộp sẽ sử dụng thiết bị chính (primary device) làm thiết bị đầu tiên trong cấu hình gộp. Giao diện này sẽ không bị loại bỏ trừ khi xảy ra lỗi. Thiết lập này đặc biệt hữu ích khi một trong các card mạng (NIC) trong cấu hình gộp có tốc độ cao hơn, nhờ đó có thể xử lý khối lượng công việc lớn hơn. Thiết lập này chỉ có hiệu lực khi giao diện gộp đang ở chế độ active-backup (chế độ 1).
+* `hosts.networkconfig.interfaces.ipv4.address.ip`: Chỉ định địa chỉ IP tĩnh cho giao diện gộp. Đây chính là địa chỉ IP của nút (node).
+* `hosts.networkconfig.routes.config.next-hop-interface`: Chỉ định giá trị cho tham số `routes.config.next-hop-interface`. Thiết lập này đặt `bond0` làm cổng mặc định (gateway) cho tuyến đường mặc định (default route). 
+
+> **Quan trọng:** Sau khi triển khai cụm (cluster), bạn không thể thay đổi cấu hình `networkConfig` trong tệp `install-config.yaml` để điều chỉnh giao diện mạng của máy chủ (host). Hãy sử dụng Kubernetes NMState Operator để thực hiện các thay đổi đối với giao diện mạng của máy chủ sau khi đã triển khai.
+
+##### 3.3.15.16. Cấu hình nhiều nút cụm (cluster node)
+Bạn có thể cấu hình đồng thời các nút cụm trong OpenShift Container Platform với các thiết lập giống hệt nhau.
+
+Việc cấu hình nhiều nút cụm giúp tránh phải thêm thông tin dư thừa cho từng nút vào tệp `install-config.yaml`. Tệp này chứa các tham số cụ thể để áp dụng cùng một cấu hình cho nhiều nút trong cụm.
+
+Các nút tính toán (compute node) được cấu hình tách biệt với nút điều khiển (controller node). Tuy nhiên, cấu hình cho cả hai loại nút này đều sử dụng các tham số được nêu trong tệp `install-config.yaml` để cho phép thiết lập cấu hình cho nhiều nút cùng lúc. Hãy đặt các tham số `networkConfig` thành `BOND`, như được minh họa trong ví dụ sau:
+
+```yaml
+hosts:
+- name: ostest-master-0
+ [...]
+ networkConfig: &BOND
+   interfaces:
+   - name: bond0
+     type: bond
+     state: up
+     ipv4:
+       dhcp: true
+       enabled: true
+     link-aggregation:
+       mode: active-backup
+       port:
+       - enp2s0
+       - enp3s0
+- name: ostest-master-1
+ [...]
+ networkConfig: *BOND
+- name: ostest-master-2
+ [...]
+ networkConfig: *BOND
+```
+
+> **Lưu ý:** Việc cấu hình nhiều nút cụm (cluster node) chỉ khả dụng đối với các triển khai ban đầu trên cơ sở hạ tầng do trình cài đặt cung cấp (installer-provisioned infrastructure).
+
+##### 3.3.15.17. Cấu hình Secure Boot được quản lý (managed Secure Boot)
+Bạn có thể bật tính năng Secure Boot được quản lý khi triển khai cụm (cluster) thông qua trình cài đặt (installer-provisioned cluster) bằng cách sử dụng phương thức định địa chỉ Redfish BMC, chẳng hạn như `redfish`, `redfish-virtualmedia` hoặc `idrac-virtualmedia`.
+
+**Quy trình**
+
+* Thêm thiết lập cấu hình `bootMode` cho mỗi nút (node) để bật tính năng Secure Boot được quản lý. 
+
+Ví dụ
+
+```yaml
+hosts:
+  - name: openshift-master-0
+    role: master
+    bmc:
+      address: redfish://<out_of_band_ip>
+      username: <username>
+      password: <password>
+    bootMACAddress: <NIC1_mac_address>
+    rootDeviceHints:
+     deviceName: "/dev/sda"
+    bootMode: UEFISecureBoot
+```
+
+  * Đối với `hosts.bmc.address`: Hãy đảm bảo rằng thiết lập `bmc.address` sử dụng một trong các giao thức sau: `redfish`, `redfish-virtualmedia` hoặc `idrac-virtualmedia`. Để biết thêm chi tiết, vui lòng tham khảo mục "Địa chỉ BMC cho HPE iLO" hoặc "Địa chỉ BMC cho Dell iDRAC".
+  * Đối với `hosts.bootMode`: Thiết lập `bootMode` mặc định là `UEFI`. Hãy thay đổi thành `UEFISecureBoot` để kích hoạt tính năng Secure Boot được quản lý (managed Secure Boot).
+
+> **Lưu ý:** Vui lòng tham khảo phần "Cấu hình các nút" (Configuring nodes) trong mục "Các điều kiện tiên quyết" (Prerequisites) để đảm bảo rằng các nút (node) hỗ trợ tính năng Secure Boot được quản lý. Nếu các nút không hỗ trợ tính năng này, hãy xem phần "Cấu hình thủ công Secure Boot cho các nút" (Configuring nodes for Secure Boot manually) nằm trong mục "Cấu hình các nút". Việc cấu hình thủ công Secure Boot yêu cầu sử dụng phương thức Redfish virtual media.
+
+> **Lưu ý:** Red Hat không hỗ trợ Secure Boot thông qua giao thức IPMI, vì IPMI không cung cấp các cơ chế quản lý cho Secure Boot.
+
+#### 3.3.16. Các tệp cấu hình manifest
+Bạn có thể tùy chỉnh quá trình cài đặt cụm (cluster) của mình bằng cách chỉnh sửa các tệp cấu hình manifest.
+
+##### 3.3.16.1. Tạo các tệp manifest cho OpenShift Container Platform
+Tạo các tệp manifest để bắt đầu tùy chỉnh quá trình cài đặt cụm (cluster) của bạn.
+
+**Quy trình**
+
+* Tạo các tệp manifest cho OpenShift Container Platform bằng cách chạy lệnh sau:
+
+```shell
+$ ./openshift-baremetal-install --dir ~/clusterconfigs create manifests
+```
+
+Ví dụ đầu ra
+
+```
+INFO Consuming Install Config from target directory
+WARNING Making control-plane schedulable by setting MastersSchedulable to true for Scheduler cluster settings
+WARNING Discarding the OpenShift Manifest that was provided in the target directory because its dependencies are dirty and it needs to be regenerated
+```
+
+##### 3.3.16.2. Cấu hình NTP cho các cụm không kết nối mạng
+Bạn có thể cấu hình các máy chủ NTP trên các nút mặt phẳng điều khiển (control plane nodes) và thiết lập các nút tính toán (compute nodes) làm máy khách NTP (NTP clients) để đảm bảo đồng bộ hóa thời gian trong các cụm không kết nối mạng — nơi không thể truy cập vào các máy chủ NTP bên ngoài.
+
+OpenShift Container Platform cài đặt dịch vụ Giao thức Thời gian Mạng (NTP) có tên là `chrony` trên các nút của cụm.
+
+**Hình 3.8. Cấu hình NTP cho các cụm không kết nối mạng**
+![Hình 3.8](img/152_OpenShift_Config_NTP_0421.png)
+
+Các nút (node) trong OpenShift Container Platform cần thống nhất về ngày giờ để có thể vận hành đúng cách. Khi các nút tính toán (compute node) lấy thông tin ngày giờ từ các máy chủ NTP trên các nút điều khiển (control node), điều này cho phép thiết lập và vận hành các cụm (cluster) không kết nối với mạng có định tuyến — và do đó không thể truy cập vào các máy chủ NTP ở tầng cao hơn (stratum cao hơn).
+
+**Quy trình**
+
+1. Cài đặt Butane trên máy chủ cài đặt (installation host) của bạn bằng cách sử dụng lệnh sau:
+
+```shell
+$ sudo dnf -y install butane
+```
+
+2. Tạo một cấu hình Butane có tên `99-master-chrony-conf-override.bu`, bao gồm nội dung của tệp `chrony.conf` dành cho các nút control plane.
+
+> **Lưu ý:** Xem phần "Tạo cấu hình máy bằng Butane" để biết thông tin về Butane.
+
+```yaml
+variant: openshift
+version: 4.22.0
+metadata:
+  name: 99-master-chrony-conf-override
+  labels:
+    machineconfiguration.openshift.io/role: master
+storage:
+  files:
+    - path: /etc/chrony.conf
+      mode: 0644
+      overwrite: true
+      contents:
+        inline: |
+          # Use public servers from the pool.ntp.org project.
+          # Please consider joining the pool (https://www.pool.ntp.org/join.html).
+
+          # The Machine Config Operator manages this file
+          server openshift-master-0.<cluster-name>.<domain> iburst
+          server openshift-master-1.<cluster-name>.<domain> iburst
+          server openshift-master-2.<cluster-name>.<domain> iburst
+
+          stratumweight 0
+          driftfile /var/lib/chrony/drift
+          rtcsync
+          makestep 10 3
+          bindcmdaddress 127.0.0.1
+          bindcmdaddress ::1
+          keyfile /etc/chrony.keys
+          commandkey 1
+          generatecommandkey
+          noclientlog
+          logchange 0.5
+          logdir /var/log/chrony
+
+          # Configure the control plane nodes to serve as local NTP servers
+          # for all compute nodes, even if they are not in sync with an
+          # upstream NTP server.
+
+          # Allow NTP client access from the local network.
+          allow all
+          # Serve time even if not synchronized to a time source.
+          local stratum 3 orphan
+```
+
+Trong đó:
+
+  * `<cluster-name>`: Chỉ định tên của cụm (cluster).
+  * `<domain>`: Chỉ định tên miền đầy đủ (fully qualified domain name).
+
+3. Sử dụng Butane để tạo tệp đối tượng MachineConfig có tên `99-master-chrony-conf-override.yaml`, chứa cấu hình sẽ được chuyển đến các nút control plane:
+
+```shell
+$ butane 99-master-chrony-conf-override.bu -o 99-master-chrony-conf-override.yaml
+```
+
+4. Tạo một cấu hình Butane có tên `99-worker-chrony-conf-override.bu`, bao gồm nội dung của tệp `chrony.conf` dành cho các nút tính toán (compute nodes), trong đó tham chiếu đến các máy chủ NTP trên các nút điều khiển (control plane nodes).
+
+```yaml
+variant: openshift
+version: 4.22.0
+metadata:
+  name: 99-worker-chrony-conf-override
+  labels:
+    machineconfiguration.openshift.io/role: worker
+storage:
+  files:
+    - path: /etc/chrony.conf
+      mode: 0644
+      overwrite: true
+      contents:
+        inline: |
+          # The Machine Config Operator manages this file.
+          server openshift-master-0.<cluster-name>.<domain> iburst
+          server openshift-master-1.<cluster-name>.<domain> iburst
+          server openshift-master-2.<cluster-name>.<domain> iburst
+
+          stratumweight 0
+          driftfile /var/lib/chrony/drift
+          rtcsync
+          makestep 10 3
+          bindcmdaddress 127.0.0.1
+          bindcmdaddress ::1
+          keyfile /etc/chrony.keys
+          commandkey 1
+          generatecommandkey
+          noclientlog
+          logchange 0.5
+          logdir /var/log/chrony
+```
+
+Trong đó:
+
+* `<cluster-name>`: Chỉ định tên của cụm (cluster).
+* `<domain>`: Chỉ định tên miền đầy đủ (fully qualified domain name).
+
+5. Sử dụng Butane để tạo tệp đối tượng `MachineConfig` có tên `99-worker-chrony-conf-override.yaml`, chứa cấu hình sẽ được chuyển đến các nút worker:
+
+```shell
+$ butane 99-worker-chrony-conf-override.bu -o 99-worker-chrony-conf-override.yaml
+```
+
+##### 3.3.16.3. Cấu hình các thành phần mạng để chạy trên mặt phẳng điều khiển (control plane)
+Bạn có thể cấu hình các thành phần mạng để chỉ chạy trên các nút thuộc mặt phẳng điều khiển (control plane nodes).
+
+Theo mặc định, OpenShift Container Platform cho phép bất kỳ nút nào trong nhóm cấu hình máy (machine config pool) lưu trữ địa chỉ IP ảo `ingressVIP`. Tuy nhiên, trong một số môi trường, các nút tính toán (compute nodes) được triển khai trên các mạng con (subnet) tách biệt với các nút thuộc mặt phẳng điều khiển; điều này đòi hỏi phải cấu hình để địa chỉ IP ảo `ingressVIP` chỉ chạy trên các nút thuộc mặt phẳng điều khiển.
+
+> **Quan trọng:** Khi triển khai các nút từ xa trên các mạng con tách biệt, bạn bắt buộc phải đặt địa chỉ IP ảo `ingressVIP` chỉ trên các nút thuộc mặt phẳng điều khiển.
+
+![Hình 3.9](img/161_OpenShift_Baremetal_IPI_Deployment_updates_0521.png)
+
+**Quy trình**
+
+1. Chuyển đến thư mục lưu trữ tệp install-config.yaml:
+
+```shell
+$ cd ~/clusterconfigs
+```
+
+2. Chuyển sang thư mục con `manifests`:
+
+```shell
+$ cd manifests
+```
+
+3. Tạo một tệp có tên là `cluster-network-avoid-workers-99-config.yaml`:
+
+```shell
+$ touch cluster-network-avoid-workers-99-config.yaml
+```
+
+4. Mở tệp `cluster-network-avoid-workers-99-config.yaml` trong một trình soạn thảo và nhập tài nguyên tùy chỉnh (CR) mô tả cấu hình Operator:
+
+```yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  name: 50-worker-fix-ipi-rwn
+  labels:
+    machineconfiguration.openshift.io/role: worker
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+        - path: /etc/kubernetes/manifests/keepalived.yaml
+          mode: 0644
+          contents:
+            source: data:,
+```
+
+Tệp manifest này đặt địa chỉ IP ảo (virtual IP - VIP) ingressVIP lên các nút mặt phẳng điều khiển (control plane nodes). Ngoài ra, tệp manifest này còn triển khai các tiến trình sau đây, chỉ trên các nút mặt phẳng điều khiển:
+
+  * `openshift-ingress-operator`
+  * `keepalived`
+
+5. Lưu tệp `cluster-network-avoid-workers-99-config.yaml` lại.
+6. Tạo tệp `manifests/cluster-ingress-default-ingresscontroller.yaml`:
+
+```yaml
+apiVersion: operator.openshift.io/v1
+kind: IngressController
+metadata:
+  name: default
+  namespace: openshift-ingress-operator
+spec:
+  nodePlacement:
+    nodeSelector:
+      matchLabels:
+        node-role.kubernetes.io/master: ""
+```
+
+7. Hãy cân nhắc sao lưu thư mục `manifests`. Chương trình cài đặt sẽ xóa thư mục `manifests/` khi tạo cụm (cluster).
+8. Sửa đổi tệp manifest `cluster-scheduler-02-config.yml` để cho phép lập lịch tác vụ trên các nút điều khiển (control plane nodes) bằng cách đặt trường `mastersSchedulable` thành `true`. Theo mặc định, các nút điều khiển không được thiết lập để lập lịch tác vụ. Ví dụ:
+
+```shell
+$ sed -i "s;mastersSchedulable: false;mastersSchedulable: true;g" clusterconfigs/manifests/cluster-scheduler-02-config.yml
+```
+
+> **Lưu ý:** Nếu các nút mặt phẳng điều khiển (control plane nodes) không thể lập lịch sau khi hoàn tất quy trình này, việc triển khai cụm sẽ thất bại.
+
+##### 3.3.16.4. Triển khai các bộ định tuyến (router) trên các nút tính toán (compute node)
+Để xử lý lưu lượng truy cập bên ngoài cho các dịch vụ trong cụm OpenShift Container Platform của bạn, hãy tạo một tệp YAML thiết lập số lượng bản sao (replica) bộ định tuyến phù hợp.
+
+Trong quá trình cài đặt, chương trình cài đặt sẽ triển khai các pod bộ định tuyến trên các nút tính toán. Theo mặc định, chương trình cài đặt sẽ triển khai hai pod bộ định tuyến.
+
+> **Quan trọng:** Việc triển khai một cụm chỉ với một nút tính toán không được hỗ trợ. Mặc dù việc điều chỉnh số lượng bản sao bộ định tuyến có thể giải quyết các vấn đề liên quan đến trạng thái suy giảm (degraded state) khi triển khai với một nút tính toán duy nhất, nhưng cụm đó sẽ mất khả năng sẵn sàng cao (high availability) đối với API truy cập vào (ingress API), điều này không phù hợp cho các môi trường sản xuất.
+
+> **Lưu ý:** Theo mặc định, chương trình cài đặt sẽ triển khai hai bộ định tuyến. Nếu cụm không có nút tính toán nào, chương trình cài đặt sẽ triển khai hai bộ định tuyến đó trên các nút mặt phẳng điều khiển (control plane node).
+
+**Quy trình**
+
+1. Tạo tệp `router-replicas.yaml`:
+
+```yaml
+apiVersion: operator.openshift.io/v1
+kind: IngressController
+metadata:
+  name: default
+  namespace: openshift-ingress-operator
+spec:
+  replicas: <num-of-router-pods>
+  endpointPublishingStrategy:
+    type: HostNetwork
+  nodePlacement:
+    nodeSelector:
+      matchLabels:
+        node-role.kubernetes.io/worker: ""
+```
+
+> **Lưu ý:** Hãy thay thế `<num-of-router-pods>` bằng một giá trị phù hợp. Nếu chỉ sử dụng một nút tính toán (compute node), hãy đặt `replicas:` thành 1. Nếu sử dụng nhiều hơn 3 nút tính toán, bạn có thể tăng giá trị `replicas:` (mặc định là 2) lên mức phù hợp.
+
+2. Lưu và sao chép tệp `router-replicas.yaml` vào thư mục `clusterconfigs/openshift`:
+
+```shell
+$ cp ~/router-replicas.yaml clusterconfigs/openshift/99_router-replicas.yaml
+```
+
+##### 3.3.16.5. Cấu hình BIOS
+Bạn có thể cấu hình BIOS trong quá trình cài đặt.
+
+**Quy trình**
+
+1. Tạo các tệp manifest. 
+2. Chỉnh sửa tệp tài nguyên `BareMetalHost` tương ứng với nút (node):
+
+```shell
+$ vim clusterconfigs/openshift/99_openshift-cluster-api_hosts-*.yaml
+```
+
+3. Thêm cấu hình BIOS vào phần spec của tài nguyên BareMetalHost:
+
+```yaml
+spec:
+  firmware:
+    simultaneousMultithreadingEnabled: true
+    sriovEnabled: true
+    virtualizationEnabled: true
+```
+
+> **Lưu ý:** Red Hat hỗ trợ ba cấu hình BIOS. Chỉ các máy chủ có BMC loại iRMC mới được hỗ trợ. Các loại máy chủ khác hiện không được hỗ trợ.
+
+4. Tạo cụm (cluster).
+
+##### 3.3.16.6. Cấu hình RAID
+Bạn có thể cấu hình mảng đĩa độc lập dự phòng (RAID) bằng cách sử dụng bộ điều khiển quản lý bo mạch chủ (BMC) trong quá trình cài đặt.
+
+> **Lưu ý:** Nếu bạn muốn cấu hình RAID phần cứng cho nút (node), hãy đảm bảo rằng nút đó có bộ điều khiển RAID được hỗ trợ. OpenShift Container Platform 4.22 không hỗ trợ RAID phần mềm.
+
+**Bảng 3.13. Hỗ trợ RAID phần cứng theo nhà cung cấp**
+
+| Nhà cung cấp | BMC và giao thức  | Phiên bản firmware           | Các cấp độ RAID  |
+|--------------|-------------------|------------------------------|------------------|
+| Fujitsu      | iRMC              | N/A                          | 0, 1, 5, 6 và 10 |
+| Dell         | iDRAC với Redfish | Phiên bản 6.10.30.20 trở lên | 0, 1 và 5        |
+
+**Quy trình**
+
+1. Tạo các tệp manifest. 
+2. Chỉnh sửa tài nguyên BareMetalHost tương ứng với nút (node):
+
+```shell
+$ vim clusterconfigs/openshift/99_openshift-cluster-api_hosts-*.yaml
+```
+
+> **Lưu ý:** Ví dụ sau đây sử dụng cấu hình RAID phần cứng vì OpenShift Container Platform 4.22 không hỗ trợ RAID phần mềm. 
+
+  * Nếu bạn thêm một cấu hình RAID cụ thể vào phần `spec`, nút (node) sẽ xóa cấu hình RAID hiện có trong giai đoạn chuẩn bị (preparing phase) và thiết lập cấu hình RAID mới theo yêu cầu. Ví dụ:
+
+  ```yaml
+  spec:
+    raid:
+      hardwareRAIDVolumes:
+      - level: "0"
+        name: "sda"
+        numberOfPhysicalDisks: 1
+        rotational: true
+        sizeGibibytes: 0
+  ```
+
+  Tham số `level` là trường bắt buộc, còn các tham số khác là các trường tùy chọn.
+
+  * Nếu bạn thêm một cấu hình RAID trống vào phần thông số kỹ thuật, cấu hình trống này sẽ khiến nút (node) xóa cấu hình RAID ban đầu trong giai đoạn chuẩn bị, nhưng không thực hiện cấu hình mới. Ví dụ:
+
+  ```yaml
+  spec:
+    raid:
+      hardwareRAIDVolumes: []
+  ```
+
+  * Nếu bạn không thêm trường RAID vào phần đặc tả (spec), cấu hình RAID ban đầu sẽ không bị xóa và cũng sẽ không có cấu hình mới nào được thực hiện.
+
+3. Tạo cụm (cluster).
+
+##### 3.3.16.7. Cấu hình lưu trữ trên các node
+Bạn có thể thực hiện các thay đổi đối với hệ điều hành trên các node của OpenShift Container Platform bằng cách tạo các đối tượng `MachineConfig`, vốn được quản lý bởi `Machine Config Operator` (MCO).
+
+Thông số kỹ thuật của `MachineConfig` bao gồm một cấu hình `ignition` (ignition config) dùng để thiết lập các máy tại thời điểm khởi động lần đầu. Đối tượng cấu hình này có thể được sử dụng để sửa đổi các tệp tin, dịch vụ `systemd` và các tính năng khác của hệ điều hành đang chạy trên các máy thuộc OpenShift Container Platform.
+
+Hãy sử dụng cấu hình `ignition` để thiết lập lưu trữ trên các node. Ví dụ về tệp manifest `MachineSet` dưới đây minh họa cách thêm một phân vùng (partition) vào một thiết bị trên node chính (primary node). Trong ví dụ này, bạn cần áp dụng tệp manifest trước khi tiến hành cài đặt để tạo một phân vùng có tên là `recovery` với dung lượng 16 GiB trên node chính.
+
+**Quy trình thực hiện**
+
+1. Tạo một tệp có tên `custom-partitions.yaml` và thêm vào đó một đối tượng `MachineConfig` chứa cấu trúc phân vùng mà bạn mong muốn:
+
+```yaml
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: primary
+  name: 10_primary_storage_config
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      disks:
+        - device: </dev/xxyN>
+          partitions:
+            - label: recovery
+              startMiB: 32768
+              sizeMiB: 16384
+      filesystems:
+        - device: /dev/disk/by-partlabel/recovery
+          label: recovery
+          format: xfs
+```
+
+2. Lưu và sao chép tệp `custom-partitions.yaml` vào thư mục `clusterconfigs/openshift`:
+
+```shell
+$ cp ~/<MachineConfig_manifest> ~/clusterconfigs/openshift
+```
+
+#### 3.3.17. Tạo registry trong môi trường không kết nối internet (disconnected registry)
+Trong một số trường hợp, bạn có thể muốn cài đặt cụm OpenShift Container Platform bằng cách sử dụng bản sao cục bộ của registry cài đặt. Việc này có thể giúp tăng hiệu quả mạng trong trường hợp các nút (node) của cụm nằm trên một mạng không có quyền truy cập internet.
+
+Để thiết lập một bản sao cục bộ (hay còn gọi là registry phản chiếu - mirror registry), bạn cần chuẩn bị các thành phần sau:
+
+* Chứng chỉ dành cho nút registry. Đây có thể là chứng chỉ tự ký (self-signed certificate). 
+* Một máy chủ web (web server) để phục vụ các container trên hệ thống. 
+* Thông tin xác thực kéo ảnh (pull secret) đã được cập nhật, bao gồm chứng chỉ và thông tin về kho lưu trữ (repository) cục bộ.
+
+> **Lưu ý**
+> 
+> * Việc tạo registry trong môi trường không kết nối internet trên một nút registry là tùy chọn. Nếu bạn cần thực hiện việc này, bạn phải hoàn thành tất cả các mục con dưới đây. 
+> * Nếu bạn đã chuẩn bị sẵn một registry phản chiếu cho quá trình cài đặt trong môi trường không kết nối internet (thông qua việc sao chép/phản chiếu các image), bạn có thể chuyển thẳng đến phần "Sửa đổi tệp install-config.yaml để sử dụng registry trong môi trường không kết nối internet". Để biết thêm thông tin về cách chuẩn bị registry phản chiếu cho quá trình cài đặt trong môi trường không kết nối internet, hãy xem mục "Phản chiếu các image cho quá trình cài đặt trong môi trường không kết nối internet".
+
+##### 3.3.17.1. Chuẩn bị nút registry để lưu trữ registry được nhân bản (mirrored registry)
+Chuẩn bị một nút registry để lưu trữ registry nhân bản cục bộ phục vụ cho việc cài đặt OpenShift Container Platform.
+
+Hãy hoàn tất các bước sau trước khi lưu trữ registry nhân bản trên hạ tầng vật lý (bare metal).
+
+**Quy trình**
+
+1. Mở cổng tường lửa trên nút registry:
+
+```shell
+$ sudo firewall-cmd --add-port=5000/tcp --zone=libvirt  --permanent
+$ sudo firewall-cmd --add-port=5000/tcp --zone=public   --permanent
+$ sudo firewall-cmd --reload
+```
+
+2. Cài đặt các gói cần thiết cho nút registry:
+
+```shell
+$ sudo yum -y install python3 podman httpd httpd-tools jq
+```
+
+3. Tạo cấu trúc thư mục để lưu trữ thông tin kho lưu trữ:
+
+```shell
+$ sudo mkdir -p /opt/registry/{auth,certs,data}
+```
+
+##### 3.3.17.2. Sao chép kho lưu trữ hình ảnh (image repository) của OpenShift Container Platform sang một registry trong môi trường không kết nối internet (disconnected registry)
+Hãy sao chép kho lưu trữ hình ảnh của OpenShift Container Platform sang một registry cục bộ để cung cấp các hình ảnh container cho môi trường không kết nối internet của bạn.
+
+Thực hiện các bước sau để sao chép kho lưu trữ hình ảnh của OpenShift Container Platform cho một registry trong môi trường không kết nối internet.
+
+> **Quan trọng:** Lệnh `oc adm release mirror` đã lỗi thời kể từ phiên bản OpenShift Container Platform 4.22 và sẽ bị loại bỏ trong các phiên bản tương lai.
+
+Thay vào đó, hãy sử dụng plugin `oc-mirror` phiên bản 2 (v2).
+
+**Điều kiện tiên quyết**
+
+* Máy chủ thực hiện sao chép (mirror host) của bạn có quyền truy cập internet. 
+* Bạn đã cấu hình một registry sao chép (mirror registry) để sử dụng trong mạng bị hạn chế của mình, đồng thời có quyền truy cập vào chứng chỉ và thông tin xác thực đã được thiết lập. 
+* Bạn đã tải xuống "pull secret" (bí mật kéo hình ảnh) từ Red Hat OpenShift Cluster Manager và sửa đổi nó để bao gồm thông tin xác thực cho kho lưu trữ sao chép của bạn.
+
+**Quy trình**
+
+1. Xem trang "Tải xuống OpenShift Container Platform" (Download OpenShift Container Platform) để xác định phiên bản OpenShift Container Platform mà bạn muốn cài đặt, đồng thời xác định thẻ (tag) tương ứng trên trang "Thẻ kho lưu trữ" (Repository Tags). 
+2. Thiết lập các biến môi trường cần thiết:
+  * Xuất (export) phiên bản phát hành (release version):
+
+  ```shell
+  $ OCP_RELEASE=<release_version>
+  ```
+
+  Đối với `<release_version>`, hãy chỉ định thẻ tương ứng với phiên bản OpenShift Container Platform cần cài đặt, chẳng hạn như 4.5.4.
+
+  * Xuất tên registry cục bộ và cổng máy chủ:
+
+  ```shell
+  $ LOCAL_REGISTRY='<local_registry_host_name>:<local_registry_host_port>'
+  ```
+
+  Đối với `<local_registry_host_name>`, hãy chỉ định tên miền registry cho kho lưu trữ nhân bản (mirror repository) của bạn; còn đối với `<local_registry_host_port>`, hãy chỉ định cổng mà registry đó sử dụng để cung cấp nội dung.
+
+  * Xuất tên kho lưu trữ cục bộ:
+
+  ```shell
+  $ LOCAL_REPOSITORY='<local_repository_name>'
+  ```
+
+  Đối với `<local_repository_name>`, hãy chỉ định tên của kho lưu trữ cần tạo trong registry của bạn, chẳng hạn như `ocp4/openshift4`.
+
+  * Xuất tên kho lưu trữ cần sao chép:
+
+  ```shell
+  $ PRODUCT_REPO='openshift-release-dev'
+  ```
+
+  Đối với bản phát hành chính thức (production release), bạn phải chỉ định `openshift-release-dev`.
+
+  * Xuất đường dẫn đến registry pull secret của bạn:
+
+  ```shell
+  $ LOCAL_SECRET_JSON='<path_to_pull_secret>'
+  ```
+
+  Đối với `<path_to_pull_secret>`, hãy chỉ rõ đường dẫn tuyệt đối cùng tên tệp của pull secret (bí mật kéo ảnh) mà bạn đã tạo cho registry phản chiếu (mirror registry) của mình.
+
+  * Xuất biến bản sao phát hành:
+
+  ```shell
+  $ RELEASE_NAME="ocp-release"
+  ```
+
+  Đối với bản phát hành chính thức (production release), bạn phải chỉ định `ocp-release`.
+
+  * Xuất loại kiến trúc cho cụm của bạn:
+
+  ```shell
+  $ ARCHITECTURE=<cluster_architecture>
+  ```
+
+  Đối với `<cluster_architecture>`, hãy chỉ định kiến trúc của cụm, chẳng hạn như `x86_64`, `aarch64`, `s390x` hoặc `ppc64le`.
+
+  * Xuất đường dẫn đến thư mục sẽ lưu trữ các hình ảnh được sao chép (mirror):
+
+  ```shell
+  $ REMOVABLE_MEDIA_PATH=<path>
+  ```
+
+  Đối với `<path>`, hãy chỉ rõ đường dẫn đầy đủ, bao gồm cả ký tự gạch chéo (`/`) ở đầu.
+
+3. Sao chép các hình ảnh phiên bản sang registry phản chiếu (mirror registry):
+  * Nếu máy chủ phản chiếu (mirror host) của bạn không có quyền truy cập internet, hãy thực hiện các bước sau:
+    * Kết nối thiết bị lưu trữ rời với một hệ thống có kết nối internet. 
+    * Xem lại các hình ảnh và tệp cấu hình (configuration manifests) cần sao chép:
+
+    ```shell
+    $ oc adm release mirror -a ${LOCAL_SECRET_JSON}  \
+      --from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE} \
+      --to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} \
+      --to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE} --dry-run
+    ```
+
+    * Hãy ghi lại toàn bộ phần `imageContentSources` từ kết quả đầu ra của lệnh trước đó. Thông tin về các mirror (bản sao lưu trữ) là duy nhất cho kho lưu trữ được nhân bản của bạn; bạn bắt buộc phải thêm phần `imageContentSources` này vào tệp `install-config.yaml` trong quá trình cài đặt.
+    * Sao chép các hình ảnh (image) vào một thư mục trên phương tiện lưu trữ rời:
+
+    ```shell
+    $ oc adm release mirror -a ${LOCAL_SECRET_JSON} \
+      --to-dir=${REMOVABLE_MEDIA_PATH}/mirror quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE}
+    ```
+
+    * Đưa các tệp phương tiện vào môi trường mạng bị hạn chế và tải các hình ảnh đó lên kho lưu trữ container cục bộ.
+
+    ```shell
+    $ oc image mirror -a ${LOCAL_SECRET_JSON} \
+      --from-dir=${REMOVABLE_MEDIA_PATH}/mirror \
+      "file://openshift/release:${OCP_RELEASE}*" ${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}
+    ```
+
+  * Nếu registry container cục bộ được kết nối với máy chủ mirror, hãy thực hiện các thao tác sau:
+    * Đẩy trực tiếp các image phát hành (release images) vào registry cục bộ bằng cách sử dụng lệnh sau:
+
+    ```shell
+    $ oc adm release mirror -a ${LOCAL_SECRET_JSON}  \
+      --from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE} \
+      --to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} \
+      --to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE}
+    ```
+
+    Lệnh này truy xuất thông tin phát hành dưới dạng một bản tóm tắt (digest), trong đó bao gồm dữ liệu `imageContentSources` cần thiết cho quá trình cài đặt cụm (cluster) của bạn.
+
+    * Hãy lưu lại toàn bộ phần `imageContentSources` từ kết quả đầu ra của lệnh trên. Thông tin về các bản sao (mirror) là duy nhất đối với kho lưu trữ được sao chép (mirrored repository) của bạn; bạn bắt buộc phải thêm phần `imageContentSources` này vào tệp `install-config.yaml` trong quá trình cài đặt.
+
+    > **Lưu ý:** Trong quá trình sao chép, tên hình ảnh (image name) sẽ được điều chỉnh (patched) để trỏ đến Quay.io; do đó, khi kiểm tra trên máy ảo bootstrap, các hình ảnh trong `podman` sẽ hiển thị Quay.io là registry lưu trữ.
+
+4. Để tạo chương trình cài đặt dựa trên nội dung mà bạn đã sao chép (mirror), hãy giải nén nội dung đó và đính kèm vào bản phát hành:
+  * Nếu máy chủ lưu trữ bản sao (mirror host) của bạn không có quyền truy cập internet, hãy chạy lệnh sau:
+
+  ```shell
+  $ oc adm release extract -a ${LOCAL_SECRET_JSON} \
+    --command=openshift-baremetal-install \
+    "${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}"
+  ```
+
+  * Nếu registry container cục bộ được kết nối với máy chủ mirror, hãy chạy lệnh sau:
+
+  ```shell
+  $ oc adm release extract -a ${LOCAL_SECRET_JSON} \
+    --command=openshift-baremetal-install \
+    "${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE}"
+  ```
+
+  > **Quan trọng:** Để đảm bảo bạn sử dụng đúng các hình ảnh (image) cho phiên bản OpenShift Container Platform mà mình đã chọn, bạn phải giải nén chương trình cài đặt từ nội dung đã được sao chép (mirrored content). Bạn phải thực hiện bước này trên một máy tính có kết nối internet đang hoạt động. Nếu bạn đang ở trong môi trường không có kết nối internet (disconnected environment), hãy sử dụng cờ `--image` trong lệnh `must-gather` và trỏ đến hình ảnh tải trọng (payload image).
+
+5. Đối với các cụm sử dụng cơ sở hạ tầng do trình cài đặt cung cấp, hãy chạy lệnh sau:
+
+```shell
+$ openshift-baremetal-install
+```
+
+##### 3.3.17.3. Chỉnh sửa tệp install-config.yaml để sử dụng registry trong môi trường không kết nối internet (disconnected registry)
+Trên nút cung cấp (provisioner node), tệp `install-config.yaml `cần sử dụng thông tin xác thực tải xuống (pull-secret) mới được tạo từ tệp `pull-secret-update.txt`. Tệp `install-config.yaml` cũng phải chứa chứng chỉ và thông tin về registry của nút registry trong môi trường không kết nối internet.
+
+**Quy trình**
+
+1. Thêm chứng chỉ của nút registry trong môi trường không kết nối internet vào tệp `install-config.yaml`:
+
+```shell
+$ echo "additionalTrustBundle: |" >> install-config.yaml
+```
+
+Chứng chỉ cần nằm ngay sau dòng `"additionalTrustBundle: |"` và được thụt lề đúng cách, thường là thụt vào hai khoảng trắng.
+
+```shell
+$ sed -e 's/^/  /' /opt/registry/certs/domain.crt >> install-config.yaml
+```
+
+2. Thêm thông tin mirror cho registry vào tệp `install-config.yaml`:
+
+```shell
+$ echo "imageContentSources:" >> install-config.yaml
+$ echo "- mirrors:" >> install-config.yaml
+$ echo "  - registry.example.com:5000/ocp4/openshift4" >> install-config.yaml
+```
+
+Thay thế `registry.example.com` bằng tên miền đầy đủ của registry đó.
+
+```shell
+$ echo "  source: quay.io/openshift-release-dev/ocp-release" >> install-config.yaml
+$ echo "- mirrors:" >> install-config.yaml
+$ echo "  - registry.example.com:5000/ocp4/openshift4" >> install-config.yaml
+```
+
+Thay thế `registry.example.com` bằng tên miền đầy đủ của registry đó.
+
+```shell
+$ echo "  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev" >> install-config.yaml
+```
+
+#### 3.3.18. Danh mục kiểm tra xác thực trước khi cài đặt
+Đảm bảo rằng tất cả các bước cần thiết đã được hoàn tất trước khi cài đặt OpenShift Container Platform. 
+
+* ❏ Đã tải xuống trình cài đặt OpenShift Container Platform. 
+* ❏ Đã giải nén trình cài đặt OpenShift Container Platform. 
+* ❏ Đã cấu hình các tham số bắt buộc cho tệp `install-config.yaml`. 
+* ❏ Đã cấu hình tham số `hosts` cho tệp `install-config.yaml`. 
+* ❏ Đã cấu hình tham số `bmc` cho tệp `install-config.yaml`. 
+* ❏ Đã áp dụng các quy ước cho các giá trị được cấu hình trong trường địa chỉ `bmc`. 
+* ❏ Đã tạo các tệp manifest cho OpenShift Container Platform. 
+* ❏ (Tùy chọn) Đã triển khai các bộ định tuyến (router) trên các nút tính toán (compute node). 
+* ❏ (Tùy chọn) Đã tạo một registry trong môi trường không kết nối internet (disconnected registry). 
+* ❏ (Tùy chọn) Xác thực các thiết lập của registry trong môi trường không kết nối internet (nếu có sử dụng).
+
+### 3.4. Cài đặt cụm (cluster)
+Bạn có thể cài đặt một cụm sau khi đã thiết lập môi trường cho việc cài đặt OpenShift Container Platform. Hãy đảm bảo rằng bạn đã hoàn tất các điều kiện tiên quyết trước khi tiến hành cài đặt cụm.
+
+#### 3.4.1. Dọn dẹp các cài đặt trước đó
+Bạn phải loại bỏ các thành phần (artifact) còn sót lại từ bất kỳ lần triển khai không thành công nào trước khi thử triển khai lại OpenShift Container Platform.
+
+**Quy trình**
+
+1. Tắt nguồn tất cả các nút bare-metal (máy chủ vật lý) trước khi cài đặt cụm OpenShift Container Platform bằng cách chạy lệnh sau:
+
+```shell
+$ ipmitool -I lanplus -U <user> -P <password> -H <management_server_ip> power off
+```
+
+2. Hãy xóa bỏ mọi tài nguyên bootstrap cũ (nếu còn sót lại từ lần triển khai trước đó) bằng cách chạy tập lệnh sau:
+
+```shell
+for i in $(sudo virsh list | tail -n +3 | grep bootstrap | awk {'print $2'});
+do
+  sudo virsh destroy $i;
+  sudo virsh undefine $i;
+  sudo virsh vol-delete $i --pool $i;
+  sudo virsh vol-delete $i.ign --pool $i;
+  sudo virsh pool-destroy $i;
+  sudo virsh pool-undefine $i;
+done
+```
+
+3. Xóa các thành phần còn sót lại do quá trình cài đặt trước đó tạo ra bằng cách chạy lệnh sau:
+
+```shell
+$ cd ; /bin/rm -rf auth/ bootstrap.ign master.ign worker.ign metadata.json \
+  .openshift_install.log .openshift_install_state.json
+```
+
+4. Tạo lại các tệp manifest của OpenShift Container Platform bằng cách chạy lệnh sau:
+
+```shell
+$ ./openshift-baremetal-install --dir ~/clusterconfigs create manifests
+```
+
+#### 3.4.2. Triển khai cụm thông qua trình cài đặt OpenShift Container Platform
+Bạn có thể triển khai cụm bằng cách chạy trình cài đặt OpenShift Container Platform.
+
+**Quy trình**
+
+* Chạy trình cài đặt OpenShift Container Platform:
+
+```shell
+$ ./openshift-baremetal-install --dir ~/clusterconfigs --log-level debug create cluster
+```
+
+#### 3.4.3. Theo dõi tiến trình cài đặt
+Trong quá trình triển khai, bạn có thể kiểm tra trạng thái tổng thể của quá trình cài đặt bằng cách sử dụng lệnh `tail` đối với tệp nhật ký `.openshift_install.log` nằm trong thư mục cài đặt.
+
+**Quy trình**
+
+* Theo dõi tiến trình cài đặt bằng cách chạy lệnh sau:
+
+```shell
+$ tail -f /path/to/install-dir/.openshift_install.log
+```
+
+#### 3.4.4. Xác minh cấu hình địa chỉ IP tĩnh
+Hãy đảm bảo rằng tất cả các bước cần thiết đã được hoàn tất và xác minh rằng cấu hình mạng đang hoạt động bình thường.
+
+Nếu thiết lập dành riêng địa chỉ IP (DHCP reservation) cho một nút (node) trong cụm (cluster) chỉ định thời hạn thuê (lease) là vô hạn, thì sau khi trình cài đặt (installer) cung cấp (provision) nút đó thành công, tập lệnh điều phối (dispatcher script) sẽ kiểm tra cấu hình mạng của nút này.
+
+Nếu tập lệnh phát hiện cấu hình mạng chứa thời hạn thuê DHCP vô hạn, nó sẽ tạo một kết nối mới bằng cách sử dụng địa chỉ IP từ thời hạn thuê DHCP đó làm địa chỉ IP tĩnh.
+Lưu ý
+
+Tập lệnh điều phối có thể chạy trên các nút đã được cung cấp thành công trong khi quá trình cung cấp các nút khác trong cụm vẫn đang diễn ra.
+
+**Quy trình**
+
+1. Kiểm tra cấu hình giao diện mạng trên nút đó. 
+2. Tắt máy chủ DHCP, khởi động lại nút OpenShift Container Platform và đảm bảo rằng cấu hình mạng hoạt động bình thường.
+
+### 3.5. Khắc phục sự cố cài đặt
+Khắc phục các sự cố trong quá trình cài đặt OpenShift Container Platform để xác định và giải quyết những lỗi phát sinh khi triển khai.
+
+#### 3.5.1. Khắc phục sự cố quy trình của chương trình cài đặt
+Trước khi khắc phục sự cố trong môi trường cài đặt, điều quan trọng là phải hiểu rõ quy trình tổng thể của quá trình cài đặt trên phần cứng vật lý (bare metal) thông qua trình cài đặt (installer-provisioned installation).
+
+Các sơ đồ dưới đây minh họa quy trình khắc phục sự cố với các bước chi tiết cho môi trường này.
+
+**Hình 3.9. Quy trình khắc phục sự cố đối với các lỗi trong tệp `install-config.yaml` hoặc các trường hợp không thể truy cập vào hình ảnh RHCOS (RHCOS images)**
+![Hình 3.9](img/flow1.png)
+
+Sơ đồ này minh họa quy trình xử lý sự cố trong trường hợp tệp `install-config.yaml` bị lỗi hoặc không thể truy cập các ảnh (image) của Red Hat Enterprise Linux CoreOS (RHCOS). Hãy tham khảo phần "Khắc phục sự cố tệp `install-config.yaml`" để biết các gợi ý xử lý lỗi.
+
+**Hình 3.10. Quy trình xử lý sự cố đối với các vấn đề về máy ảo bootstrap (bootstrap VM), các máy ảo bootstrap không thể khởi động các nút (node) trong cụm (cluster), và cách kiểm tra nhật ký (log)**
+![Hình 3.10](img/flow2.png)
+
+Sơ đồ này minh họa quy trình xử lý sự cố đối với các vấn đề liên quan đến máy ảo khởi động (bootstrap VM), các máy ảo khởi động không thể khởi chạy các nút cụm (cluster node), cũng như cách kiểm tra nhật ký (log). Quy trình này không áp dụng khi cài đặt cụm OpenShift Container Platform mà không có mạng `provisioning`.
+
+**Hình 3.11. Quy trình xử lý sự cố đối với các nút cụm không thể khởi động qua PXE**
+![Hình 3.11](img/flow3.png)
+
+Sơ đồ này minh họa quy trình xử lý sự cố cho các nút (node) trong cụm không thể khởi động qua PXE. Nếu thực hiện cài đặt bằng phương thức phương tiện ảo (virtual media) thông qua Redfish, mỗi nút phải đáp ứng các yêu cầu tối thiểu về chương trình cơ sở (firmware) để chương trình cài đặt có thể triển khai nút đó. Để biết thêm chi tiết, hãy xem phần Yêu cầu về chương trình cơ sở (firmware) khi cài đặt bằng phương tiện ảo.
+
+**Hình 3.12. Quy trình xử lý sự cố từ trạng thái API không thể truy cập đến trạng thái cài đặt đã được xác thực**
+![Hình 3.12](img/flow4.png)
+
+Sơ đồ này minh họa quy trình khắc phục sự cố, từ trạng thái API không thể truy cập cho đến khi quá trình cài đặt được xác thực thành công.
+
+#### 3.5.2. Khắc phục sự cố tệp install-config.yaml
+Tệp cấu hình install-config.yaml đại diện cho tất cả các nút (node) thuộc cụm OpenShift Container Platform. Tệp này chứa các tùy chọn cần thiết, bao gồm (nhưng không giới hạn ở) apiVersion, baseDomain, imageContentSources và các địa chỉ IP ảo (virtual IP).
+
+Nếu xảy ra lỗi trong giai đoạn đầu triển khai cụm OpenShift Container Platform, nhiều khả năng lỗi nằm ở tệp cấu hình install-config.yaml.
+
+**Quy trình**
+
+1. Sử dụng các hướng dẫn trong phần "[YAML-tips](https://www.redhat.com/sysadmin/yaml-tips)" (mẹo làm việc với YAML). 
+2. Kiểm tra tính chính xác của cú pháp YAML bằng [syntax-check](http://www.yamllint.com/). 
+3. Xác minh rằng các ảnh (image) QEMU của Red Hat Enterprise Linux CoreOS (RHCOS) đã được định nghĩa đúng cách và có thể truy cập được thông qua URL được cung cấp trong tệp install-config.yaml bằng cách chạy lệnh sau:
+
+```shell
+$ curl -s -o /dev/null -I -w "%{http_code}\n" http://webserver.example.com:8080/rhcos-44.81.202004250133-0-qemu.<architecture>.qcow2.gz?sha256=7d884b46ee54fe87bbc3893bf2aa99af3b2d31f2e19ab5529c60636fbd0f1ce7
+```
+
+Nếu kết quả đầu ra là 200, nghĩa là có phản hồi hợp lệ từ máy chủ web đang lưu trữ hình ảnh VM khởi động (bootstrap VM image).
+
+#### 3.5.3. Khắc phục sự cố liên quan đến máy ảo bootstrap
+Chương trình cài đặt OpenShift Container Platform sẽ khởi tạo một máy ảo (VM) bootstrap; máy ảo này đảm nhận việc cung cấp (provisioning) các nút (node) cho cụm OpenShift Container Platform.
+
+**Quy trình**
+
+1. Khoảng 10 đến 15 phút sau khi bắt đầu chạy chương trình cài đặt, hãy kiểm tra xem máy ảo bootstrap đã hoạt động hay chưa bằng cách thực thi lệnh `virsh`:
+
+```shell
+$ sudo virsh list
+```
+
+Ví dụ đầu ra
+
+```
+ Id    Name                           State
+ --------------------------------------------
+ 12    openshift-xf6fq-bootstrap      running
+```
+
+> **Lưu ý:** Tên của máy ảo bootstrap luôn bao gồm tên cụm (cluster name) theo sau là một chuỗi ký tự ngẫu nhiên và kết thúc bằng từ "bootstrap".
+
+2. Nếu máy ảo bootstrap không chạy sau 10–15 phút, hãy kiểm tra xem dịch vụ libvirtd có đang chạy trên hệ thống hay không bằng cách sử dụng lệnh sau:
+
+```shell
+$ systemctl status libvirtd
+```
+
+Ví dụ đầu ra
+
+```
+● libvirtd.service - Virtualization daemon
+   Loaded: loaded (/usr/lib/systemd/system/libvirtd.service; enabled; vendor preset: enabled)
+   Active: active (running) since Tue 2020-03-03 21:21:07 UTC; 3 weeks 5 days ago
+     Docs: man:libvirtd(8)
+           https://libvirt.org
+ Main PID: 9850 (libvirtd)
+    Tasks: 20 (limit: 32768)
+   Memory: 74.8M
+   CGroup: /system.slice/libvirtd.service
+           ├─ 9850 /usr/sbin/libvirtd
+```
+
+Nếu máy ảo bootstrap đang hoạt động, hãy đăng nhập vào đó.
+
+3. Tìm địa chỉ IP của máy ảo bootstrap bằng cách chạy lệnh sau:
+
+```shell
+$ sudo virsh console example.com
+```
+
+Ví dụ đầu ra
+
+```
+Connected to domain example.com
+Escape character is ^]
+Red Hat Enterprise Linux CoreOS 43.81.202001142154.0 (Ootpa) 4.3
+SSH host key: SHA256:BRWJktXZgQQRY5zjuAV0IKZ4WM7i4TiUyMVanqu9Pqg (ED25519)
+SSH host key: SHA256:7+iKGA7VtG5szmk2jB5gl/5EZ+SNcJ3a2g23o0lnIio (ECDSA)
+SSH host key: SHA256:DH5VWhvhvagOTaLsYiVNse9ca+ZSW/30OOMed8rIGOc (RSA)
+ens3:  fd35:919d:4042:2:c7ed:9a9f:a9ec:7
+ens4: 172.22.0.2 fe80::1d05:e52e:be5d:263f
+localhost login:
+```
+
+> **Quan trọng:** Khi triển khai cụm OpenShift Container Platform mà không có mạng cung cấp (`provisioning` network), bạn phải sử dụng địa chỉ IP công cộng thay vì địa chỉ IP riêng (ví dụ: `172.22.0.2`).
+
+4. Sau khi có được địa chỉ IP, hãy đăng nhập vào máy ảo bootstrap bằng cách chạy lệnh ssh:
+
+> **Lưu ý:** Trong kết quả hiển thị trên bảng điều khiển (console) ở bước trước, bạn có thể sử dụng địa chỉ IPv6 do giao diện ens3 cung cấp hoặc địa chỉ IPv4 do giao diện ens4 cung cấp.
+
+```shell
+$ ssh core@172.22.0.2
+```
+
+Nếu bạn không đăng nhập thành công vào máy ảo bootstrap, có thể bạn đã gặp phải một trong các trường hợp sau:
+
+  * Bạn không thể kết nối tới mạng `172.22.0.0/24`. Hãy kiểm tra kết nối mạng giữa thiết bị cung cấp (provisioner) và cầu nối mạng cung cấp (`provisioning` network bridge). Vấn đề này có thể xảy ra nếu bạn đang sử dụng mạng cung cấp (`provisioning` network). 
+  * Bạn không thể kết nối tới máy ảo bootstrap thông qua mạng công cộng (public network). Khi cố gắng truy cập qua SSH bằng mạng `baremetal`, hãy kiểm tra kết nối trên máy chủ cung cấp (`provisioner` host), đặc biệt là tại cầu nối mạng baremetal (`baremetal` network bridge). 
+  * Bạn gặp lỗi "Permission denied (publickey,password,keyboard-interactive)" (Từ chối quyền truy cập). Khi cố gắng truy cập vào máy ảo bootstrap, lỗi từ chối quyền có thể xảy ra. Hãy xác minh rằng khóa SSH của người dùng đang cố gắng đăng nhập vào máy ảo đã được thiết lập trong tệp `install-config.yaml`.
+
+##### 3.5.3.1. Máy ảo bootstrap không thể khởi động các nút trong cụm (cluster nodes)
+Trong quá trình triển khai, có khả năng máy ảo bootstrap không khởi động được các nút trong cụm, khiến máy ảo này không thể cung cấp (provision) hình ảnh RHCOS cho các nút đó.
+
+Tình huống này có thể xảy ra do:
+
+* Gặp vấn đề với tệp `install-config.yaml`. 
+* Gặp sự cố với quyền truy cập mạng ngoài băng tần (out-of-band network access) khi sử dụng mạng bare-metal.
+
+Để xác minh vấn đề, bạn có thể kiểm tra ba container liên quan đến Ironic:
+
+* ironic
+* ironic-inspector
+
+**Quy trình**
+
+1. Đăng nhập vào máy ảo bootstrap bằng cách chạy lệnh sau:
+
+```shell
+$ ssh core@172.22.0.2
+```
+
+2. Kiểm tra nhật ký container bằng cách chạy lệnh sau:
+
+```shell
+$ sudo podman logs -f <container_name>
+```
+
+Thay thế `<container_name>` bằng một trong các giá trị: ironic hoặc ironic-inspector. Nếu bạn gặp sự cố trong đó các nút (node) thuộc mặt phẳng điều khiển (control plane) không khởi động được qua PXE, hãy kiểm tra pod ironic. Pod này chứa thông tin về quá trình khởi động các nút trong cụm (cluster), vì nó thực hiện thao tác đăng nhập vào các nút đó thông qua IPMI.
+
+**Kết quả**
+
+Các nút cụm (cluster node) có thể đang ở trạng thái BẬT (ON) khi quá trình triển khai bắt đầu.
+
+**Khắc phục sự cố**
+
+Hãy tắt nguồn các nút cụm OpenShift Container Platform trước khi bắt đầu cài đặt thông qua IPMI bằng cách chạy lệnh sau:
+
+```shell
+$ ipmitool -I lanplus -U root -P <password> -H <out_of_band_ip> power off
+```
+
+##### 3.5.3.2. Kiểm tra nhật ký (logs)
+Khi gặp sự cố trong quá trình tải xuống hoặc truy cập các hình ảnh (images) RHCOS, trước tiên hãy xác minh xem URL trong tệp cấu hình `install-config.yaml` có chính xác hay không.
+
+Xem ví dụ dưới đây về máy chủ web nội bộ lưu trữ các hình ảnh RHCOS:
+
+```
+bootstrapOSImage: http://<ip:port>/rhcos-43.81.202001142154.0-qemu.<architecture>.qcow2.gz?sha256=9d999f55ff1d44f7ed7c106508e5deecd04dc3c06095d34d36bf1cd127837e0c
+clusterOSImage: http://<ip:port>/rhcos-43.81.202001142154.0-openstack.<architecture>.qcow2.gz?sha256=a1bda656fa0892f7b936fdc6b6a6086bddaed5dafacedcd7a1e811abb78fe3b0
+```
+
+Container `coreos-downloader` tải xuống các tài nguyên từ một máy chủ web hoặc từ registry bên ngoài quay.io, tùy thuộc vào nội dung được chỉ định trong tệp cấu hình install-config.yaml. Hãy xác minh rằng container coreos-downloader đang hoạt động và kiểm tra nhật ký (logs) của nó nếu cần.
+
+**Quy trình**
+
+1. Đăng nhập vào máy ảo bootstrap bằng cách chạy lệnh sau:
+
+```shell
+$ ssh core@172.22.0.2
+```
+
+2. Kiểm tra trạng thái của container `coreos-downloader` bên trong máy ảo bootstrap bằng cách chạy lệnh sau:
+
+```shell
+$ sudo podman logs -f coreos-downloader
+```
+
+Nếu máy ảo bootstrap không thể truy cập URL dẫn đến các hình ảnh, hãy sử dụng lệnh curl để xác minh rằng máy ảo đó có thể truy cập được các hình ảnh này.
+
+3. Kiểm tra các nhật ký hệ thống và nhật ký khởi động (bootstrap logs) để xác minh xem tất cả các container đã được khởi chạy trong giai đoạn triển khai hay chưa:
+  * Kiểm tra các nhật ký hệ thống bằng cách chạy lệnh sau:
+
+  ```shell
+  $ journalctl -xe
+  ```
+
+  * Hãy kiểm tra các nhật ký (log) của `bootkube` để theo dõi tiến trình khởi động (bootstrap) bằng cách chạy lệnh sau:
+
+  ```shell
+  $ journalctl -b -f -u bootkube.service
+  ```
+
+4. Hãy xác minh rằng tất cả các pod — bao gồm `dnsmasq`, `mariadb`, `httpd` và `ironic` — đều đang chạy bằng cách sử dụng lệnh sau:
+
+```shell
+$ sudo podman ps
+```
+
+5. Nếu xảy ra sự cố với các pod, hãy kiểm tra nhật ký (log) của các container đang gặp vấn đề. Để kiểm tra nhật ký của dịch vụ ironic, hãy chạy lệnh sau:
+
+```shell
+$ sudo podman logs ironic
+```
+
+#### 3.5.4. Điều tra tình trạng Kubernetes API không khả dụng
+Khi Kubernetes API không khả dụng, hãy kiểm tra các nút (node) trong mặt phẳng điều khiển (control plane) để đảm bảo rằng chúng đang chạy các thành phần cần thiết. Ngoài ra, hãy kiểm tra cơ chế phân giải tên máy chủ (hostname resolution).
+
+**Quy trình**
+
+1. Đảm bảo rằng `etcd` đang chạy trên mỗi nút thuộc mặt phẳng điều khiển bằng cách thực thi lệnh sau:
+
+```shell
+$ sudo crictl logs $(sudo crictl ps --pod=$(sudo crictl pods --name=etcd-member --quiet) --quiet)
+```
+
+2. Nếu lệnh trước đó không thành công, hãy đảm bảo rằng Kubelet đã tạo các pod `etcd` bằng cách chạy lệnh sau:
+
+```shell
+$ sudo crictl pods --name=etcd-member
+```
+
+Nếu không có pod nào, hãy kiểm tra `etcd`.
+
+3. Hãy kiểm tra các nút trong cụm để đảm bảo chúng có tên miền đủ điều kiện (fully qualified domain name) thay vì chỉ là localhost.localdomain, bằng cách sử dụng lệnh sau:
+
+```shell
+$ hostname
+```
+
+Nếu tên máy chủ (hostname) chưa được thiết lập, hãy thiết lập tên máy chủ chính xác bằng cách chạy lệnh sau:
+
+```shell
+$ sudo hostnamectl set-hostname <hostname>
+```
+
+4. Hãy đảm bảo rằng mỗi nút đều có thông tin phân giải tên chính xác trên máy chủ DNS bằng cách chạy lệnh dig:
+
+```shell
+$ dig api.<cluster_name>.example.com
+```
+
+Ví dụ đầu ra
+
+```
+; <<>> DiG 9.11.4-P2-RedHat-9.11.4-26.P2.el8 <<>> api.<cluster_name>.example.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 37551
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 1, ADDITIONAL: 2
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+; COOKIE: 866929d2f8e8563582af23f05ec44203d313e50948d43f60 (good)
+;; QUESTION SECTION:
+;api.<cluster_name>.example.com. IN A
+
+;; ANSWER SECTION:
+api.<cluster_name>.example.com. 10800 IN  A 10.19.13.86
+
+;; AUTHORITY SECTION:
+<cluster_name>.example.com. 10800 IN NS <cluster_name>.example.com.
+
+;; ADDITIONAL SECTION:
+<cluster_name>.example.com. 10800 IN A  10.19.14.247
+
+;; Query time: 0 msec
+;; SERVER: 10.19.14.247#53(10.19.14.247)
+;; WHEN: Tue May 19 20:30:59 UTC 2020
+;; MSG SIZE  rcvd: 140
+```
+
+Kết quả đầu ra trong ví dụ trên cho thấy địa chỉ IP phù hợp cho VIP `api.<cluster_name>.example.com` là `10.19.13.86`. Địa chỉ IP này cần nằm trên mạng `baremetal`.
+
+#### 3.5.5. Khắc phục sự cố không khởi tạo được cụm (cluster)
+Chương trình cài đặt sử dụng Cluster Version Operator để tạo tất cả các thành phần của một cụm OpenShift Container Platform. Khi chương trình cài đặt không khởi tạo được cụm, bạn có thể truy xuất các thông tin quan trọng nhất từ các đối tượng ClusterVersion và ClusterOperator.
+
+**Quy trình**
+
+1. Kiểm tra đối tượng ClusterVersion bằng cách chạy lệnh sau:
+
+```shell
+$ oc --kubeconfig=${INSTALL_DIR}/auth/kubeconfig get clusterversion -o yaml
+```
+
+Ví dụ đầu ra
+
+```yaml
+apiVersion: config.openshift.io/v1
+kind: ClusterVersion
+metadata:
+  creationTimestamp: 2019-02-27T22:24:21Z
+  generation: 1
+  name: version
+  resourceVersion: "19927"
+  selfLink: /apis/config.openshift.io/v1/clusterversions/version
+  uid: 6e0f4cf8-3ade-11e9-9034-0a923b47ded4
+spec:
+  channel: stable-4.1
+  clusterID: 5ec312f9-f729-429d-a454-61d4906896ca
+status:
+  availableUpdates: null
+  conditions:
+  - lastTransitionTime: 2019-02-27T22:50:30Z
+    message: Done applying 4.1.1
+    status: "True"
+    type: Available
+  - lastTransitionTime: 2019-02-27T22:50:30Z
+    status: "False"
+    type: Failing
+  - lastTransitionTime: 2019-02-27T22:50:30Z
+    message: Cluster version is 4.1.1
+    status: "False"
+    type: Progressing
+  - lastTransitionTime: 2019-02-27T22:24:31Z
+    message: "Unable to retrieve available updates: unknown version 4.1.1"
+    reason: RemoteFailed
+    status: "False"
+    type: RetrievedUpdates
+  desired:
+    image: registry.svc.ci.openshift.org/openshift/origin-release@sha256:91e6f754975963e7db1a9958075eb609ad226968623939d262d1cf45e9dbc39a
+    version: 4.1.1
+  history:
+  - completionTime: 2019-02-27T22:50:30Z
+    image: registry.svc.ci.openshift.org/openshift/origin-release@sha256:91e6f754975963e7db1a9958075eb609ad226968623939d262d1cf45e9dbc39a
+    startedTime: 2019-02-27T22:24:31Z
+    state: Completed
+    version: 4.1.1
+  observedGeneration: 1
+  versionHash: Wa7as_ik1qE=
+```
+
+2. Xem các điều kiện bằng cách chạy lệnh sau:
+
+```shell
+$ oc --kubeconfig=${INSTALL_DIR}/auth/kubeconfig get clusterversion version \
+ -o=jsonpath='{range .status.conditions[*]}{.type}{" "}{.status}{" "}{.message}{"\n"}{end}'
+```
+
+Một số trạng thái quan trọng nhất bao gồm `Failing`, `Available` và `Progressing`.
+
+Ví dụ đầu ra
+
+```
+Available True Done applying 4.1.1
+Failing False
+Progressing False Cluster version is 4.0.0-0.alpha-2019-02-26-194020
+RetrievedUpdates False Unable to retrieve available updates: unknown version 4.1.1
+```
+
+3. Kiểm tra đối tượng `ClusterOperator` bằng cách chạy lệnh sau:
+
+```shell
+$ oc --kubeconfig=${INSTALL_DIR}/auth/kubeconfig get clusteroperator
+```
+
+Lệnh này trả về trạng thái của các Operator trong cụm.
+
+Ví dụ về kết quả đầu ra
+
+```
+NAME                                  VERSION   AVAILABLE   PROGRESSING   FAILING   SINCE
+cluster-baremetal-operator                      True        False         False     17m
+cluster-autoscaler                              True        False         False     17m
+cluster-storage-operator                        True        False         False     10m
+console                                         True        False         False     7m21s
+dns                                             True        False         False     31m
+image-registry                                  True        False         False     9m58s
+ingress                                         True        False         False     10m
+kube-apiserver                                  True        False         False     28m
+kube-controller-manager                         True        False         False     21m
+kube-scheduler                                  True        False         False     25m
+machine-api                                     True        False         False     17m
+machine-config                                  True        False         False     17m
+marketplace-operator                            True        False         False     10m
+monitoring                                      True        False         False     8m23s
+network                                         True        False         False     13m
+node-tuning                                     True        False         False     11m
+openshift-apiserver                             True        False         False     15m
+openshift-authentication                        True        False         False     20m
+openshift-cloud-credential-operator             True        False         False     18m
+openshift-controller-manager                    True        False         False     10m
+openshift-samples                               True        False         False     8m42s
+operator-lifecycle-manager                      True        False         False     17m
+service-ca                                      True        False         False     30m
+```
+
+4. Kiểm tra các Operator cụm riêng lẻ bằng cách chạy lệnh sau:
+
+```shell
+$ oc --kubeconfig=${INSTALL_DIR}/auth/kubeconfig get clusteroperator <operator> -oyaml
+```
+
+Thay thế `<operator>` bằng tên của một Operator cụm (cluster Operator). Lệnh này hữu ích để xác định lý do tại sao một Operator cụm chưa đạt đến trạng thái `Available` (Sẵn sàng) hoặc đang ở trạng thái `Failed` (Thất bại).
+
+Ví dụ đầu ra
+
+```yaml
+apiVersion: config.openshift.io/v1
+kind: ClusterOperator
+metadata:
+  creationTimestamp: 2019-02-27T22:47:04Z
+  generation: 1
+  name: monitoring
+  resourceVersion: "24677"
+  selfLink: /apis/config.openshift.io/v1/clusteroperators/monitoring
+  uid: 9a6a5ef9-3ae1-11e9-bad4-0a97b6ba9358
+spec: {}
+status:
+  conditions:
+  - lastTransitionTime: 2019-02-27T22:49:10Z
+    message: Successfully rolled out the stack.
+    status: "True"
+    type: Available
+  - lastTransitionTime: 2019-02-27T22:49:10Z
+    status: "False"
+    type: Progressing
+  - lastTransitionTime: 2019-02-27T22:49:10Z
+    status: "False"
+    type: Failing
+  extension: null
+  relatedObjects: null
+  version: ""
+```
+
+5. Kiểm tra điều kiện trạng thái của Cluster Operator bằng cách chạy lệnh sau:
+
+```shell
+$ oc --kubeconfig=${INSTALL_DIR}/auth/kubeconfig get clusteroperator <operator> \
+  -o=jsonpath='{range .status.conditions[*]}{.type}{" "}{.status}{" "}{.message}{"\n"}{end}'
+```
+
+Thay thế `<operator>` bằng tên của một trong các toán tử ở trên.
+
+Ví dụ kết quả đầu ra
+
+```
+Available True Successfully rolled out the stack
+Progressing False
+Failing False
+```
+
+6. Truy xuất danh sách các đối tượng thuộc sở hữu của cluster Operator bằng cách chạy lệnh sau:
+
+```shell
+$ oc --kubeconfig=${INSTALL_DIR}/auth/kubeconfig get clusteroperator kube-apiserver \
+  -o=jsonpath='{.status.relatedObjects}'
+```
+
+Ví dụ đầu ra
+
+```
+[map[resource:kubeapiservers group:operator.openshift.io name:cluster] map[group: name:openshift-config resource:namespaces] map[group: name:openshift-config-managed resource:namespaces] map[group: name:openshift-kube-apiserver-operator resource:namespaces] map[group: name:openshift-kube-apiserver resource:namespaces]]
+```
+
+#### 3.5.6. Khắc phục sự cố không lấy được URL của bảng điều khiển (console)
+Chương trình cài đặt truy xuất URL cho bảng điều khiển OpenShift Container Platform bằng cách sử dụng `[route][route-object]` trong không gian tên (namespace) `openshift-console`.
+
+Nếu chương trình cài đặt không thể truy xuất URL cho bảng điều khiển, hãy thực hiện quy trình sau.
+
+**Quy trình**
+
+1. Kiểm tra xem bộ định tuyến (router) của bảng điều khiển đang ở trạng thái `Available` (Khả dụng) hay `Failing` (Đang gặp lỗi) bằng cách chạy lệnh sau:
+
+```shell
+$ oc --kubeconfig=${INSTALL_DIR}/auth/kubeconfig get clusteroperator console -oyaml
+```
+
+Ví dụ đầu ra
+
+```yaml
+apiVersion: config.openshift.io/v1
+kind: ClusterOperator
+metadata:
+  creationTimestamp: 2019-02-27T22:46:57Z
+  generation: 1
+  name: console
+  resourceVersion: "19682"
+  selfLink: /apis/config.openshift.io/v1/clusteroperators/console
+  uid: 960364aa-3ae1-11e9-bad4-0a97b6ba9358
+spec: {}
+status:
+  conditions:
+  - lastTransitionTime: 2019-02-27T22:46:58Z
+    status: "False"
+    type: Failing
+  - lastTransitionTime: 2019-02-27T22:50:12Z
+    status: "False"
+    type: Progressing
+  - lastTransitionTime: 2019-02-27T22:50:12Z
+    status: "True"
+    type: Available
+  - lastTransitionTime: 2019-02-27T22:46:57Z
+    status: "True"
+    type: Upgradeable
+  extension: null
+  relatedObjects:
+  - group: operator.openshift.io
+    name: cluster
+    resource: consoles
+  - group: config.openshift.io
+    name: cluster
+    resource: consoles
+  - group: oauth.openshift.io
+    name: console
+    resource: oauthclients
+  - group: ""
+    name: openshift-console-operator
+    resource: namespaces
+  - group: ""
+    name: openshift-console
+    resource: namespaces
+  versions: null
+```
+
+2. Lấy URL của bảng điều khiển theo cách thủ công bằng cách chạy lệnh sau:
+
+```shell
+$ oc --kubeconfig=${INSTALL_DIR}/auth/kubeconfig get route console -n openshift-console \
+  -o=jsonpath='{.spec.host}' console-openshift-console.apps.adahiya-1.devcluster.openshift.com
+```
+
+#### 3.5.7. Khắc phục sự cố không thêm được chứng chỉ ingress vào kubeconfig
+Nếu chương trình cài đặt không thêm được chứng chỉ ingress mặc định vào tệp ${INSTALL_DIR}/auth/kubeconfig, hãy truy xuất chứng chỉ đó từ cụm (cluster) rồi thêm vào.
+
+Thông thường, chương trình cài đặt sẽ tự động thêm chứng chỉ ingress mặc định vào danh sách các cơ quan cấp chứng chỉ (CA) khách tin cậy trong tệp `${INSTALL_DIR}/auth/kubeconfig`.
+
+**Quy trình**
+
+1. Truy xuất chứng chỉ từ cụm bằng cách chạy lệnh sau:
+
+```shell
+$ oc --kubeconfig=${INSTALL_DIR}/auth/kubeconfig get configmaps default-ingress-cert \
+  -n openshift-config-managed -o=jsonpath='{.data.ca-bundle\.crt}'
+```
+
+Ví dụ đầu ra
+
+```
+-----BEGIN CERTIFICATE-----
+MIIC/TCCAeWgAwIBAgIBATANBgkqhkiG9w0BAQsFADAuMSwwKgYDVQQDDCNjbHVz
+dGVyLWluZ3Jlc3Mtb3BlcmF0b3JAMTU1MTMwNzU4OTAeFw0xOTAyMjcyMjQ2Mjha
+Fw0yMTAyMjYyMjQ2MjlaMC4xLDAqBgNVBAMMI2NsdXN0ZXItaW5ncmVzcy1vcGVy
+YXRvckAxNTUxMzA3NTg5MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
+uCA4fQ+2YXoXSUL4h/mcvJfrgpBfKBW5hfB8NcgXeCYiQPnCKblH1sEQnI3VC5Pk
+2OfNCF3PUlfm4i8CHC95a7nCkRjmJNg1gVrWCvS/ohLgnO0BvszSiRLxIpuo3C4S
+EVqqvxValHcbdAXWgZLQoYZXV7RMz8yZjl5CfhDaaItyBFj3GtIJkXgUwp/5sUfI
+LDXW8MM6AXfuG+kweLdLCMm3g8WLLfLBLvVBKB+4IhIH7ll0buOz04RKhnYN+Ebw
+tcvFi55vwuUCWMnGhWHGEQ8sWm/wLnNlOwsUz7S1/sW8nj87GFHzgkaVM9EOnoNI
+gKhMBK9ItNzjrP6dgiKBCQIDAQABoyYwJDAOBgNVHQ8BAf8EBAMCAqQwEgYDVR0T
+AQH/BAgwBgEB/wIBADANBgkqhkiG9w0BAQsFAAOCAQEAq+vi0sFKudaZ9aUQMMha
+CeWx9CZvZBblnAWT/61UdpZKpFi4eJ2d33lGcfKwHOi2NP/iSKQBebfG0iNLVVPz
+vwLbSG1i9R9GLdAbnHpPT9UG6fLaDIoKpnKiBfGENfxeiq5vTln2bAgivxrVlyiq
++MdDXFAWb6V4u2xh6RChI7akNsS3oU9PZ9YOs5e8vJp2YAEphht05X0swA+X8V8T
+C278FFifpo0h3Q0Dbv8Rfn4UpBEtN4KkLeS+JeT+0o2XOsFZp7Uhr9yFIodRsnNo
+H/Uwmab28ocNrGNiEVaVH6eTTQeeZuOdoQzUbClElpVmkrNGY0M42K0PvOQ/e7+y
+AQ==
+-----END CERTIFICATE-----
+```
+
+2. Thêm chứng chỉ vào trường `client-certificate-authority-data` trong tệp `${INSTALL_DIR}/auth/kubeconfig`.
+
+#### 3.5.8. Khắc phục sự cố truy cập SSH vào các nút (node) trong cụm
+Để tăng cường bảo mật, theo mặc định, bạn không thể truy cập SSH vào cụm từ bên ngoài. Tuy nhiên, bạn có thể truy cập các nút điều khiển (control plane node) và các nút worker (worker node) từ nút cung cấp (provisioner node). Nếu bạn không thể truy cập SSH vào các nút trong cụm từ nút cung cấp, có thể các nút đó đang chờ phản hồi từ máy ảo khởi động (bootstrap VM).
+
+Các nút điều khiển lấy cấu hình khởi động từ máy ảo khởi động; nếu không lấy được cấu hình này, chúng sẽ không thể khởi động thành công.
+
+**Quy trình**
+
+1. Nếu có quyền truy cập vật lý vào các nút, hãy kiểm tra đầu ra trên bảng điều khiển (console output) của chúng để xác định xem quá trình khởi động đã hoàn tất thành công hay chưa. Nếu các nút vẫn đang trong quá trình lấy cấu hình khởi động, có thể đã xảy ra sự cố với máy ảo khởi động (bootstrap VM). 
+2. Đảm bảo rằng bạn đã cấu hình thiết lập `sshKey: '<ssh_pub_key>'` trong tệp `install-config.yaml`, trong đó `<ssh_pub_key>` là khóa công khai (public key) của người dùng `kni` trên nút cung cấp (provisioner node).
+
+#### 3.5.9. Các nút cụm (cluster nodes) không khởi động qua PXE
+Khi các nút trong cụm OpenShift Container Platform không khởi động qua PXE, hãy thực hiện các bước kiểm tra khắc phục sự cố trên những nút đó.
+
+Quy trình này không áp dụng cho trường hợp cài đặt cụm OpenShift Container Platform mà không sử dụng mạng cung cấp (provisioning network).
+
+**Quy trình**
+
+1. Kiểm tra khả năng kết nối mạng tới mạng cung cấp (provisioning network). 
+2. Đảm bảo rằng PXE đã được bật trên giao diện mạng (NIC) dành cho mạng cung cấp và đã được tắt trên tất cả các giao diện mạng khác. 
+3. Xác minh rằng tệp cấu hình `install-config.yaml` bao gồm tham số `rootDeviceHints` và địa chỉ MAC khởi động (boot MAC address) cho giao diện mạng được kết nối với mạng cung cấp. 
+
+Ví dụ:
+
+  * Các thiết lập cho nút mặt phẳng điều khiển (control plane node)
+
+  ```
+  bootMACAddress: 24:6E:96:1B:96:90 # MAC of bootable provisioning NIC
+  ```
+
+  * Cấu hình nút tính toán
+
+  ```
+  bootMACAddress: 24:6E:96:1B:96:90 # MAC of bootable provisioning NIC
+  ```
+
+#### 3.5.10. Quá trình cài đặt không tạo ra các worker node
+Chương trình cài đặt không trực tiếp cung cấp (provision) các worker node. Thay vào đó, Machine API Operator sẽ thực hiện tăng hoặc giảm số lượng node trên các nền tảng được hỗ trợ.
+
+Nếu các worker node không được tạo sau 15 đến 20 phút (thời gian này phụ thuộc vào tốc độ kết nối internet của cụm), hãy kiểm tra Machine API Operator.
+
+**Quy trình**
+
+1. Kiểm tra Machine API Operator bằng cách chạy lệnh sau:
+
+```shell
+$ oc --kubeconfig=${INSTALL_DIR}/auth/kubeconfig \
+  --namespace=openshift-machine-api get deployments
+```
+
+Nếu `${INSTALL_DIR}` chưa được thiết lập trong môi trường của bạn, hãy thay thế giá trị đó bằng tên của thư mục cài đặt.
+
+Ví dụ đầu ra
+
+```
+NAME                          READY   UP-TO-DATE   AVAILABLE   AGE
+cluster-autoscaler-operator   1/1     1            1           86m
+cluster-baremetal-operator    1/1     1            1           86m
+machine-api-controllers       1/1     1            1           85m
+machine-api-operator          1/1     1            1           86m
+```
+
+2. Kiểm tra nhật ký của bộ điều khiển máy bằng cách chạy lệnh sau:
+
+```shell
+$ oc --kubeconfig=${INSTALL_DIR}/auth/kubeconfig \
+  --namespace=openshift-machine-api logs deployments/machine-api-controllers \
+  --container=machine-controller
+```
+
+#### 3.5.11. Khắc phục sự cố với Cluster Network Operator
+Để khắc phục các sự cố liên quan đến Cluster Network Operator trong quá trình cài đặt, hãy xác minh rằng cấu hình mạng đã tồn tại và đang hoạt động.
+
+Cluster Network Operator triển khai các thành phần mạng từ giai đoạn đầu của quá trình cài đặt — sau khi các nút mặt phẳng điều khiển (control plane nodes) đã khởi chạy, nhưng trước khi chương trình cài đặt loại bỏ mặt phẳng điều khiển khởi động (bootstrap control plane). Các vấn đề phát sinh với Operator này có thể là dấu hiệu cho thấy chương trình cài đặt đang gặp lỗi.
+
+**Quy trình**
+
+1. Đảm bảo cấu hình mạng đã tồn tại bằng cách chạy lệnh sau:
+
+```shell
+$ oc get network -o yaml cluster
+```
+
+Nếu nó không tồn tại, nghĩa là chương trình cài đặt đã không tạo ra nó. Để tìm nguyên nhân, hãy chạy lệnh sau:
+
+```shell
+$ openshift-install create manifests
+```
+
+Hãy xem xét các tệp manifest để xác định lý do tại sao chương trình cài đặt không tạo cấu hình mạng.
+
+2. Đảm bảo mạng đang hoạt động bằng cách nhập lệnh sau:
+
+```shell
+$ oc get po -n openshift-network-operator
+```
+
+#### 3.5.12. Không thể phát hiện các máy chủ vật lý (bare-metal) mới thông qua BMC
+Trong một số trường hợp, chương trình cài đặt không thể phát hiện các máy chủ vật lý mới và đưa ra thông báo lỗi, do không thể gắn (mount) tài nguyên lưu trữ phương tiện ảo (virtual media share) từ xa.
+
+Ví dụ:
+
+```
+ProvisioningError 51s metal3-baremetal-controller Image provisioning failed: Deploy step deploy.deploy failed with BadRequestError: HTTP POST
+https://<bmc_address>/redfish/v1/Managers/iDRAC.Embedded.1/VirtualMedia/CD/Actions/VirtualMedia.InsertMedia
+returned code 400.
+Base.1.8.GeneralError: A general error has occurred. See ExtendedInfo for more information
+Extended information: [
+  {
+    "Message": "Unable to mount remote share https://<ironic_address>/redfish/boot-<uuid>.iso.",
+    "MessageArgs": [
+      "https://<ironic_address>/redfish/boot-<uuid>.iso"
+    ],
+    "MessageArgs@odata.count": 1,
+    "MessageId": "IDRAC.2.5.RAC0720",
+    "RelatedProperties": [
+      "#/Image"
+    ],
+    "RelatedProperties@odata.count": 1,
+    "Resolution": "Retry the operation.",
+    "Severity": "Informational"
+  }
+].
+```
+
+Trong trường hợp này, nếu bạn đang sử dụng phương tiện ảo (virtual media) với một cơ quan cấp chứng chỉ (certificate authority - CA) không xác định, bạn có thể định cấu hình các thiết lập chia sẻ tệp từ xa trên bộ điều khiển quản lý bo mạch chủ (Baseboard Management Controller - BMC) để tin tưởng cơ quan cấp chứng chỉ đó, nhằm tránh xảy ra lỗi này.
+
+> **Lưu ý:** Giải pháp này đã được kiểm thử trên OpenShift Container Platform 4.11 với Dell iDRAC 9 và phiên bản chương trình cơ sở (firmware) 5.10.50.
+
+#### 3.5.13. Khắc phục sự cố các worker node không thể tham gia cụm (cluster)
+Nếu các worker node không thể tham gia cụm, hãy đảm bảo rằng tất cả các node đều có thể phân giải tên miền `api-int.<cluster_name>.<base_domain>`.
+
+Các cụm do trình cài đặt (installer) thiết lập sẽ đi kèm với một máy chủ DNS chứa bản ghi DNS cho URL `api-int.<cluster_name>.<base_domain>`. Nếu các node trong cụm sử dụng máy chủ DNS bên ngoài hoặc máy chủ DNS thượng nguồn (upstream) để phân giải URL này mà không có bản ghi tương ứng, các worker node có thể không tham gia được vào cụm.
+
+Hãy đảm bảo rằng tất cả các node trong cụm đều có thể phân giải tên miền này.
+
+**Quy trình**
+
+1. Thêm bản ghi DNS A/AAAA hoặc CNAME để xác định bộ cân bằng tải (load balancer) API trong nội bộ hệ thống. Ví dụ: nếu sử dụng `dnsmasq`, hãy sửa đổi tệp cấu hình `dnsmasq.conf` bằng cách chạy lệnh sau:
+
+```shell
+$ sudo nano /etc/dnsmasq.conf
+```
+
+Ví dụ đầu ra
+
+```
+address=/api-int.<cluster_name>.<base_domain>/<IP_address>
+address=/api-int.mycluster.example.com/192.168.1.10
+address=/api-int.mycluster.example.com/2001:0db8:85a3:0000:0000:8a2e:0370:7334
+```
+
+2. Thêm bản ghi DNS PTR để xác định bộ cân bằng tải API trong nội bộ hệ thống. Ví dụ: khi sử dụng dnsmasq, hãy sửa đổi tệp cấu hình `dnsmasq.conf` bằng cách chạy lệnh sau:
+
+```shell
+$ sudo nano /etc/dnsmasq.conf
+```
+
+Ví dụ đầu ra
+
+```
+ptr-record=<IP_address>.in-addr.arpa,api-int.<cluster_name>.<base_domain>
+ptr-record=10.1.168.192.in-addr.arpa,api-int.mycluster.example.com
+```
+
+3. Khởi động lại máy chủ DNS. Ví dụ, khi sử dụng dnsmasq, hãy chạy lệnh sau:
+
+```shell
+$ sudo systemctl restart dnsmasq
+```
+
+Các bản ghi này phải có thể phân giải được từ tất cả các nút trong cụm.
+
+#### 3.5.14. Dọn dẹp các cài đặt trước đó
+Bạn phải loại bỏ các thành phần còn sót lại từ bất kỳ lần triển khai không thành công nào trước khi thử triển khai lại OpenShift Container Platform.
+
+**Quy trình**
+
+1. Tắt tất cả các nút bare-metal (máy chủ vật lý) trước khi cài đặt cụm OpenShift Container Platform bằng cách chạy lệnh sau:
+
+```shell
+$ ipmitool -I lanplus -U <user> -P <password> -H <management_server_ip> power off
+```
+
+2. Hãy xóa bỏ mọi tài nguyên bootstrap cũ (nếu còn sót lại từ lần triển khai trước đó) bằng cách chạy tập lệnh sau:
+
+```shell
+for i in $(sudo virsh list | tail -n +3 | grep bootstrap | awk {'print $2'});
+do
+  sudo virsh destroy $i;
+  sudo virsh undefine $i;
+  sudo virsh vol-delete $i --pool $i;
+  sudo virsh vol-delete $i.ign --pool $i;
+  sudo virsh pool-destroy $i;
+  sudo virsh pool-undefine $i;
+done
+```
+
+3. Xóa các thành phần còn sót lại do quá trình cài đặt trước đó tạo ra bằng cách chạy lệnh sau:
+
+```shell
+$ cd ; /bin/rm -rf auth/ bootstrap.ign master.ign worker.ign metadata.json \
+  .openshift_install.log .openshift_install_state.json
+```
+
+4. Tạo lại các tệp manifest của OpenShift Container Platform bằng cách chạy lệnh sau:
+
+```shell
+$ ./openshift-baremetal-install --dir ~/clusterconfigs create manifests
+```
+
+#### 3.5.15. Các vấn đề khi tạo registry
+Khi tạo một registry không kết nối với mạng bên ngoài (disconnected registry), bạn có thể gặp lỗi "User Not Authorized" (Người dùng không được ủy quyền) trong quá trình sao chép (mirror) registry. Lỗi này có thể xảy ra nếu bạn quên thêm thông tin xác thực mới vào tệp `pull-secret.txt` hiện có.
+
+**Quy trình**
+
+1. Kiểm tra để đảm bảo rằng quá trình xác thực đã thành công bằng cách chạy lệnh sau:
+
+```shell
+$ /usr/local/bin/oc adm release mirror \
+  -a pull-secret-update.json
+  --from=$UPSTREAM_REPO \
+  --to-release-image=$LOCAL_REG/$LOCAL_REPO:${VERSION} \
+  --to=$LOCAL_REG/$LOCAL_REPO
+```
+
+> **Lưu ý:** Ví dụ về kết quả đầu ra của các biến được sử dụng để phản ánh các ảnh cài đặt (install images):
+> 
+> ```
+> UPSTREAM_REPO=${RELEASE_IMAGE}
+> LOCAL_REG=<registry_FQDN>:<registry_port>
+> LOCAL_REPO='ocp4/openshift4'
+> ```
+> 
+> Các giá trị của `RELEASE_IMAGE` và `VERSION` đã được thiết lập trong bước "Truy xuất trình cài đặt OpenShift" (Retrieving OpenShift Installer) thuộc phần "Thiết lập môi trường để cài đặt OpenShift".
+
+2. Sau khi sao chép registry, hãy xác nhận rằng bạn có thể truy cập nó trong môi trường không kết nối mạng bằng cách chạy lệnh sau:
+
+```shell
+$ curl -k -u <user>:<password> https://registry.example.com:<registry_port>/v2/_catalog
+  {"repositories":["<Repo_Name>"]}
+```
+
+#### 3.5.16. Các vấn đề khác
+Hãy xem qua các vấn đề khác liên quan đến OpenShift Container Platform để xác định và giải quyết những lỗi triển khai ít gặp trong cụm (cluster) của bạn.
+
+##### 3.5.16.1. Khắc phục lỗi mạng runtime chưa sẵn sàng (runtime network not ready)
+Hãy khắc phục lỗi mạng runtime chưa sẵn sàng trong cụm OpenShift Container Platform của bạn để khôi phục khả năng giao tiếp giữa các nút (node).
+
+Sau khi triển khai cụm, bạn có thể gặp phải lỗi sau:
+
+```
+runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:Network plugin returns error: Missing CNI default network
+```
+
+Cluster Network Operator chịu trách nhiệm triển khai các thành phần mạng dựa trên một đối tượng đặc biệt được tạo bởi chương trình cài đặt. Thành phần này hoạt động từ rất sớm trong quá trình cài đặt: sau khi các nút (node) thuộc mặt phẳng điều khiển (control plane) đã khởi chạy, nhưng trước khi mặt phẳng điều khiển khởi động (bootstrap control plane) bị loại bỏ. Những vấn đề liên quan đến thành phần này có thể là dấu hiệu cho thấy các trục trặc tinh vi hơn trong chương trình cài đặt, chẳng hạn như độ trễ kéo dài khi khởi chạy các nút thuộc mặt phẳng điều khiển hoặc các vấn đề trong giao tiếp với `apiserver`.
+
+**Quy trình**
+
+1. Kiểm tra các pod trong namespace `openshift-network-operator` bằng cách chạy lệnh sau:
+
+```shell
+$ oc get all -n openshift-network-operator
+```
+
+Ví dụ đầu ra
+
+```
+NAME                                    READY STATUS            RESTARTS   AGE
+pod/network-operator-69dfd7b577-bg89v   0/1   ContainerCreating 0          149m
+```
+
+2. Trên nút `provisioner`, hãy xác định xem cấu hình mạng có tồn tại hay không bằng cách chạy lệnh sau:
+
+```shell
+$ kubectl get network.config.openshift.io cluster -oyaml
+```
+
+Ví dụ đầu ra
+
+```yaml
+apiVersion: config.openshift.io/v1
+kind: Network
+metadata:
+  name: cluster
+spec:
+  serviceNetwork:
+  - 172.30.0.0/16
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  networkType: OVNKubernetes
+```
+
+Nếu nó không tồn tại, nghĩa là chương trình cài đặt đã không tạo ra nó. Để xác định lý do tại sao chương trình cài đặt không tạo ra nó, hãy chạy lệnh sau:
+
+```shell
+$ openshift-install create manifests
+```
+
+3. Kiểm tra xem network-operator có đang chạy hay không bằng cách thực thi lệnh sau:
+
+```shell
+$ kubectl -n openshift-network-operator get pods
+```
+
+4. Truy xuất các tệp nhật ký bằng cách chạy lệnh sau:
+
+```shell
+$ kubectl -n openshift-network-operator logs -l "name=network-operator"
+```
+
+Trên các cụm máy chủ có tính khả dụng cao với ba hoặc nhiều hơn ba nút điều khiển, Operator sẽ thực hiện bầu chọn lãnh đạo và tất cả các Operator khác sẽ ở chế độ ngủ. Để biết thêm chi tiết, hãy xem phần [Khắc phục sự cố](https://github.com/openshift/installer/blob/master/docs/user/troubleshooting.md).
+
+##### 3.5.16.2. Khắc phục thông báo lỗi "No disk found with matching rootDeviceHints"
+Để đảm bảo trình cài đặt có thể xác định vị trí và cấu hình ổ đĩa lưu trữ đích trên nút (node) của bạn, hãy khắc phục lỗi "No disk found with matching rootDeviceHints".
+
+Sau khi triển khai cụm (cluster), bạn có thể gặp thông báo lỗi sau:
+
+```
+No disk found with matching rootDeviceHints
+```
+
+Để khắc phục thông báo lỗi "No disk found with matching rootDeviceHints", hãy thực hiện giải pháp tạm thời sau đây:
+
+**Quy trình**
+
+1. Thay đổi `rootDeviceHints` thành `minSizeGigabytes: 300`.
+2. Sau khi thay đổi các thiết lập `rootDeviceHints`, hãy khởi động CoreOS, sau đó xác minh thông tin ổ đĩa bằng cách chạy lệnh sau:
+
+```shell
+$ udevadm info /dev/sda
+```
+
+Nếu bạn đang sử dụng các máy chủ DL360 Gen 10, hãy lưu ý rằng chúng có một khe cắm thẻ SD có thể được gán tên thiết bị là /dev/sda. Nếu không có thẻ SD nào được lắp trong máy chủ, điều này có thể gây ra xung đột. Hãy đảm bảo rằng khe cắm thẻ SD đã bị vô hiệu hóa trong cài đặt BIOS của máy chủ.
+
+Nếu giải pháp thay thế `minSizeGigabytes` không đáp ứng được các yêu cầu, bạn có thể cần hoàn nguyên `rootDeviceHints` về giá trị `/dev/sda`. Thay đổi này cho phép các ảnh (image) Ironic khởi động thành công.
+
+Một phương pháp khác để khắc phục vấn đề này là sử dụng ID sê-ri (serial ID) của ổ đĩa. Tuy nhiên, cần lưu ý rằng việc tìm kiếm ID sê-ri có thể khá phức tạp và có thể khiến tệp cấu hình trở nên khó đọc hơn. Nếu chọn cách này, hãy đảm bảo rằng bạn đã thu thập ID sê-ri bằng lệnh đã được hướng dẫn trước đó và đưa nó vào tệp cấu hình của mình.
+
+##### 3.5.16.3. Khắc phục lỗi các nút trong cụm không nhận được đúng địa chỉ IPv6 qua DHCP
+Xử lý và giải quyết các vấn đề về cấu hình DHCP khiến các nút trong cụm OpenShift Container Platform không nhận được địa chỉ IPv6 đã được chỉ định.
+
+Nếu các nút trong cụm không nhận được đúng địa chỉ IPv6 qua DHCP, hãy kiểm tra theo quy trình dưới đây.
+
+**Quy trình**
+
+1. Đảm bảo rằng các địa chỉ IPv6 được dành riêng (reserved) nằm ngoài phạm vi cấp phát của DHCP. 
+2. Trong phần dành riêng địa chỉ IP trên máy chủ DHCP, hãy đảm bảo rằng thông tin dành riêng đó chỉ định đúng Định danh Duy nhất DHCP (DHCP Unique Identifier - DUID). 
+
+Ví dụ:
+
+```
+# This is a dnsmasq dhcp reservation, 'id:00:03:00:01' is the client id and '18:db:f2:8c:d5:9f' is the MAC Address for the NIC
+id:00:03:00:01:18:db:f2:8c:d5:9f,openshift-master-1,[2620:52:0:1302::6]
+```
+
+3. Đảm bảo rằng các thông báo định tuyến đang hoạt động.
+4. Đảm bảo rằng máy chủ DHCP đang lắng nghe trên các giao diện cần thiết để cung cấp các dải địa chỉ IP.
+
+##### 3.5.16.4. Khắc phục lỗi các nút trong cụm (cluster nodes) không nhận được tên máy chủ (hostname) chính xác qua DHCP
+Trong quá trình triển khai IPv6, các nút trong cụm phải nhận được tên máy chủ (hostname) thông qua DHCP. Đôi khi, NetworkManager không gán tên máy chủ ngay lập tức.
+
+Một nút thuộc mặt phẳng điều khiển (control plane node) có thể báo lỗi, chẳng hạn như:
+
+```
+Failed Units: 2
+  NetworkManager-wait-online.service
+  nodeip-configuration.service
+```
+
+Lỗi này cho thấy nút (node) trong cụm có khả năng đã khởi động mà không nhận được tên máy chủ (hostname) từ máy chủ DHCP, dẫn đến việc kubelet khởi động với tên máy chủ là localhost.localdomain. Để khắc phục lỗi này, hãy buộc nút đó cập nhật lại tên máy chủ.
+
+**Quy trình**
+
+1. Lấy tên máy chủ bằng cách chạy lệnh sau:
+
+```shell
+[core@master-X ~]$ hostname
+```
+
+Nếu tên máy chủ (hostname) là `localhost`, hãy thực hiện các bước sau:
+
+> Lưu ý: Trong đó X là số thứ tự của nút mặt phẳng điều khiển (control plane node).
+
+2. Buộc nút cụm (cluster node) gia hạn thuê DHCP bằng cách chạy lệnh sau:
+
+```shell
+[core@master-X ~]$ sudo nmcli con up "<bare_metal_nic>"
+```
+
+Thay thế `<bare_metal_nic>` bằng kết nối có dây tương ứng với mạng `baremetal`.
+
+3. Kiểm tra lại `hostname` bằng cách chạy lệnh sau:
+
+```shell
+[core@master-X ~]$ hostname
+```
+
+4. Nếu tên máy chủ vẫn là `localhost.localdomain`, hãy khởi động lại `NetworkManager` bằng cách chạy lệnh sau:
+
+```shell
+[core@master-X ~]$ sudo systemctl restart NetworkManager
+```
+
+5. Nếu tên máy chủ (hostname) vẫn là `localhost.localdomain`, hãy đợi vài phút rồi kiểm tra lại. Nếu tên máy chủ vẫn là `localhost.localdomain`, hãy thực hiện lại các bước trước đó.
+6. Khởi động lại dịch vụ `nodeip-configuration` bằng cách chạy lệnh sau:
+
+```shell
+[core@master-X ~]$ sudo systemctl restart nodeip-configuration.service
+```
+
+Dịch vụ này sẽ cấu hình lại dịch vụ `kubelet` với các tham chiếu tên máy chủ (hostname) chính xác.
+
+7. Hãy tải lại định nghĩa các tệp đơn vị (unit files) – do `kubelet` đã được thay đổi ở bước trước – bằng cách chạy lệnh sau:
+
+```shell
+[core@master-X ~]$ sudo systemctl daemon-reload
+```
+
+8. Khởi động lại dịch vụ `kubelet` bằng cách chạy lệnh sau:
+
+```shell
+[core@master-X ~]$ sudo systemctl restart kubelet.service
+```
+
+9. Đảm bảo kubelet được khởi động với tên máy chủ (hostname) chính xác bằng cách chạy lệnh sau:
+
+```shell
+[core@master-X ~]$ sudo journalctl -fu kubelet.service
+```
+
+Nếu nút cụm (cluster node) không nhận được tên máy chủ (hostname) chính xác qua DHCP sau khi cụm đã khởi chạy và đi vào hoạt động (ví dụ: trong quá trình khởi động lại), cụm đó sẽ có một yêu cầu ký chứng chỉ (CSR) ở trạng thái chờ xử lý. Không được phê duyệt `csr` này, nếu không có thể phát sinh các vấn đề khác. Cách xử lý `csr`:
+
+  Lấy danh sách các `csr` trên cụm bằng cách chạy lệnh sau:
+
+  ```shell
+  $ oc get csr
+  ```
+
+  * Kiểm tra xem một `csr` đang chờ xử lý có chứa Subject Name: `localhost.localdomain` hay không bằng cách chạy lệnh sau:
+
+  ```shell
+  $ oc get csr <pending_csr> -o jsonpath='{.spec.request}' | \
+    base64 --decode | openssl req -noout -text
+  ```
+
+  * Xóa mọi `csr` có chứa Subject Name: `localhost.localdomain` bằng cách chạy lệnh sau:
+
+  ```shell
+  $ oc delete csr <wrong_csr>
+  ```
+
+##### 3.5.16.5. Khắc phục lỗi các tuyến đường (route) không kết nối được tới điểm cuối (endpoint)
+Để khôi phục kết nối mạng bên ngoài cho các ứng dụng của bạn, hãy khắc phục sự cố các tuyến đường (route) trong OpenShift Container Platform không kết nối được tới các điểm cuối dịch vụ (service endpoint) của chúng.
+
+Trong quá trình cài đặt, có thể xảy ra xung đột Giao thức dự phòng bộ định tuyến ảo (Virtual Router Redundancy Protocol - VRRP).
+
+Xung đột này xảy ra khi một nút (node) OpenShift Container Platform đang hoạt động từ một lần triển khai cũ vẫn sử dụng tên cụm (cluster name) hiện tại của bạn, mặc dù nút đó không thực sự thuộc về lần triển khai mới.
+
+Ví dụ: một cụm được triển khai với tên là `openshift`, bao gồm ba nút mặt phẳng điều khiển (control plane node) và ba nút worker (worker node). Sau đó, một quá trình cài đặt khác lại sử dụng cùng tên cụm là `openshift`, nhưng lần triển khai này chỉ thiết lập ba nút mặt phẳng điều khiển, khiến ba nút worker từ lần triển khai trước vẫn ở trạng thái đang hoạt động (ON). Điều này có thể dẫn đến xung đột Định danh bộ định tuyến ảo (Virtual Router Identifier - VRID) và xung đột VRRP.
+
+**Quy trình**
+
+1. Lấy thông tin tuyến đường (route) bằng cách chạy lệnh sau:
+
+```shell
+$ oc get route oauth-openshift
+```
+
+2. Kiểm tra điểm cuối dịch vụ bằng cách chạy lệnh sau:
+
+```shell
+$ oc get svc oauth-openshift
+```
+
+Ví dụ đầu ra
+
+```
+NAME              TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+oauth-openshift   ClusterIP   172.30.19.162   <none>        443/TCP   59m
+```
+
+3. Hãy thử truy cập dịch vụ từ một nút mặt phẳng điều khiển (control plane node) bằng cách chạy lệnh sau:
+
+```shell
+[core@master0 ~]$ curl -k https://172.30.19.162
+```
+
+Ví dụ đầu ra
+
+```json
+{
+  "kind": "Status",
+  "apiVersion": "v1",
+  "metadata": {
+  },
+  "status": "Failure",
+  "message": "forbidden: User \"system:anonymous\" cannot get path \"/\"",
+  "reason": "Forbidden",
+  "details": {
+  },
+  "code": 403
+}
+```
+
+4. Xác định các lỗi liên quan đến `authentication-operator` từ nút `provisioner` bằng cách chạy lệnh sau:
+
+```shell
+$ oc logs deployment/authentication-operator -n openshift-authentication-operator
+```
+
+Ví dụ đầu ra
+
+```
+Event(v1.ObjectReference{Kind:"Deployment", Namespace:"openshift-authentication-operator", Name:"authentication-operator", UID:"225c5bd5-b368-439b-9155-5fd3c0459d98", APIVersion:"apps/v1", ResourceVersion:"", FieldPath:""}): type: 'Normal' reason: 'OperatorStatusChanged' Status for clusteroperator/authentication changed: Degraded message changed from "IngressStateEndpointsDegraded: All 2 endpoints for oauth-server are reporting"
+```
+
+5. Hãy đảm bảo rằng tên cụm (cluster name) cho mỗi lần triển khai là duy nhất để tránh xảy ra xung đột.
+6. Tắt tất cả các nút (node) không thuộc phạm vi triển khai cụm nhưng lại đang sử dụng cùng tên cụm đó. Nếu không, pod xác thực (authentication pod) của cụm OpenShift Container Platform có thể sẽ không bao giờ khởi động thành công.
+
+##### 3.5.16.6. Khắc phục lỗi Ignition trong quá trình khởi động lần đầu (firstboot)
+Hãy khắc phục các lỗi cấu hình Ignition xảy ra trong quá trình khởi động lần đầu (firstboot) của các nút (node) để tránh tình trạng triển khai cụm (cluster) bị thất bại.
+
+**Quy trình**
+
+1. Kết nối với nút (node) xảy ra lỗi cấu hình Ignition:
+
+```
+Failed Units: 1
+  machine-config-daemon-firstboot.service
+```
+
+2. Khởi động lại dịch vụ machine-config-daemon-firstboot bằng cách chạy lệnh sau:
+
+```shell
+[core@worker-X ~]$ sudo systemctl restart machine-config-daemon-firstboot.service
+```
+
+##### 3.5.16.7. Khắc phục lỗi đồng bộ hóa thời gian NTP
+Việc triển khai các cụm OpenShift Container Platform đòi hỏi các nút (node) trong cụm phải được đồng bộ hóa thời gian thông qua NTP. Nếu thời gian giữa các nút không đồng bộ—cụ thể là khi độ lệch thời gian vượt quá hai giây—quá trình triển khai có thể thất bại.
+
+**Quy trình**
+
+1. Kiểm tra sự khác biệt về thời gian (AGE) giữa các nút trong cụm bằng cách chạy lệnh sau:
+
+```shell
+$ oc get nodes
+```
+
+Ví dụ đầu ra
+
+```
+NAME                         STATUS   ROLES    AGE   VERSION
+master-0.cloud.example.com   Ready    master   145m   v1.35.4
+master-1.cloud.example.com   Ready    master   135m   v1.35.4
+master-2.cloud.example.com   Ready    master   145m   v1.35.4
+worker-2.cloud.example.com   Ready    worker   100m   v1.35.4
+```
+
+2. Hãy kiểm tra các độ trễ thời gian không nhất quán do hiện tượng trôi xung nhịp (clock drift) bằng cách chạy lệnh sau:
+
+```shell
+$ oc get bmh -n openshift-machine-api
+```
+
+**Ví dụ kết quả đầu ra hiển thị lỗi đăng ký do sai lệch đồng hồ**
+
+```
+master-1   error registering master-1  ipmi://<out_of_band_ip>
+```
+
+3. Kiểm tra trạng thái `System clock synchronized` (đồng bộ hóa đồng hồ hệ thống) trên một nút bằng cách chạy lệnh sau:
+
+```shell
+$ sudo timedatectl
+```
+
+Ví dụ đầu ra
+
+```
+               Local time: Tue 2020-03-10 18:20:02 UTC
+           Universal time: Tue 2020-03-10 18:20:02 UTC
+                 RTC time: Tue 2020-03-10 18:36:53
+                Time zone: UTC (UTC, +0000)
+System clock synchronized: no
+              NTP service: active
+          RTC in local TZ: no
+```
+
+Đảm bảo rằng giá trị đồng bộ hóa đồng hồ hệ thống (System clock synchronized) là "yes" trước khi tiến hành cài đặt.
+
+4. Khắc phục tình trạng sai lệch đồng hồ (clock drift) tùy theo giai đoạn triển khai của bạn:
+  * Xử lý đồng bộ hóa đồng hồ trong trường hợp xảy ra sai lệch trên một cụm (cluster) hiện có:
+    * Tạo một tệp cấu hình Butane bao gồm nội dung của tệp `chrony.conf` để phân phối đến các nút (node). Trong ví dụ dưới đây, hãy tạo tệp `99-master-chrony.bu` để thêm tệp này vào các nút thuộc mặt phẳng điều khiển (control plane nodes). Bạn có thể sửa đổi tệp này cho các nút tính toán (compute nodes) hoặc lặp lại quy trình tương tự cho vai trò nút tính toán.
+
+    ```yaml
+    variant: openshift
+    version: 4.22.0
+    metadata:
+      name: 99-master-chrony
+      labels:
+        machineconfiguration.openshift.io/role: master
+    storage:
+      files:
+      - path: /etc/chrony.conf
+        mode: 0644
+        overwrite: true
+        contents:
+          inline: |
+            server <NTP_server> iburst
+            stratumweight 0
+            driftfile /var/lib/chrony/drift
+            rtcsync
+            makestep 10 3
+            bindcmdaddress 127.0.0.1
+            bindcmdaddress ::1
+            keyfile /etc/chrony.keys
+            commandkey 1
+            generatecommandkey
+            noclientlog
+            logchange 0.5
+            logdir /var/log/chrony
+    ```
+
+    Hãy thay thế `<NTP_server`> bằng địa chỉ IP của máy chủ NTP.
+
+    * Sử dụng Butane để tạo tệp đối tượng MachineConfig có tên `99-master-chrony.yaml` — tệp này chứa cấu hình sẽ được chuyển đến các nút — bằng cách chạy lệnh sau:
+
+    ```shell
+    $ butane 99-master-chrony.bu -o 99-master-chrony.yaml
+    ```
+
+    * Áp dụng tệp đối tượng MachineConfig bằng cách chạy lệnh sau:
+
+    ```shell
+    $ oc apply -f 99-master-chrony.yaml
+    ```
+
+    * Đảm bảo giá trị đồng bộ hóa đồng hồ hệ thống (System clock synchronized) là "yes" bằng cách chạy lệnh sau:
+
+    ```shell
+    $ sudo timedatectl
+    ```
+
+    Ví dụ đầu ra
+
+    ```
+                   Local time: Tue 2020-03-10 19:10:02 UTC
+               Universal time: Tue 2020-03-10 19:10:02 UTC
+                     RTC time: Tue 2020-03-10 19:36:53
+                    Time zone: UTC (UTC, +0000)
+    System clock synchronized: yes
+                  NTP service: active
+              RTC in local TZ: no
+    ```
+
+  * Giải quyết vấn đề đồng bộ hóa đồng hồ (khắc phục tình trạng lệch thời gian) trước khi triển khai:
+    * Tạo các tệp manifest và thêm tệp này vào thư mục openshift. Ví dụ:
+
+    ```shell
+    $ cp chrony-masters.yaml ~/clusterconfigs/openshift/99_masters-chrony-configuration.yaml
+    ```
+
+    * Tiếp tục tạo cụm.
+
+#### 3.5.17. Kiểm tra quá trình cài đặt
+Sau khi cài đặt, hãy đảm bảo rằng chương trình cài đặt đã triển khai các node và pod thành công.
+
+**Quy trình**
+
+1. Khi các node của cụm OpenShift Container Platform đã được cài đặt đúng cách, hãy đảm bảo rằng trạng thái "Ready" (Sẵn sàng) xuất hiện trong cột STATUS bằng cách chạy lệnh sau:
+
+```shell
+$ oc get nodes
+```
+
+Ví dụ đầu ra
+
+```
+NAME                   STATUS   ROLES           AGE  VERSION
+master-0.example.com   Ready    master,worker   4h   v1.35.4
+master-1.example.com   Ready    master,worker   4h   v1.35.4
+master-2.example.com   Ready    master,worker   4h   v1.35.4
+```
+
+2. Hãy xác nhận rằng chương trình cài đặt đã triển khai thành công tất cả các pod. Xóa mọi pod vẫn đang chạy hoặc đã hoàn tất (xuất hiện trong kết quả đầu ra) bằng cách thực thi lệnh sau:
+
+```shell
+$ oc get pods --all-namespaces | grep -iv running | grep -iv complete
+```
