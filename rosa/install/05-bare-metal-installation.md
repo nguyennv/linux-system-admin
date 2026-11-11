@@ -51,7 +51,7 @@ Hãy định cấu hình cụm bare-metal của bạn một cách chính xác tr
 #### I.5.1. Các yêu cầu về tính sẵn sàng cao (High Availability - HA) đối với OpenShift Virtualization
 Khi thảo luận về các tính năng sẵn sàng cao (HA) trong ngữ cảnh của OpenShift Virtualization, thuật ngữ này chỉ đề cập đến mô hình sao chép (replication model) của các thành phần cốt lõi trong cụm (cluster). Mô hình này được xác định bởi các trường `controlPlaneTopology` và `infrastructureTopology` trong tài nguyên tùy chỉnh (Custom Resource - CR) có tên là `Infrastructure`. Việc thiết lập các trường này thành `HighlyAvailable` sẽ cung cấp cơ chế dự phòng cho các thành phần; cơ chế này khác biệt với tính năng HA dành cho ứng dụng trên toàn bộ cụm. Ngược lại, nếu thiết lập các trường này thành `SingleReplica`, cơ chế dự phòng thành phần sẽ bị vô hiệu hóa, đồng nghĩa với việc các tính năng HA của OpenShift Virtualization cũng không khả dụng.
 
-Nếu bạn dự định sử dụng các tính năng HA của OpenShift Virtualization, bạn bắt buộc phải có ba nút (node) thuộc mặt phẳng điều khiển (control plane) tại thời điểm cài đặt cụm. Trạng thái `controlPlaneTopology` trong tài nguyên `Infrastructure` của cụm phải được đặt là `HighlyAvailable`.
+Nếu bạn dự định sử dụng các tính năng HA của OpenShift Virtualization, bạn bắt buộc phải có ba nút (node) thuộc control plane tại thời điểm cài đặt cụm. Trạng thái `controlPlaneTopology` trong tài nguyên `Infrastructure` của cụm phải được đặt là `HighlyAvailable`.
 
 > **Lưu ý:** Bạn có thể cài đặt OpenShift Virtualization trên một cụm chỉ gồm một nút duy nhất (single-node cluster), nhưng cấu hình này không hỗ trợ các tính năng HA.
 
@@ -115,8 +115,8 @@ Các cụm OpenShift Container Platform với quy mô nhỏ nhất yêu cầu c�
 
 | Máy chủ                                                                  | Mô tả                                                                                                                                                                                                  |
 |--------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Một máy khởi động tạm thời                                               | Cụm yêu cầu phải có máy bootstrap để triển khai cụm OpenShift Container Platform trên ba máy thuộc mặt phẳng điều khiển (control plane). Bạn có thể loại bỏ máy bootstrap sau khi đã cài đặt xong cụm. |
-| Ba máy thuộc mặt phẳng điều khiển                                        | Các máy thuộc mặt phẳng điều khiển (control plane) chạy các dịch vụ Kubernetes và OpenShift Container Platform, tạo nên mặt phẳng điều khiển đó.                                                       |
+| Một máy khởi động tạm thời                                               | Cụm yêu cầu phải có máy bootstrap để triển khai cụm OpenShift Container Platform trên ba máy thuộc control plane. Bạn có thể loại bỏ máy bootstrap sau khi đã cài đặt xong cụm. |
+| Ba máy thuộc mặt phẳng điều khiển                                        | Các máy thuộc control plane chạy các dịch vụ Kubernetes và OpenShift Container Platform, tạo nên mặt phẳng điều khiển đó.                                                       |
 | Ít nhất hai máy tính, còn được gọi là các máy thực thi (worker machine). | Các khối lượng công việc do người dùng OpenShift Container Platform yêu cầu sẽ chạy trên các máy tính toán.                                                                                            |
 
 > **Lưu ý:** Một ngoại lệ là bạn có thể vận hành cụm máy chủ bare metal (phần cứng vật lý) mà không cần máy chủ tính toán (compute machine) nào, chỉ bao gồm ba máy chủ điều khiển (control plane machine). Cấu hình này tạo ra các cụm nhỏ gọn, sử dụng tài nguyên hiệu quả hơn, phù hợp để các quản trị viên và nhà phát triển thực hiện kiểm thử, phát triển ứng dụng hoặc triển khai thực tế. Việc vận hành chỉ với một máy chủ tính toán là không được hỗ trợ.
@@ -139,7 +139,7 @@ RHCOS được xây dựng dựa trên Red Hat Enterprise Linux (RHEL) 9.8 và k
 | Tính toán            | RHCOS        | 2   | 8 GB  | 100 GB  | 300  |
 
 * Một CPU tương đương với một nhân vật lý khi tính năng đa luồng đồng thời (SMT) – hay còn gọi là Hyper-Threading – không được kích hoạt. Khi tính năng này được kích hoạt, hãy sử dụng công thức sau để tính toán tỷ lệ tương ứng: (số luồng trên mỗi nhân × số nhân) × số socket = số CPU. 
-* OpenShift Container Platform và Kubernetes rất nhạy cảm với hiệu năng ổ đĩa; do đó, Red Hat khuyến nghị sử dụng hệ thống lưu trữ có tốc độ cao, đặc biệt là đối với etcd trên các nút mặt phẳng điều khiển (control plane nodes) – nơi yêu cầu thời gian thực hiện fsync (p99) đạt mức 10 ms. Trên nhiều nền tảng đám mây, dung lượng lưu trữ và chỉ số IOPS thường tỷ lệ thuận với nhau; vì vậy, bạn có thể cần cấp phát thêm dung lượng lưu trữ để đạt được hiệu năng cần thiết. 
+* OpenShift Container Platform và Kubernetes rất nhạy cảm với hiệu năng ổ đĩa; do đó, Red Hat khuyến nghị sử dụng hệ thống lưu trữ có tốc độ cao, đặc biệt là đối với etcd trên các nút control plane – nơi yêu cầu thời gian thực hiện fsync (p99) đạt mức 10 ms. Trên nhiều nền tảng đám mây, dung lượng lưu trữ và chỉ số IOPS thường tỷ lệ thuận với nhau; vì vậy, bạn có thể cần cấp phát thêm dung lượng lưu trữ để đạt được hiệu năng cần thiết. 
 * Đối với tất cả các mô hình cài đặt do người dùng tự cung cấp (user-provisioned installations), nếu bạn chọn sử dụng các máy tính toán (compute machines) chạy hệ điều hành RHEL trong cụm (cluster) của mình, bạn sẽ chịu trách nhiệm quản lý vòng đời và bảo trì hệ điều hành đó. Điều này bao gồm việc thực hiện các bản cập nhật hệ thống, áp dụng các bản vá lỗi và hoàn tất mọi tác vụ cần thiết khác. OpenShift Container Platform phiên bản 4.10 trở về sau không hỗ trợ các máy tính toán chạy RHEL 7.
 
 > **Lưu ý:** Trong OpenShift Container Platform phiên bản 4.22, RHCOS sử dụng RHEL phiên bản 9.8, với các yêu cầu cập nhật về kiến trúc vi xử lý (micro-architecture). Mỗi kiến trúc yêu cầu các tập lệnh (Instruction Set Architecture - ISA) tối thiểu như sau:
@@ -188,7 +188,7 @@ Phần này cung cấp thông tin chi tiết về các cổng (port) cần thi�
 | TCP       | `1936`          | Các chỉ số                                                                                                                                    |
 | TCP       | `9000`-`9999`   | Các dịch vụ ở cấp độ máy chủ (host), bao gồm node exporter trên các cổng `9100`-`9101` và Cluster Version Operator trên cổng `9099`.          |
 | TCP       | `10250`-`10259` | Các cổng mặc định mà Kubernetes dành riêng                                                                                                    |
-| TCP       | `22623`         | Cổng này xử lý lưu lượng truy cập từ Machine Config Server và điều hướng lưu lượng đó đến các máy thuộc mặt phẳng điều khiển (control plane). |
+| TCP       | `22623`         | Cổng này xử lý lưu lượng truy cập từ Machine Config Server và điều hướng lưu lượng đó đến các máy thuộc control plane. |
 | UDP       | `6081`          | Geneve                                                                                                                                        |
 | UDP       | `9000`-`9999`   | Các dịch vụ ở cấp độ máy chủ, bao gồm node exporter trên các cổng `9100`-`9101`.                                                              |
 | UDP       | `500`           | Các gói tin IPsec IKE                                                                                                                         |
@@ -197,13 +197,13 @@ Phần này cung cấp thông tin chi tiết về các cổng (port) cần thi�
 | TCP/UDP   | `30000`-`32767` | Cổng nút Kubernetes                                                                                                                           |
 | ESP       | N/A             | Giao thức đóng gói bảo mật (ESP) trong IPsec                                                                                                  |
 
-**Bảng 2.4. Các cổng được sử dụng cho hoạt động giao tiếp giữa tất cả các máy với mặt phẳng điều khiển (control plane)**
+**Bảng 2.4. Các cổng được sử dụng cho hoạt động giao tiếp giữa tất cả các máy với control plane**
 
 | Giao thức | Cổng   | Mô tả          |
 |-----------|--------|----------------|
 | TCP       | `6443` | Kubernetes API |
 
-**Bảng 2.5. Các cổng được sử dụng cho hoạt động giao tiếp giữa các máy trong mặt phẳng điều khiển (control plane)**
+**Bảng 2.5. Các cổng được sử dụng cho hoạt động giao tiếp giữa các máy trong control plane**
 
 | Giao thức | Cổng          | Mô tả                                                           |
 |-----------|---------------|-----------------------------------------------------------------|
@@ -221,7 +221,7 @@ Dưới đây là danh sách các thành phần cụm bắt buộc:
 
 * Kubernetes API
 * Wildcard (tên miền đại diện) cho ứng dụng trong OpenShift Container Platform
-* Các máy bootstrap và các máy thuộc mặt phẳng điều khiển (control plane)
+* Các máy bootstrap và các máy thuộc control plane
 * Các máy tính toán (compute machines)
 
 Phân giải DNS ngược (reverse DNS resolution) cũng là yêu cầu bắt buộc đối với Kubernetes API, máy bootstrap, các máy thuộc mặt phẳng điều khiển và các máy tính toán.
@@ -240,7 +240,7 @@ Các bản ghi DNS dưới đây là bắt buộc đối với cụm OpenShift C
 | Kubernetes API               | `api-int.<cluster_name>.<base_domain>.`            | Cần có bản ghi DNS A/AAAA hoặc CNAME, cùng với bản ghi DNS PTR, để xác định bộ cân bằng tải API (API load balancer) trong nội bộ hệ thống. Các bản ghi này phải có thể phân giải được từ tất cả các nút (node) bên trong cụm (cluster). **Quan trọng:** Máy chủ API (API server) phải có khả năng phân giải các nút worker thông qua tên máy chủ (hostname) đã được ghi lại trong Kubernetes. Nếu máy chủ API không thể phân giải được tên các nút, thì các lệnh gọi API thông qua proxy có thể bị lỗi, và bạn sẽ không thể truy xuất nhật ký (log) từ các pod.                                                                       |
 | Routes                       | `*.apps.<cluster_name>.<base_domain>.`             | Một bản ghi DNS wildcard (dạng A/AAAA hoặc CNAME) trỏ đến bộ cân bằng tải ingress (ingress load balancer) của ứng dụng. Bộ cân bằng tải ingress này hướng lưu lượng truy cập đến các máy đang chạy các pod Ingress Controller. Theo mặc định, các pod Ingress Controller này chạy trên các máy tính toán (compute machines). Các bản ghi này phải có thể được phân giải bởi cả các client bên ngoài cụm lẫn tất cả các node nằm bên trong cụm. Ví dụ: `console-openshift-console.apps.<cluster_name>.<base_domain>` được sử dụng làm tuyến đường (route) wildcard dẫn đến bảng điều khiển (console) của OpenShift Container Platform. |
 | Máy khởi động                | `bootstrap.<cluster_name>.<base_domain>.`          | Một bản ghi DNS A/AAAA hoặc CNAME, cùng với một bản ghi DNS PTR, để xác định máy khởi động (bootstrap machine). Các bản ghi này phải có thể được phân giải bởi các nút (node) nằm trong cụm (cluster).                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| Máy chủ mặt phẳng điều khiển | `<control_plane><n>.<cluster_name>.<base_domain>.` | Các bản ghi DNS A/AAAA hoặc CNAME cùng các bản ghi DNS PTR được sử dụng để định danh từng máy trong số các nút thuộc mặt phẳng điều khiển (control plane nodes). Các bản ghi này phải có khả năng được phân giải bởi các nút nằm trong cụm (cluster).                                                                                                                                                                                                                                                                                                                                                                                 |
+| Máy chủ mặt phẳng điều khiển | `<control_plane><n>.<cluster_name>.<base_domain>.` | Các bản ghi DNS A/AAAA hoặc CNAME cùng các bản ghi DNS PTR được sử dụng để định danh từng máy trong số các nút thuộc control plane. Các bản ghi này phải có khả năng được phân giải bởi các nút nằm trong cụm (cluster).                                                                                                                                                                                                                                                                                                                                                                                 |
 | Máy tính toán                | `<compute><n>.<cluster_name>.<base_domain>.`       | Các bản ghi DNS A/AAAA hoặc CNAME cùng các bản ghi DNS PTR được sử dụng để định danh từng máy trong số các nút worker (worker nodes). Các bản ghi này phải có khả năng được phân giải bởi các nút nằm trong cụm (cluster).                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 > **Lưu ý:** Trong OpenShift Container Platform 4.4 trở về sau, bạn không cần chỉ định các bản ghi SRV và máy chủ etcd trong cấu hình DNS của mình.
@@ -300,7 +300,7 @@ Trong đó:
 * `api-int.ocp4.example.com.`: Cung cấp khả năng phân giải tên cho Kubernetes API. Bản ghi này trỏ đến địa chỉ IP của bộ cân bằng tải dành cho API và được sử dụng cho các giao tiếp nội bộ trong cụm (cluster).
 * `*.apps.ocp4.example.com.`: Cung cấp khả năng phân giải tên cho các tuyến đường (route) dạng ký tự đại diện (wildcard). Bản ghi này trỏ đến địa chỉ IP của bộ cân bằng tải dành cho ứng dụng (application ingress load balancer). Bộ cân bằng tải này hướng lưu lượng đến các máy đang chạy các pod Ingress Controller.
 * `bootstrap.ocp4.example.com.`: Cung cấp khả năng phân giải tên cho máy bootstrap.
-* `control-plane0.ocp4.example.com.`: Cung cấp khả năng phân giải tên cho các máy thuộc mặt phẳng điều khiển (control plane).
+* `control-plane0.ocp4.example.com.`: Cung cấp khả năng phân giải tên cho các máy thuộc control plane.
 * `compute0.ocp4.example.com.`: Cung cấp khả năng phân giải tên cho các máy tính toán (compute machine).
 
 Ví dụ về tệp vùng (zone file) BIND dưới đây hiển thị các bản ghi PTR mẫu phục vụ cho việc phân giải tên ngược (reverse name resolution) trong một cụm do người dùng tự cung cấp (user-provisioned cluster):
@@ -336,7 +336,7 @@ Trong đó:
 * `api.ocp4.example.com.`: Cung cấp khả năng phân giải DNS ngược (reverse DNS resolution) cho Kubernetes API. Bản ghi PTR trỏ đến tên bản ghi của bộ cân bằng tải (load balancer) API.
 * `api-int.ocp4.example.com.`: Cung cấp khả năng phân giải DNS ngược cho Kubernetes API. Bản ghi PTR trỏ đến tên bản ghi của bộ cân bằng tải API và được sử dụng cho các hoạt động giao tiếp nội bộ trong cụm (cluster).
 * `bootstrap.ocp4.example.com.`: Cung cấp khả năng phân giải DNS ngược cho máy bootstrap.
-* `control-plane0.ocp4.example.com.`: Cung cấp khả năng phân giải DNS ngược cho các máy thuộc mặt phẳng điều khiển (control plane).
+* `control-plane0.ocp4.example.com.`: Cung cấp khả năng phân giải DNS ngược cho các máy thuộc control plane.
 * `compute0.ocp4.example.com.`: Cung cấp khả năng phân giải DNS ngược cho các máy tính toán (compute machines).
 
 > **Lưu ý:** Không bắt buộc phải có bản ghi PTR cho tên miền đại diện (wildcard) của ứng dụng trong OpenShift Container Platform.
@@ -401,8 +401,8 @@ Cấu hình các cổng (port) sau đây ở cả phía trước (front-end) và
 
 | Cổng  | Máy chủ phụ trợ                                                                                                                                                                                                                                                                                                          | Nội bộ | Bên ngoài | Mô tả                     |
 |-------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------|-----------|---------------------------|
-| 6443  | Bootstrap và mặt phẳng điều khiển (control plane). Sau khi máy bootstrap khởi tạo mặt phẳng điều khiển của cụm (cluster), bạn cần loại bỏ máy này khỏi bộ cân bằng tải (load balancer). Bạn phải cấu hình điểm cuối (endpoint) `/readyz` để phục vụ cho việc kiểm tra tình trạng hoạt động của máy chủ API (API server). | X      | X         | Máy chủ API Kubernetes    |
-| 22623 | Bootstrap và mặt phẳng điều khiển (control plane). Bạn loại bỏ máy bootstrap khỏi bộ cân bằng tải sau khi máy này khởi tạo mặt phẳng điều khiển của cụm (cluster).                                                                                                                                                       | X      |           | Máy chủ cấu hình thiết bị |
+| 6443  | Bootstrap và control plane. Sau khi máy bootstrap khởi tạo mặt phẳng điều khiển của cụm (cluster), bạn cần loại bỏ máy này khỏi bộ cân bằng tải (load balancer). Bạn phải cấu hình điểm cuối (endpoint) `/readyz` để phục vụ cho việc kiểm tra tình trạng hoạt động của máy chủ API (API server). | X      | X         | Máy chủ API Kubernetes    |
+| 22623 | Bootstrap và control plane. Bạn loại bỏ máy bootstrap khỏi bộ cân bằng tải sau khi máy này khởi tạo mặt phẳng điều khiển của cụm (cluster).                                                                                                                                                       | X      |           | Máy chủ cấu hình thiết bị |
 
 > **Lưu ý:** Bộ cân bằng tải (load balancer) phải được cấu hình sao cho khoảng thời gian từ lúc máy chủ API tắt điểm cuối (endpoint) `/readyz` cho đến khi thực thể máy chủ API đó bị loại bỏ khỏi nhóm (pool) không vượt quá 30 giây. Trong khoảng thời gian sau khi `/readyz` trả về lỗi hoặc chuyển sang trạng thái khỏe mạnh (healthy), điểm cuối đó phải được loại bỏ hoặc thêm vào tương ứng. Việc thực hiện kiểm tra (probe) mỗi 5 hoặc 10 giây, với quy định cần 2 phản hồi thành công liên tiếp để xác định trạng thái khỏe mạnh và 3 phản hồi không thành công liên tiếp để xác định trạng thái không khỏe mạnh, là các thông số đã được kiểm chứng hiệu quả. 
 
@@ -421,7 +421,7 @@ Cấu hình các cổng (port) sau đây ở cả phía trước (front-end) và
 | 443  | Các máy chạy các pod Ingress Controller — dù là máy tính toán (compute) hay máy thực thi tác vụ (worker) — theo mặc định. | X      | X         | Lưu lượng truy cập HTTPS |
 | 80   | Các máy chạy các pod Ingress Controller — dù là máy tính toán (compute) hay máy thực thi tác vụ (worker) — theo mặc định. | X      | X         | Lưu lượng truy cập HTTP  |
 
-> **Lưu ý:** Nếu bạn triển khai cụm gồm ba nút (node) mà không có nút tính toán (compute node) nào, các pod của Ingress Controller sẽ chạy trên các nút thuộc mặt phẳng điều khiển (control plane node). Đối với các cụm gồm ba nút, bạn phải cấu hình bộ cân bằng tải Ingress cho ứng dụng của mình để định tuyến lưu lượng truy cập HTTP và HTTPS đến các nút thuộc mặt phẳng điều khiển.
+> **Lưu ý:** Nếu bạn triển khai cụm gồm ba nút (node) mà không có nút tính toán (compute node) nào, các pod của Ingress Controller sẽ chạy trên các nút thuộc control plane. Đối với các cụm gồm ba nút, bạn phải cấu hình bộ cân bằng tải Ingress cho ứng dụng của mình để định tuyến lưu lượng truy cập HTTP và HTTPS đến các nút thuộc mặt phẳng điều khiển.
 
 ###### II.1.2.7.1. Ví dụ về cấu hình bộ cân bằng tải cho các cụm do người dùng cung cấp
 Hãy tham khảo ví dụ về cấu hình bộ cân bằng tải cho API và Ingress ứng dụng để hiểu cách đáp ứng các yêu cầu về cân bằng tải đối với các cụm do người dùng cung cấp.
@@ -490,7 +490,7 @@ listen ingress-router-80
 
 Trong đó:
 
-* `listen api-server-6443`: Cổng 6443 xử lý lưu lượng truy cập Kubernetes API và trỏ đến các máy thuộc mặt phẳng điều khiển (control plane). Bạn phải định cấu hình kiểm tra trạng thái (health check) trên cổng này để đảm bảo rằng API server khả dụng trước khi định tuyến lưu lượng truy cập.
+* `listen api-server-6443`: Cổng 6443 xử lý lưu lượng truy cập Kubernetes API và trỏ đến các máy thuộc control plane. Bạn phải định cấu hình kiểm tra trạng thái (health check) trên cổng này để đảm bảo rằng API server khả dụng trước khi định tuyến lưu lượng truy cập.
 * `server bootstrap bootstrap.ocp4.example.com`: Các mục cấu hình bootstrap phải được thiết lập trước khi cài đặt cụm OpenShift Container Platform và phải được loại bỏ sau khi quá trình bootstrap hoàn tất.
 * `listen machine-config-server`: Cổng 22623 xử lý lưu lượng truy cập của machine config server và trỏ đến các máy thuộc mặt phẳng điều khiển.
 * `listen ingress-router-443`: Cổng 443 xử lý lưu lượng truy cập HTTPS và trỏ đến các máy chạy các pod Ingress Controller. Theo mặc định, các pod Ingress Controller chạy trên các máy tính toán (compute nodes).
@@ -1017,7 +1017,7 @@ Sau khi hoàn tất quá trình chuẩn bị, cơ sở hạ tầng cụm của b
   bootstrap.ocp4.example.com.   604800  IN  A 192.168.1.96
   ```
 
-  * Sử dụng phương pháp này để thực hiện tra cứu dựa trên các tên bản ghi DNS của các nút mặt phẳng điều khiển (control plane) và các nút tính toán (compute nodes). Hãy kiểm tra để đảm bảo rằng các kết quả thu được tương ứng với địa chỉ IP của từng nút.
+  * Sử dụng phương pháp này để thực hiện tra cứu dựa trên các tên bản ghi DNS của các nút control plane và các nút tính toán (compute nodes). Hãy kiểm tra để đảm bảo rằng các kết quả thu được tương ứng với địa chỉ IP của từng nút.
 2. Từ nút cài đặt của bạn, hãy thực hiện truy vấn DNS ngược (reverse DNS lookup) đối với các địa chỉ IP của bộ cân bằng tải (load balancer) và các nút trong cụm (cluster nodes). Hãy xác minh rằng các tên bản ghi (record names) trong phản hồi tương ứng với các thành phần chính xác. 
   * Thực hiện truy vấn ngược đối với địa chỉ IP của bộ cân bằng tải API. Kiểm tra xem phản hồi có bao gồm các tên bản ghi dành cho Kubernetes API và Kubernetes internal API hay không:
 
@@ -1393,7 +1393,7 @@ Chương trình cài đặt sẽ tạo một proxy trên toàn cụm (cluster-wi
 > **Lưu ý:** Chỉ đối tượng Proxy có tên là `cluster` mới được hỗ trợ; bạn không thể tạo thêm các proxy khác.
 
 ##### II.1.12.3. Cấu hình cụm ba nút (three-node cluster)
-Để tạo các cụm có quy mô nhỏ hơn và tiết kiệm tài nguyên phục vụ cho mục đích thử nghiệm hoặc triển khai thực tế, bạn có thể thiết lập một cụm trên hạ tầng vật lý (bare-metal) mà không cần các máy tính toán (compute machine). Cấu hình tùy chọn này chỉ sử dụng ba máy thuộc mặt phẳng điều khiển (control plane), giúp tối ưu hóa tài nguyên hạ tầng cho các quản trị viên và nhà phát triển.
+Để tạo các cụm có quy mô nhỏ hơn và tiết kiệm tài nguyên phục vụ cho mục đích thử nghiệm hoặc triển khai thực tế, bạn có thể thiết lập một cụm trên hạ tầng vật lý (bare-metal) mà không cần các máy tính toán (compute machine). Cấu hình tùy chọn này chỉ sử dụng ba máy thuộc control plane, giúp tối ưu hóa tài nguyên hạ tầng cho các quản trị viên và nhà phát triển.
 
 Trong các môi trường OpenShift Container Platform gồm ba nút, ba máy thuộc mặt phẳng điều khiển này cũng có thể đảm nhận vai trò lập lịch (schedulable); nghĩa là các khối lượng công việc (workload) ứng dụng của bạn sẽ chạy trực tiếp trên các máy này.
 
@@ -1417,12 +1417,12 @@ compute:
 
 Đối với các cụm gồm ba nút (three-node cluster), hãy thực hiện các bước sau:
 
-* Nếu bạn triển khai cụm gồm ba nút mà không có nút tính toán (compute node) nào, các pod của Ingress Controller sẽ chạy trên các nút thuộc mặt phẳng điều khiển (control plane nodes). Trong các triển khai cụm ba nút, bạn phải cấu hình bộ cân bằng tải (load balancer) cho lưu lượng truy cập ứng dụng (ingress load balancer) để định tuyến lưu lượng HTTP và HTTPS đến các nút thuộc mặt phẳng điều khiển. Xem thêm thông tin tại phần "Các yêu cầu về cân bằng tải cho cơ sở hạ tầng do người dùng cung cấp" (Load balancing requirements for user-provisioned infrastructure). 
+* Nếu bạn triển khai cụm gồm ba nút mà không có nút tính toán (compute node) nào, các pod của Ingress Controller sẽ chạy trên các nút thuộc control plane. Trong các triển khai cụm ba nút, bạn phải cấu hình bộ cân bằng tải (load balancer) cho lưu lượng truy cập ứng dụng (ingress load balancer) để định tuyến lưu lượng HTTP và HTTPS đến các nút thuộc mặt phẳng điều khiển. Xem thêm thông tin tại phần "Các yêu cầu về cân bằng tải cho cơ sở hạ tầng do người dùng cung cấp" (Load balancing requirements for user-provisioned infrastructure). 
 * Khi tạo các tệp manifest của Kubernetes trong quy trình tiếp theo, hãy đảm bảo rằng tham số `mastersSchedulable` trong tệp `<installation_directory>/manifests/cluster-scheduler-02-config.yml` được đặt là `true`. Việc này cho phép các khối lượng công việc (workload) ứng dụng của bạn chạy trên các nút thuộc mặt phẳng điều khiển. 
 * Không triển khai bất kỳ nút tính toán nào khi tạo các máy chạy hệ điều hành Red Hat Enterprise Linux CoreOS (RHCOS).
 
 ##### II.1.12.4. Các điều kiện tiên quyết để cấu hình nút trọng tài cục bộ (local arbiter node)
-Để duy trì tính sẵn sàng cao (HA) đồng thời giảm chi phí cơ sở hạ tầng cho cụm (cluster) của mình, bạn có thể cấu hình cụm OpenShift Container Platform với hai nút mặt phẳng điều khiển (control plane node) và một nút trọng tài cục bộ (local arbiter node).
+Để duy trì tính sẵn sàng cao (HA) đồng thời giảm chi phí cơ sở hạ tầng cho cụm (cluster) của mình, bạn có thể cấu hình cụm OpenShift Container Platform với hai nút control plane và một nút trọng tài cục bộ (local arbiter node).
 
 Nút trọng tài cục bộ là một máy chủ có chi phí thấp hơn, được đặt cùng vị trí và tham gia vào các quyết định thiết lập hạn ngạch (quorum) của mặt phẳng điều khiển. Khác với nút mặt phẳng điều khiển tiêu chuẩn, nút trọng tài không chạy toàn bộ các dịch vụ của mặt phẳng điều khiển. Bạn có thể sử dụng cấu hình này để duy trì tính sẵn sàng cao trong cụm của mình chỉ với hai nút mặt phẳng điều khiển được cung cấp đầy đủ tài nguyên, thay vì ba nút.
 
@@ -1450,7 +1450,7 @@ Các nút mặt phẳng điều khiển phải đáp ứng các yêu cầu hệ 
 Ngoài ra, các nút mặt phẳng điều khiển cũng phải có đủ dung lượng lưu trữ cho khối lượng công việc (workload).
 
 ##### II.1.12.5. Cấu hình nút trọng tài (arbiter node) cục bộ bằng cơ sở hạ tầng do người dùng cung cấp
-Để duy trì tính sẵn sàng cao (HA) đồng thời giảm chi phí cơ sở hạ tầng cho cụm (cluster) của mình, bạn có thể cấu hình cụm OpenShift Container Platform với hai nút mặt phẳng điều khiển (control plane node) và một nút trọng tài cục bộ.
+Để duy trì tính sẵn sàng cao (HA) đồng thời giảm chi phí cơ sở hạ tầng cho cụm (cluster) của mình, bạn có thể cấu hình cụm OpenShift Container Platform với hai nút control plane và một nút trọng tài cục bộ.
 
 **Điều kiện tiên quyết**
 
@@ -1522,11 +1522,11 @@ $ ./openshift-install create manifests --dir <installation_directory>
 
 Trong đó: `<installation_directory>` chỉ định thư mục cài đặt chứa tệp `install-config.yaml` mà bạn đã tạo.
 
-> **Cảnh báo:** Nếu bạn đang cài đặt một cụm gồm ba nút (three-node cluster), hãy bỏ qua bước tiếp theo để cho phép các nút mặt phẳng điều khiển (control plane nodes) có thể nhận tác vụ (schedulable).
+> **Cảnh báo:** Nếu bạn đang cài đặt một cụm gồm ba nút (three-node cluster), hãy bỏ qua bước tiếp theo để cho phép các nút control plane có thể nhận tác vụ (schedulable).
 
 > **Quan trọng:** Khi bạn cấu hình các nút mặt phẳng điều khiển từ trạng thái mặc định là không nhận tác vụ (unschedulable) sang trạng thái có thể nhận tác vụ (schedulable), bạn sẽ cần thêm các gói đăng ký (subscriptions) bổ sung, vì lúc này các nút mặt phẳng điều khiển sẽ trở thành các nút tính toán (compute nodes).
 
-2. Hãy xác minh rằng tham số `mastersSchedulable` trong tệp manifest Kubernetes `<installation_directory>/manifests/cluster-scheduler-02-config.yml` được đặt thành `false`. Thiết lập này ngăn không cho các pod được lập lịch trên các máy thuộc mặt phẳng điều khiển (control plane):
+2. Hãy xác minh rằng tham số `mastersSchedulable` trong tệp manifest Kubernetes `<installation_directory>/manifests/cluster-scheduler-02-config.yml` được đặt thành `false`. Thiết lập này ngăn không cho các pod được lập lịch trên các máy thuộc control plane:
   * Mở tệp `<installation_directory>/manifests/cluster-scheduler-02-config.yml`. 
   * Tìm tham số `mastersSchedulable` và xác minh rằng tham số này được đặt thành `false`. 
   * Lưu tệp và thoát.
@@ -3141,7 +3141,7 @@ INFO It is now safe to remove the bootstrap resources
 
 Thời gian chờ hoàn tất quá trình khởi động ban đầu (bootstrapping) khác nhau tùy theo từng nền tảng.
 
-Lệnh này sẽ thực thi thành công khi Kubernetes API server phát tín hiệu xác nhận rằng quá trình khởi động ban đầu đã hoàn tất trên các máy thuộc mặt phẳng điều khiển (control plane).
+Lệnh này sẽ thực thi thành công khi Kubernetes API server phát tín hiệu xác nhận rằng quá trình khởi động ban đầu đã hoàn tất trên các máy thuộc control plane.
 
 2. Sau khi quá trình khởi động ban đầu hoàn tất, hãy loại bỏ máy khởi động (bootstrap machine) khỏi bộ cân bằng tải (load balancer).
 
@@ -3301,7 +3301,7 @@ worker-1  Ready     worker  11m  v1.35.4
 > ((Lưu ý:)) Bạn có thể cần đợi vài phút sau khi các CSR máy chủ được phê duyệt để các máy chuyển sang trạng thái `Ready`.
 
 #### II.1.18. Cấu hình Operator ban đầu
-Sau khi mặt phẳng điều khiển (control plane) khởi tạo xong, bạn cần lập tức cấu hình một số Operator để đảm bảo tất cả chúng đều ở trạng thái sẵn sàng.
+Sau khi control plane khởi tạo xong, bạn cần lập tức cấu hình một số Operator để đảm bảo tất cả chúng đều ở trạng thái sẵn sàng.
 
 **Điều kiện tiên quyết**
 
@@ -3666,8 +3666,8 @@ Quan trọng
 
 | Máy chủ                                                                       | Mô tả                                                                                                                                                                                                  |
 |-------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Một máy khởi động tạm thời                                                    | Cụm yêu cầu phải có máy bootstrap để triển khai cụm OpenShift Container Platform trên ba máy thuộc mặt phẳng điều khiển (control plane). Bạn có thể loại bỏ máy bootstrap sau khi đã cài đặt xong cụm. |
-| Ba máy mặt phẳng điều khiển                                                   | Các máy thuộc mặt phẳng điều khiển (control plane) chạy các dịch vụ Kubernetes và OpenShift Container Platform, tạo nên mặt phẳng điều khiển đó.                                                       |
+| Một máy khởi động tạm thời                                                    | Cụm yêu cầu phải có máy bootstrap để triển khai cụm OpenShift Container Platform trên ba máy thuộc control plane. Bạn có thể loại bỏ máy bootstrap sau khi đã cài đặt xong cụm. |
+| Ba máy mặt phẳng điều khiển                                                   | Các máy thuộc control plane chạy các dịch vụ Kubernetes và OpenShift Container Platform, tạo nên mặt phẳng điều khiển đó.                                                       |
 | Ít nhất hai máy tính toán, còn được gọi là các máy thực thi (worker machine). | Các khối lượng công việc do người dùng OpenShift Container Platform yêu cầu sẽ chạy trên các máy tính toán.                                                                                            |
 
 > **Lưu ý:** Một trường hợp ngoại lệ là bạn có thể vận hành cụm máy chủ bare metal (phần cứng vật lý) mà không cần máy chủ tính toán (compute machine) nào, chỉ bao gồm ba máy chủ điều khiển (control plane machine). Cấu hình này tạo ra các cụm nhỏ gọn, sử dụng tài nguyên hiệu quả hơn, phù hợp để các quản trị viên và nhà phát triển sử dụng cho mục đích thử nghiệm, phát triển và vận hành thực tế. Việc vận hành chỉ với một máy chủ tính toán là không được hỗ trợ.
@@ -3690,7 +3690,7 @@ RHCOS được xây dựng dựa trên Red Hat Enterprise Linux (RHEL) 9.8 và k
 | Tính toán            | RHCOS        | 2   | 8 GB  | 100 GB  | 300  |
 
 * Một CPU tương đương với một nhân vật lý khi tính năng đa luồng đồng thời (SMT) – hay còn gọi là Hyper-Threading – không được kích hoạt. Khi tính năng này được bật, hãy sử dụng công thức sau để tính toán tỷ lệ tương ứng: (số luồng trên mỗi nhân × số nhân) × số socket = số CPU.
-* OpenShift Container Platform và Kubernetes rất nhạy cảm với hiệu năng ổ đĩa. Red Hat khuyến nghị sử dụng hệ thống lưu trữ có tốc độ cao, đặc biệt là đối với etcd trên các nút mặt phẳng điều khiển (control plane nodes) – nơi yêu cầu thời gian fsync p99 đạt mức 10 ms. Trên nhiều nền tảng đám mây, dung lượng lưu trữ và chỉ số IOPS thường tỷ lệ thuận với nhau; do đó, bạn có thể cần cấp phát thêm dung lượng lưu trữ để đạt được hiệu năng cần thiết.
+* OpenShift Container Platform và Kubernetes rất nhạy cảm với hiệu năng ổ đĩa. Red Hat khuyến nghị sử dụng hệ thống lưu trữ có tốc độ cao, đặc biệt là đối với etcd trên các nút control plane – nơi yêu cầu thời gian fsync p99 đạt mức 10 ms. Trên nhiều nền tảng đám mây, dung lượng lưu trữ và chỉ số IOPS thường tỷ lệ thuận với nhau; do đó, bạn có thể cần cấp phát thêm dung lượng lưu trữ để đạt được hiệu năng cần thiết.
 * Đối với các mô hình cài đặt do người dùng tự triển khai (user-provisioned installations), nếu bạn chọn sử dụng các máy tính (compute machines) chạy hệ điều hành RHEL trong cụm của mình, bạn sẽ chịu trách nhiệm quản lý toàn bộ vòng đời và bảo trì hệ điều hành đó. Điều này bao gồm việc thực hiện các bản cập nhật hệ thống, áp dụng các bản vá lỗi và hoàn tất mọi tác vụ cần thiết khác. OpenShift Container Platform phiên bản 4.10 trở về sau không hỗ trợ các máy tính chạy hệ điều hành RHEL 7.
 
 > **Lưu ý:** Trong OpenShift Container Platform phiên bản 4.22, RHCOS sử dụng RHEL phiên bản 9.8, phiên bản này cập nhật các yêu cầu về vi kiến trúc. Mỗi kiến trúc yêu cầu các tập lệnh (ISA) tối thiểu sau đây:
@@ -3738,7 +3738,7 @@ Phần này cung cấp thông tin chi tiết về các cổng (port) cần thi�
 | TCP       | `1936`          | Các chỉ số                                                                                                                                    |
 | TCP       | `9000`-`9999`   | Các dịch vụ ở cấp độ máy chủ (host), bao gồm node exporter trên các cổng `9100`-`9101` và Cluster Version Operator trên cổng `9099`.          |
 | TCP       | `10250`-`10259` | Các cổng mặc định mà Kubernetes dành riêng                                                                                                    |
-| TCP       | `22623`         | Cổng này xử lý lưu lượng truy cập từ Machine Config Server và điều hướng lưu lượng đó đến các máy thuộc mặt phẳng điều khiển (control plane). |
+| TCP       | `22623`         | Cổng này xử lý lưu lượng truy cập từ Machine Config Server và điều hướng lưu lượng đó đến các máy thuộc control plane. |
 | UDP       | `6081`          | Geneve                                                                                                                                        |
 | UDP       | `9000`-`9999`   | Các dịch vụ ở cấp độ máy chủ, bao gồm node exporter trên các cổng `9100`-`9101`.                                                              |
 | UDP       | `500`           | Các gói tin IPsec IKE                                                                                                                         |
@@ -3747,13 +3747,13 @@ Phần này cung cấp thông tin chi tiết về các cổng (port) cần thi�
 | TCP/UDP   | `30000`-`32767` | Cổng nút Kubernetes                                                                                                                           |
 | ESP       | N/A             | Giao thức đóng gói bảo mật (ESP) trong IPsec                                                                                                  |
 
-**Bảng 2.13. Các cổng được sử dụng cho hoạt động giao tiếp giữa tất cả các máy với mặt phẳng điều khiển (control plane)**
+**Bảng 2.13. Các cổng được sử dụng cho hoạt động giao tiếp giữa tất cả các máy với control plane**
 
 | Giao thức | Cổng   | Mô tả          |
 |-----------|--------|----------------|
 | TCP       | `6443` | Kubernetes API |
 
-**Bảng 2.14. Các cổng được sử dụng cho hoạt động giao tiếp giữa các máy trong mặt phẳng điều khiển (control plane)**
+**Bảng 2.14. Các cổng được sử dụng cho hoạt động giao tiếp giữa các máy trong control plane**
 
 | Giao thức | Cổng          | Mô tả                                                           |
 |-----------|---------------|-----------------------------------------------------------------|
@@ -3771,7 +3771,7 @@ Dưới đây là danh sách các thành phần cụm bắt buộc:
 
 * Kubernetes API
 * Wildcard (tên miền đại diện) cho ứng dụng trên OpenShift Container Platform
-* Các máy bootstrap và các máy thuộc mặt phẳng điều khiển (control plane)
+* Các máy bootstrap và các máy thuộc control plane
 * Các máy tính toán (compute machines)
 
 Việc phân giải DNS ngược (reverse DNS resolution) cũng là yêu cầu bắt buộc đối với Kubernetes API, máy bootstrap, các máy thuộc mặt phẳng điều khiển và các máy tính toán.
@@ -3790,7 +3790,7 @@ Các bản ghi DNS dưới đây là bắt buộc đối với cụm OpenShift C
 | Kubernetes API               | `api-int.<cluster_name>.<base_domain>.`            | Cần có bản ghi DNS A/AAAA hoặc CNAME, cùng với bản ghi DNS PTR, để xác định bộ cân bằng tải API (API load balancer) trong nội bộ hệ thống. Các bản ghi này phải có thể được phân giải từ tất cả các nút (node) bên trong cụm (cluster). Quan trọng: Máy chủ API (API server) phải có khả năng phân giải các nút worker thông qua tên máy chủ (hostname) đã được ghi lại trong Kubernetes. Nếu máy chủ API không thể phân giải tên các nút, thì các lệnh gọi API thông qua proxy có thể bị lỗi, đồng thời bạn sẽ không thể truy xuất nhật ký (log) từ các pod.                                                                                                   |
 | Routes                       | `*.apps.<cluster_name>.<base_domain>.`             | Một bản ghi DNS wildcard (dạng A/AAAA hoặc CNAME) trỏ đến bộ cân bằng tải ingress (ingress load balancer) của ứng dụng. Bộ cân bằng tải ingress này hướng lưu lượng truy cập đến các máy chủ đang chạy các pod Ingress Controller. Theo mặc định, các pod Ingress Controller này hoạt động trên các máy chủ tính toán (compute machines). Các bản ghi này phải có thể được phân giải bởi cả các client bên ngoài cụm (cluster) lẫn tất cả các node nằm bên trong cụm đó. Ví dụ: `console-openshift-console.apps.<cluster_name>.<base_domain>` được sử dụng làm tuyến đường (route) wildcard dẫn đến bảng điều khiển (console) của OpenShift Container Platform. |
 | Máy khởi động                | `bootstrap.<cluster_name>.<base_domain>.`          | Một bản ghi DNS A/AAAA hoặc CNAME, cùng với một bản ghi DNS PTR, để xác định máy khởi động (bootstrap machine). Các bản ghi này phải có thể được phân giải bởi các nút (node) nằm trong cụm (cluster).                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| Máy chủ mặt phẳng điều khiển | `<control_plane><n>.<cluster_name>.<base_domain>.` | Các bản ghi DNS A/AAAA hoặc CNAME cùng các bản ghi DNS PTR được sử dụng để định danh từng máy trong số các nút thuộc mặt phẳng điều khiển (control plane nodes). Các bản ghi này phải có khả năng được phân giải bởi các nút nằm trong cụm (cluster).                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Máy chủ mặt phẳng điều khiển | `<control_plane><n>.<cluster_name>.<base_domain>.` | Các bản ghi DNS A/AAAA hoặc CNAME cùng các bản ghi DNS PTR được sử dụng để định danh từng máy trong số các nút thuộc control plane. Các bản ghi này phải có khả năng được phân giải bởi các nút nằm trong cụm (cluster).                                                                                                                                                                                                                                                                                                                                                                                                           |
 | Máy tính toán                | `<compute><n>.<cluster_name>.<base_domain>.`       | Các bản ghi DNS A/AAAA hoặc CNAME cùng các bản ghi DNS PTR được sử dụng để định danh từng máy trong số các nút worker (worker nodes). Các bản ghi này phải có khả năng được phân giải bởi các nút nằm trong cụm (cluster).                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 > **Lưu ý:** Trong OpenShift Container Platform 4.4 trở về sau, bạn không cần chỉ định các bản ghi SRV và máy chủ etcd trong cấu hình DNS của mình.
@@ -3850,7 +3850,7 @@ Trong đó:
 * api-int.ocp4.example.com.: Cung cấp khả năng phân giải tên cho Kubernetes API. Bản ghi này trỏ đến địa chỉ IP của bộ cân bằng tải dành cho API và được sử dụng cho các giao tiếp nội bộ trong cụm (cluster).
 * `*.apps.ocp4.example.com.`: Cung cấp khả năng phân giải tên cho các tuyến đường (route) dạng ký tự đại diện (wildcard). Bản ghi này trỏ đến địa chỉ IP của bộ cân bằng tải dành cho ứng dụng (application ingress load balancer). Bộ cân bằng tải này hướng lưu lượng đến các máy chủ đang chạy các pod Ingress Controller.
 * `bootstrap.ocp4.example.com.`: Cung cấp khả năng phân giải tên cho máy chủ bootstrap.
-* `control-plane0.ocp4.example.com.`: Cung cấp khả năng phân giải tên cho các máy chủ thuộc mặt phẳng điều khiển (control plane).
+* `control-plane0.ocp4.example.com.`: Cung cấp khả năng phân giải tên cho các máy chủ thuộc control plane.
 * `compute0.ocp4.example.com.`: Cung cấp khả năng phân giải tên cho các máy chủ tính toán (compute).
 
 Ví dụ về tệp vùng (zone file) BIND dưới đây hiển thị các bản ghi PTR mẫu dùng cho việc phân giải tên ngược (reverse name resolution) trong một cụm do người dùng tự cung cấp (user-provisioned cluster):
@@ -3886,7 +3886,7 @@ Trong đó:
 * `api.ocp4.example.com.`: Cung cấp khả năng phân giải DNS ngược (reverse DNS resolution) cho Kubernetes API. Bản ghi PTR trỏ đến tên bản ghi của bộ cân bằng tải (load balancer) API.
 * `api-int.ocp4.example.com.`: Cung cấp khả năng phân giải DNS ngược cho Kubernetes API. Bản ghi PTR trỏ đến tên bản ghi của bộ cân bằng tải API và được sử dụng cho các hoạt động giao tiếp nội bộ trong cụm (cluster).
 * `bootstrap.ocp4.example.com.`.: Cung cấp khả năng phân giải DNS ngược cho máy bootstrap.
-* `control-plane0.ocp4.example.com.`: Cung cấp khả năng phân giải DNS ngược cho các máy thuộc mặt phẳng điều khiển (control plane).
+* `control-plane0.ocp4.example.com.`: Cung cấp khả năng phân giải DNS ngược cho các máy thuộc control plane.
 * `compute0.ocp4.example.com.`: Cung cấp khả năng phân giải DNS ngược cho các máy tính toán (compute machines).
 
 > **Lưu ý:** Không bắt buộc phải có bản ghi PTR cho tên miền đại diện (wildcard) của ứng dụng trong OpenShift Container Platform.
@@ -3953,8 +3953,8 @@ Cấu hình các cổng (port) sau đây ở cả phía trước (front-end) và
 
 | Cổng    | Máy chủ phía sau                                                                                                                                                                                                                                                                                                         | Nội bộ | Bên ngoài | Mô tả                     |
 |---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------|-----------|---------------------------|
-| `6443`  | Bootstrap và mặt phẳng điều khiển (control plane). Sau khi máy bootstrap khởi tạo mặt phẳng điều khiển của cụm (cluster), bạn cần loại bỏ máy này khỏi bộ cân bằng tải (load balancer). Bạn phải cấu hình điểm cuối (endpoint) `/readyz` để phục vụ cho việc kiểm tra tình trạng hoạt động của máy chủ API (API server). | X      | X         | Máy chủ API Kubernetes    |
-| `22623` | Bootstrap và mặt phẳng điều khiển (control plane). Bạn loại bỏ máy bootstrap khỏi bộ cân bằng tải sau khi máy này khởi tạo mặt phẳng điều khiển của cụm (cluster).                                                                                                                                                       | X      |           | Máy chủ cấu hình thiết bị |
+| `6443`  | Bootstrap và control plane. Sau khi máy bootstrap khởi tạo mặt phẳng điều khiển của cụm (cluster), bạn cần loại bỏ máy này khỏi bộ cân bằng tải (load balancer). Bạn phải cấu hình điểm cuối (endpoint) `/readyz` để phục vụ cho việc kiểm tra tình trạng hoạt động của máy chủ API (API server). | X      | X         | Máy chủ API Kubernetes    |
+| `22623` | Bootstrap và control plane. Bạn loại bỏ máy bootstrap khỏi bộ cân bằng tải sau khi máy này khởi tạo mặt phẳng điều khiển của cụm (cluster).                                                                                                                                                       | X      |           | Máy chủ cấu hình thiết bị |
 
 > **Lưu ý:** Bộ cân bằng tải (load balancer) phải được cấu hình sao cho khoảng thời gian từ lúc máy chủ API tắt điểm cuối (endpoint) `/readyz` cho đến khi thực thể máy chủ API đó bị loại bỏ khỏi nhóm (pool) không vượt quá 30 giây. Trong khoảng thời gian sau khi `/readyz` trả về lỗi hoặc chuyển sang trạng thái khỏe mạnh (healthy), điểm cuối đó phải được loại bỏ hoặc thêm vào tương ứng. Việc thực hiện kiểm tra (probe) mỗi 5 hoặc 10 giây, với quy định cần 2 phản hồi thành công liên tiếp để xác định trạng thái khỏe mạnh và 3 phản hồi không thành công liên tiếp để xác định trạng thái không khỏe mạnh, là các thông số đã được kiểm chứng hiệu quả. 
 
@@ -3973,7 +3973,7 @@ Cấu hình các cổng (port) sau đây ở cả phía trước (front-end) và
 | `443` | Các máy chạy các pod Ingress Controller — dù là máy tính toán (compute) hay máy thực thi tác vụ (worker) — theo mặc định. | X      | X         | Lưu lượng truy cập HTTPS |
 | `80`  | Các máy chạy các pod Ingress Controller — dù là máy tính toán (compute) hay máy thực thi tác vụ (worker) — theo mặc định. | X      | X         | Lưu lượng truy cập HTTP  |
 
-> **Lưu ý:** Nếu bạn triển khai cụm gồm ba nút (node) mà không có nút tính toán (compute node) nào, các pod của Ingress Controller sẽ chạy trên các nút thuộc mặt phẳng điều khiển (control plane node). Đối với các cụm gồm ba nút, bạn phải cấu hình bộ cân bằng tải Ingress cho ứng dụng của mình để định tuyến lưu lượng truy cập HTTP và HTTPS đến các nút thuộc mặt phẳng điều khiển.
+> **Lưu ý:** Nếu bạn triển khai cụm gồm ba nút (node) mà không có nút tính toán (compute node) nào, các pod của Ingress Controller sẽ chạy trên các nút thuộc control plane. Đối với các cụm gồm ba nút, bạn phải cấu hình bộ cân bằng tải Ingress cho ứng dụng của mình để định tuyến lưu lượng truy cập HTTP và HTTPS đến các nút thuộc mặt phẳng điều khiển.
 
 ###### II.2.3.7.1. Ví dụ về cấu hình bộ cân bằng tải cho các cụm do người dùng cung cấp
 Hãy tham khảo ví dụ về cấu hình bộ cân bằng tải cho API và Ingress ứng dụng để hiểu cách đáp ứng các yêu cầu cân bằng tải đối với các cụm do người dùng cung cấp.
@@ -4042,7 +4042,7 @@ listen ingress-router-80
 
 Trong đó:
 
-* `listen api-server-6443`: Cổng 6443 xử lý lưu lượng truy cập Kubernetes API và trỏ đến các máy thuộc mặt phẳng điều khiển (control plane). Bạn phải định cấu hình kiểm tra trạng thái (health check) trên cổng này để đảm bảo rằng API server khả dụng trước khi định tuyến lưu lượng truy cập.
+* `listen api-server-6443`: Cổng 6443 xử lý lưu lượng truy cập Kubernetes API và trỏ đến các máy thuộc control plane. Bạn phải định cấu hình kiểm tra trạng thái (health check) trên cổng này để đảm bảo rằng API server khả dụng trước khi định tuyến lưu lượng truy cập.
 * `server bootstrap bootstrap.ocp4.example.com`: Các mục cấu hình bootstrap phải được thiết lập trước khi cài đặt cụm OpenShift Container Platform và phải được loại bỏ sau khi quá trình bootstrap hoàn tất.
 * `listen machine-config-server`: Cổng 22623 xử lý lưu lượng truy cập của machine config server và trỏ đến các máy thuộc mặt phẳng điều khiển.
 * `listen ingress-router-443`: Cổng 443 xử lý lưu lượng truy cập HTTPS và trỏ đến các máy chạy các pod Ingress Controller. Theo mặc định, các pod Ingress Controller chạy trên các máy tính toán (compute nodes).
@@ -4373,7 +4373,7 @@ Các bước xác thực được nêu chi tiết trong phần này phải đư�
   bootstrap.ocp4.example.com.   604800  IN  A 192.168.1.96
   ```
 
-  * Sử dụng phương pháp này để thực hiện tra cứu dựa trên các tên bản ghi DNS của các nút mặt phẳng điều khiển (control plane) và các nút tính toán (compute nodes). Hãy kiểm tra để đảm bảo rằng các kết quả thu được tương ứng với địa chỉ IP của từng nút.
+  * Sử dụng phương pháp này để thực hiện tra cứu dựa trên các tên bản ghi DNS của các nút control plane và các nút tính toán (compute nodes). Hãy kiểm tra để đảm bảo rằng các kết quả thu được tương ứng với địa chỉ IP của từng nút.
 
 2. Từ nút cài đặt của bạn, hãy thực hiện truy vấn DNS ngược (reverse DNS lookup) đối với các địa chỉ IP của bộ cân bằng tải (load balancer) và các nút trong cụm (cluster nodes). Hãy xác minh rằng các tên bản ghi (record names) trong phản hồi tương ứng với các thành phần chính xác. 
   * Thực hiện truy vấn ngược đối với địa chỉ IP của bộ cân bằng tải API. Kiểm tra xem phản hồi có bao gồm các tên bản ghi dành cho Kubernetes API và Kubernetes internal API hay không:
@@ -4757,7 +4757,7 @@ spec:
 ```
 
 4. Tùy chọn: Hãy sao lưu tệp `manifests/cluster-network-03-config.yml`. Chương trình cài đặt sẽ sử dụng các tệp trong thư mục `manifests/` khi bạn tạo các tệp cấu hình Ignition.
-5. Xóa các tệp manifest Kubernetes định nghĩa các máy thuộc mặt phẳng điều khiển (control plane) và các MachineSet tính toán (compute MachineSets):
+5. Xóa các tệp manifest Kubernetes định nghĩa các máy thuộc control plane và các MachineSet tính toán (compute MachineSets):
 
 ```shell
 $ rm -f openshift/99_openshift-cluster-api_master-machines-*.yaml \
@@ -6499,7 +6499,7 @@ INFO It is now safe to remove the bootstrap resources
 
 Thời gian chờ hoàn tất quá trình khởi động ban đầu (bootstrapping) khác nhau tùy theo từng nền tảng.
 
-Lệnh này thực thi thành công khi máy chủ API Kubernetes báo hiệu rằng quá trình khởi động ban đầu đã hoàn tất trên các máy thuộc mặt phẳng điều khiển (control plane).
+Lệnh này thực thi thành công khi máy chủ API Kubernetes báo hiệu rằng quá trình khởi động ban đầu đã hoàn tất trên các máy thuộc control plane.
 
 2. Sau khi quá trình khởi động ban đầu (bootstrap) hoàn tất, hãy loại bỏ máy bootstrap khỏi bộ cân bằng tải (load balancer).
 
@@ -6661,7 +6661,7 @@ worker-1  Ready     worker  11m  v1.35.4
 > **Lưu ý:** Bạn có thể cần đợi vài phút sau khi các CSR máy chủ được phê duyệt để các máy chuyển sang trạng thái Sẵn sàng (Ready).
 
 #### II.2.21. Cấu hình các Operator ban đầu
-Sau khi mặt phẳng điều khiển (control plane) khởi tạo xong, bạn cần lập tức cấu hình một số Operator để đảm bảo tất cả chúng đều ở trạng thái sẵn sàng.
+Sau khi control plane khởi tạo xong, bạn cần lập tức cấu hình một số Operator để đảm bảo tất cả chúng đều ở trạng thái sẵn sàng.
 
 **Điều kiện tiên quyết**
 
@@ -6956,8 +6956,8 @@ Quan trọng
 
 | Máy chủ                                                                       | Mô tả                                                                                                                                                                                                  |
 |-------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Một máy khởi động tạm thời                                                    | Cụm yêu cầu phải có máy bootstrap để triển khai cụm OpenShift Container Platform trên ba máy thuộc mặt phẳng điều khiển (control plane). Bạn có thể loại bỏ máy bootstrap sau khi đã cài đặt xong cụm. |
-| Ba máy thuộc mặt phẳng điều khiển                                             | Các máy thuộc mặt phẳng điều khiển (control plane) chạy các dịch vụ Kubernetes và OpenShift Container Platform, tạo nên mặt phẳng điều khiển đó.                                                       |
+| Một máy khởi động tạm thời                                                    | Cụm yêu cầu phải có máy bootstrap để triển khai cụm OpenShift Container Platform trên ba máy thuộc control plane. Bạn có thể loại bỏ máy bootstrap sau khi đã cài đặt xong cụm. |
+| Ba máy thuộc mặt phẳng điều khiển                                             | Các máy thuộc control plane chạy các dịch vụ Kubernetes và OpenShift Container Platform, tạo nên mặt phẳng điều khiển đó.                                                       |
 | Ít nhất hai máy tính toán, còn được gọi là các máy thực thi (worker machine). | Các khối lượng công việc do người dùng OpenShift Container Platform yêu cầu sẽ chạy trên các máy tính toán.                                                                                            |
 
 > **Lưu ý:** Một trường hợp ngoại lệ là bạn có thể vận hành các cụm máy chủ bare metal (phần cứng vật lý thuần túy) mà không cần máy chủ tính toán (compute machine), chỉ bao gồm ba máy chủ điều khiển (control plane machine). Cấu hình này tạo ra các cụm nhỏ gọn, sử dụng tài nguyên hiệu quả hơn, phù hợp để các quản trị viên cụm và nhà phát triển sử dụng cho mục đích thử nghiệm, phát triển và vận hành thực tế. Lưu ý rằng việc vận hành chỉ với một máy chủ tính toán là không được hỗ trợ.
@@ -6980,7 +6980,7 @@ RHCOS được xây dựng dựa trên Red Hat Enterprise Linux (RHEL) 9.8 và k
 | Compute       | RHCOS        | 2   | 8 GB  | 100 GB  | 300  |
 
 * Một CPU tương đương với một nhân vật lý khi tính năng đa luồng đồng thời (SMT) – hay còn gọi là Hyper-Threading – không được kích hoạt. Khi tính năng này được bật, hãy sử dụng công thức sau để tính toán tỷ lệ tương ứng: (số luồng trên mỗi nhân × số nhân) × số socket = số CPU. 
-* OpenShift Container Platform và Kubernetes rất nhạy cảm với hiệu năng ổ đĩa. Red Hat khuyến nghị sử dụng hệ thống lưu trữ có tốc độ cao, đặc biệt là đối với etcd trên các nút mặt phẳng điều khiển (control plane nodes) – vốn yêu cầu thời gian thực hiện fsync (p99) đạt mức 10 ms. Trên nhiều nền tảng đám mây, dung lượng lưu trữ và chỉ số IOPS thường tỷ lệ thuận với nhau; do đó, bạn có thể cần cấp phát thêm dung lượng lưu trữ để đạt được hiệu năng cần thiết. 
+* OpenShift Container Platform và Kubernetes rất nhạy cảm với hiệu năng ổ đĩa. Red Hat khuyến nghị sử dụng hệ thống lưu trữ có tốc độ cao, đặc biệt là đối với etcd trên các nút control plane – vốn yêu cầu thời gian thực hiện fsync (p99) đạt mức 10 ms. Trên nhiều nền tảng đám mây, dung lượng lưu trữ và chỉ số IOPS thường tỷ lệ thuận với nhau; do đó, bạn có thể cần cấp phát thêm dung lượng lưu trữ để đạt được hiệu năng cần thiết. 
 * Đối với các mô hình cài đặt do người dùng tự triển khai (user-provisioned installations), nếu bạn chọn sử dụng các máy tính toán (compute machines) chạy hệ điều hành RHEL trong cụm (cluster) của mình, bạn sẽ chịu trách nhiệm quản lý vòng đời và bảo trì hệ điều hành đó. Điều này bao gồm việc thực hiện các bản cập nhật hệ thống, áp dụng các bản vá lỗi và hoàn tất mọi tác vụ cần thiết khác. OpenShift Container Platform phiên bản 4.10 trở về sau không hỗ trợ các máy tính toán chạy RHEL 7.
 
 > **Lưu ý:** Trong OpenShift Container Platform phiên bản 4.22, RHCOS sử dụng RHEL phiên bản 9.8, với các yêu cầu cập nhật về kiến trúc vi xử lý (micro-architecture). Mỗi kiến trúc yêu cầu các tập lệnh (Instruction Set Architecture - ISA) tối thiểu như sau:
@@ -7027,7 +7027,7 @@ Phần này cung cấp thông tin chi tiết về các cổng (port) cần thi�
 | TCP       | `1936`          | Các chỉ số                                                                                                                                    |
 | TCP       | `9000`-`9999`   | Các dịch vụ ở cấp độ máy chủ (host), bao gồm node exporter trên các cổng `9100`-`9101` và Cluster Version Operator trên cổng `9099`.          |
 | TCP       | `10250`-`10259` | Các cổng mặc định mà Kubernetes dành riêng                                                                                                    |
-| TCP       | `22623`         | Cổng này xử lý lưu lượng truy cập từ Machine Config Server và điều hướng lưu lượng đó đến các máy thuộc mặt phẳng điều khiển (control plane). |
+| TCP       | `22623`         | Cổng này xử lý lưu lượng truy cập từ Machine Config Server và điều hướng lưu lượng đó đến các máy thuộc control plane. |
 | UDP       | `6081`          | Geneve                                                                                                                                        |
 | UDP       | `9000`-`9999`   | Các dịch vụ ở cấp độ máy chủ, bao gồm node exporter trên các cổng `9100`-`9101`.                                                              |
 | UDP       | `500`           | Các gói tin IPsec IKE                                                                                                                         |
@@ -7036,13 +7036,13 @@ Phần này cung cấp thông tin chi tiết về các cổng (port) cần thi�
 | TCP/UDP   | `30000`-`32767` | Cổng nút Kubernetes                                                                                                                           |
 | ESP       | N/A             | Giao thức đóng gói bảo mật (ESP) trong IPsec                                                                                                  |
 
-**Bảng 2.32. Các cổng được sử dụng cho hoạt động giao tiếp giữa tất cả các máy với mặt phẳng điều khiển (control plane)**
+**Bảng 2.32. Các cổng được sử dụng cho hoạt động giao tiếp giữa tất cả các máy với control plane**
 
 | Giao thức | Cổng   | Mô tả          |
 |-----------|--------|----------------|
 | TCP       | `6443` | Kubernetes API |
 
-**Bảng 2.33. Các cổng được sử dụng cho hoạt động giao tiếp giữa các máy trong mặt phẳng điều khiển (control plane)**
+**Bảng 2.33. Các cổng được sử dụng cho hoạt động giao tiếp giữa các máy trong control plane**
 
 | Giao thức | Cổng          | Mô tả                                                           |
 |-----------|---------------|-----------------------------------------------------------------|
@@ -7060,7 +7060,7 @@ Dưới đây là danh sách các thành phần cụm bắt buộc:
 
 * Kubernetes API
 * Wildcard (tên miền đại diện) cho ứng dụng trên OpenShift Container Platform
-* Các máy bootstrap và các máy thuộc mặt phẳng điều khiển (control plane)
+* Các máy bootstrap và các máy thuộc control plane
 * Các máy tính toán (compute machines)
 
 Phân giải DNS ngược (reverse DNS resolution) cũng là yêu cầu bắt buộc đối với Kubernetes API, máy bootstrap, các máy thuộc mặt phẳng điều khiển và các máy tính toán.
@@ -7079,7 +7079,7 @@ Các bản ghi DNS dưới đây là bắt buộc đối với cụm OpenShift C
 | Kubernetes API               | `api-int.<cluster_name>.<base_domain>.`            | Cần có bản ghi DNS A/AAAA hoặc CNAME, cùng với bản ghi DNS PTR, để xác định bộ cân bằng tải API (API load balancer) trong nội bộ hệ thống. Các bản ghi này phải có thể phân giải được từ tất cả các nút (node) bên trong cụm (cluster). **Quan trọng:** Máy chủ API (API server) phải có khả năng phân giải các nút worker thông qua tên máy chủ (hostname) đã được ghi lại trong Kubernetes. Nếu máy chủ API không thể phân giải được tên các nút, thì các lệnh gọi API thông qua proxy có thể bị lỗi, và bạn sẽ không thể truy xuất nhật ký (log) từ các pod.                                                                       |
 | Routes                       | `*.apps.<cluster_name>.<base_domain>.`             | Một bản ghi DNS wildcard (dạng A/AAAA hoặc CNAME) trỏ đến bộ cân bằng tải ingress (ingress load balancer) của ứng dụng. Bộ cân bằng tải ingress này hướng lưu lượng truy cập đến các máy đang chạy các pod Ingress Controller. Theo mặc định, các pod Ingress Controller này chạy trên các máy tính toán (compute machines). Các bản ghi này phải có thể được phân giải bởi cả các client bên ngoài cụm lẫn tất cả các node nằm bên trong cụm. Ví dụ: `console-openshift-console.apps.<cluster_name>.<base_domain>` được sử dụng làm tuyến đường (route) wildcard dẫn đến bảng điều khiển (console) của OpenShift Container Platform. |
 | Máy khởi động                | `bootstrap.<cluster_name>.<base_domain>.`          | Một bản ghi DNS A/AAAA hoặc CNAME, cùng với một bản ghi DNS PTR, để xác định máy khởi động (bootstrap machine). Các bản ghi này phải có thể được phân giải bởi các nút (node) nằm trong cụm (cluster).                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| Máy chủ mặt phẳng điều khiển | `<control_plane><n>.<cluster_name>.<base_domain>.` | Các bản ghi DNS A/AAAA hoặc CNAME cùng các bản ghi DNS PTR được sử dụng để định danh từng máy trong số các nút thuộc mặt phẳng điều khiển (control plane nodes). Các bản ghi này phải có khả năng được phân giải bởi các nút nằm trong cụm (cluster).                                                                                                                                                                                                                                                                                                                                                                                 |
+| Máy chủ mặt phẳng điều khiển | `<control_plane><n>.<cluster_name>.<base_domain>.` | Các bản ghi DNS A/AAAA hoặc CNAME cùng các bản ghi DNS PTR được sử dụng để định danh từng máy trong số các nút thuộc control plane. Các bản ghi này phải có khả năng được phân giải bởi các nút nằm trong cụm (cluster).                                                                                                                                                                                                                                                                                                                                                                                 |
 | Máy tính toán                | `<compute><n>.<cluster_name>.<base_domain>.`       | Các bản ghi DNS A/AAAA hoặc CNAME cùng các bản ghi DNS PTR được sử dụng để định danh từng máy trong số các nút worker (worker nodes). Các bản ghi này phải có khả năng được phân giải bởi các nút nằm trong cụm (cluster).                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 > **Lưu ý:** Trong OpenShift Container Platform 4.4 trở về sau, bạn không cần chỉ định các bản ghi SRV và máy chủ etcd trong cấu hình DNS của mình.
@@ -7140,7 +7140,7 @@ Trong đó:
 * api-int.ocp4.example.com.: Cung cấp khả năng phân giải tên cho Kubernetes API. Bản ghi này trỏ đến địa chỉ IP của bộ cân bằng tải dành cho API và được sử dụng cho các giao tiếp nội bộ trong cụm (cluster).
 * `*.apps.ocp4.example.com.`: Cung cấp khả năng phân giải tên cho các tuyến đường (route) dạng ký tự đại diện (wildcard). Bản ghi này trỏ đến địa chỉ IP của bộ cân bằng tải dành cho ứng dụng (application ingress load balancer). Bộ cân bằng tải này hướng lưu lượng đến các máy chủ đang chạy các pod Ingress Controller.
 * `bootstrap.ocp4.example.com.`: Cung cấp khả năng phân giải tên cho máy chủ bootstrap.
-* `control-plane0.ocp4.example.com.`: Cung cấp khả năng phân giải tên cho các máy chủ thuộc mặt phẳng điều khiển (control plane).
+* `control-plane0.ocp4.example.com.`: Cung cấp khả năng phân giải tên cho các máy chủ thuộc control plane.
 * `compute0.ocp4.example.com.`: Cung cấp khả năng phân giải tên cho các máy chủ tính toán (compute).
 
 Ví dụ về tệp vùng (zone file) BIND dưới đây hiển thị các bản ghi PTR mẫu dùng cho việc phân giải tên ngược (reverse name resolution) trong một cụm do người dùng tự cung cấp (user-provisioned cluster):
@@ -7176,7 +7176,7 @@ Trong đó:
 * `api.ocp4.example.com.`: Cung cấp khả năng phân giải DNS ngược (reverse DNS resolution) cho Kubernetes API. Bản ghi PTR trỏ đến tên bản ghi của bộ cân bằng tải (load balancer) API.
 * `api-int.ocp4.example.com.`: Cung cấp khả năng phân giải DNS ngược cho Kubernetes API. Bản ghi PTR trỏ đến tên bản ghi của bộ cân bằng tải API và được sử dụng cho các hoạt động giao tiếp nội bộ trong cụm (cluster).
 * `bootstrap.ocp4.example.com.`: Cung cấp khả năng phân giải DNS ngược cho máy bootstrap.
-* `control-plane0.ocp4.example.com.`: Cung cấp khả năng phân giải DNS ngược cho các máy thuộc mặt phẳng điều khiển (control plane).
+* `control-plane0.ocp4.example.com.`: Cung cấp khả năng phân giải DNS ngược cho các máy thuộc control plane.
 * `compute0.ocp4.example.com.`: Cung cấp khả năng phân giải DNS ngược cho các máy tính toán (compute machines).
 
 > **Lưu ý:** Không bắt buộc phải có bản ghi PTR cho tên miền đại diện (wildcard) của ứng dụng trong OpenShift Container Platform.
@@ -7243,8 +7243,8 @@ Cấu hình các cổng (port) sau đây ở cả phía trước (front-end) và
 
 | Cổng  | Máy chủ phụ trợ                                                                                                                                                                                                                                                                                                          | Nội bộ | Bên ngoài | Mô tả                     |
 |-------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------|-----------|---------------------------|
-| 6443  | Bootstrap và mặt phẳng điều khiển (control plane). Sau khi máy bootstrap khởi tạo mặt phẳng điều khiển của cụm (cluster), bạn cần loại bỏ máy này khỏi bộ cân bằng tải (load balancer). Bạn phải cấu hình điểm cuối (endpoint) `/readyz` để phục vụ cho việc kiểm tra tình trạng hoạt động của máy chủ API (API server). | X      | X         | Máy chủ API Kubernetes    |
-| 22623 | Bootstrap và mặt phẳng điều khiển (control plane). Bạn loại bỏ máy bootstrap khỏi bộ cân bằng tải sau khi máy này khởi tạo mặt phẳng điều khiển của cụm (cluster).                                                                                                                                                       | X      |           | Máy chủ cấu hình thiết bị |
+| 6443  | Bootstrap và control plane. Sau khi máy bootstrap khởi tạo mặt phẳng điều khiển của cụm (cluster), bạn cần loại bỏ máy này khỏi bộ cân bằng tải (load balancer). Bạn phải cấu hình điểm cuối (endpoint) `/readyz` để phục vụ cho việc kiểm tra tình trạng hoạt động của máy chủ API (API server). | X      | X         | Máy chủ API Kubernetes    |
+| 22623 | Bootstrap và control plane. Bạn loại bỏ máy bootstrap khỏi bộ cân bằng tải sau khi máy này khởi tạo mặt phẳng điều khiển của cụm (cluster).                                                                                                                                                       | X      |           | Máy chủ cấu hình thiết bị |
 
 > **Lưu ý:** Bộ cân bằng tải (load balancer) phải được cấu hình sao cho khoảng thời gian từ lúc máy chủ API tắt điểm cuối (endpoint) `/readyz` cho đến khi thực thể máy chủ API đó bị loại bỏ khỏi nhóm (pool) không vượt quá 30 giây. Trong khoảng thời gian sau khi `/readyz` trả về lỗi hoặc chuyển sang trạng thái khỏe mạnh (healthy), điểm cuối đó phải được loại bỏ hoặc thêm vào tương ứng. Việc thực hiện kiểm tra (probe) mỗi 5 hoặc 10 giây, với quy tắc cần 2 phản hồi thành công liên tiếp để xác định trạng thái khỏe mạnh và 3 phản hồi không thành công liên tiếp để xác định trạng thái không khỏe mạnh, là các thông số đã được kiểm chứng hiệu quả. 
 
@@ -7263,7 +7263,7 @@ Cấu hình các cổng (port) sau đây ở cả phía trước (front-end) và
 | 443  | Các máy chạy các pod Ingress Controller — dù là máy tính toán (compute) hay máy thực thi tác vụ (worker) — theo mặc định. | X      | X         | Lưu lượng truy cập HTTPS |
 | 80   | Các máy chạy các pod Ingress Controller — dù là máy tính toán (compute) hay máy thực thi tác vụ (worker) — theo mặc định. | X      | X         | Lưu lượng truy cập HTTP  |
 
-> **Lưu ý:** Nếu bạn triển khai cụm gồm ba nút (node) mà không có nút tính toán (compute node) nào, các pod của Ingress Controller sẽ chạy trên các nút thuộc mặt phẳng điều khiển (control plane node). Đối với các cụm gồm ba nút, bạn phải cấu hình bộ cân bằng tải Ingress cho ứng dụng của mình để định tuyến lưu lượng truy cập HTTP và HTTPS đến các nút thuộc mặt phẳng điều khiển.
+> **Lưu ý:** Nếu bạn triển khai cụm gồm ba nút (node) mà không có nút tính toán (compute node) nào, các pod của Ingress Controller sẽ chạy trên các nút thuộc control plane. Đối với các cụm gồm ba nút, bạn phải cấu hình bộ cân bằng tải Ingress cho ứng dụng của mình để định tuyến lưu lượng truy cập HTTP và HTTPS đến các nút thuộc mặt phẳng điều khiển.
 
 ###### II.3.4.7.1. Ví dụ về cấu hình bộ cân bằng tải cho các cụm do người dùng cung cấp
 Hãy tham khảo ví dụ về cấu hình bộ cân bằng tải cho API Kubernetes và lưu lượng truy cập ứng dụng (Ingress) để hiểu cách đáp ứng các yêu cầu cân bằng tải đối với các cụm do người dùng cung cấp.
@@ -7332,7 +7332,7 @@ listen ingress-router-80
 
 Trong đó:
 
-* `listen api-server-6443`: Cổng 6443 xử lý lưu lượng truy cập Kubernetes API và trỏ đến các máy thuộc mặt phẳng điều khiển (control plane). Bạn phải định cấu hình kiểm tra trạng thái (health check) trên cổng này để đảm bảo rằng API server khả dụng trước khi định tuyến lưu lượng truy cập.
+* `listen api-server-6443`: Cổng 6443 xử lý lưu lượng truy cập Kubernetes API và trỏ đến các máy thuộc control plane. Bạn phải định cấu hình kiểm tra trạng thái (health check) trên cổng này để đảm bảo rằng API server khả dụng trước khi định tuyến lưu lượng truy cập.
 * `server bootstrap bootstrap.ocp4.example.com`: Các mục cấu hình bootstrap phải được thiết lập trước khi cài đặt cụm OpenShift Container Platform và phải được loại bỏ sau khi quá trình bootstrap hoàn tất.
 * `listen machine-config-server`: Cổng 22623 xử lý lưu lượng truy cập của machine config server và trỏ đến các máy thuộc mặt phẳng điều khiển.
 * `listen ingress-router-443`: Cổng 443 xử lý lưu lượng truy cập HTTPS và trỏ đến các máy chạy các pod Ingress Controller. Theo mặc định, các pod Ingress Controller chạy trên các máy tính toán (compute nodes).
@@ -7658,7 +7658,7 @@ Sau khi hoàn tất quá trình chuẩn bị, cơ sở hạ tầng cụm của b
   bootstrap.ocp4.example.com.   604800  IN  A 192.168.1.96
   ```
 
-  * Sử dụng phương pháp này để thực hiện tra cứu dựa trên các tên bản ghi DNS của các nút mặt phẳng điều khiển (control plane) và các nút tính toán (compute nodes). Hãy kiểm tra để đảm bảo rằng các kết quả thu được tương ứng với địa chỉ IP của từng nút.
+  * Sử dụng phương pháp này để thực hiện tra cứu dựa trên các tên bản ghi DNS của các nút control plane và các nút tính toán (compute nodes). Hãy kiểm tra để đảm bảo rằng các kết quả thu được tương ứng với địa chỉ IP của từng nút.
 
 2. Từ nút cài đặt của bạn, hãy thực hiện truy vấn DNS ngược (reverse DNS lookup) đối với các địa chỉ IP của bộ cân bằng tải (load balancer) và các nút trong cụm (cluster nodes). Hãy xác minh rằng các tên bản ghi (record names) trong phản hồi tương ứng với các thành phần chính xác. 
   * Thực hiện truy vấn ngược đối với địa chỉ IP của bộ cân bằng tải API. Kiểm tra xem phản hồi có bao gồm các tên bản ghi dành cho Kubernetes API và Kubernetes internal API hay không:
@@ -7944,7 +7944,7 @@ Chương trình cài đặt sẽ tạo một proxy trên toàn cụm (cluster-wi
 > **Lưu ý:** Chỉ đối tượng Proxy có tên là `cluster` mới được hỗ trợ; bạn không thể tạo thêm các proxy khác.
 
 ##### II.3.9.3. Cấu hình cụm ba nút (three-node cluster)
-Để tạo các cụm có quy mô nhỏ hơn và tiết kiệm tài nguyên phục vụ mục đích thử nghiệm hoặc triển khai thực tế, bạn có thể thiết lập một cụm trên hạ tầng vật lý (bare-metal) mà không cần các máy tính toán (compute machine). Cấu hình tùy chọn này chỉ sử dụng ba máy thuộc mặt phẳng điều khiển (control plane), giúp tối ưu hóa tài nguyên hạ tầng cho các quản trị viên và nhà phát triển.
+Để tạo các cụm có quy mô nhỏ hơn và tiết kiệm tài nguyên phục vụ mục đích thử nghiệm hoặc triển khai thực tế, bạn có thể thiết lập một cụm trên hạ tầng vật lý (bare-metal) mà không cần các máy tính toán (compute machine). Cấu hình tùy chọn này chỉ sử dụng ba máy thuộc control plane, giúp tối ưu hóa tài nguyên hạ tầng cho các quản trị viên và nhà phát triển.
 
 Trong các môi trường OpenShift Container Platform gồm ba nút, ba máy thuộc mặt phẳng điều khiển này cũng có thể đảm nhận vai trò lập lịch (schedulable); nghĩa là các khối lượng công việc (workload) ứng dụng của bạn sẽ chạy trực tiếp trên các máy này.
 
@@ -7968,7 +7968,7 @@ compute:
 
 Đối với các hệ thống cụm (cluster) gồm ba nút, hãy thực hiện các bước sau:
 
-  * Nếu bạn đang triển khai cụm ba nút mà không có nút tính toán (compute node) nào, các pod của Ingress Controller sẽ chạy trên các nút mặt phẳng điều khiển (control plane node). Trong các hệ thống cụm ba nút, bạn phải cấu hình bộ cân bằng tải (load balancer) cho ứng dụng để định tuyến lưu lượng truy cập HTTP và HTTPS đến các nút mặt phẳng điều khiển. Để biết thêm thông tin, hãy xem phần các yêu cầu về cân bằng tải đối với cơ sở hạ tầng do người dùng cung cấp (user-provisioned infrastructure). 
+  * Nếu bạn đang triển khai cụm ba nút mà không có nút tính toán (compute node) nào, các pod của Ingress Controller sẽ chạy trên các nút control plane. Trong các hệ thống cụm ba nút, bạn phải cấu hình bộ cân bằng tải (load balancer) cho ứng dụng để định tuyến lưu lượng truy cập HTTP và HTTPS đến các nút mặt phẳng điều khiển. Để biết thêm thông tin, hãy xem phần các yêu cầu về cân bằng tải đối với cơ sở hạ tầng do người dùng cung cấp (user-provisioned infrastructure). 
   * Khi tạo các tệp manifest Kubernetes trong quy trình tiếp theo, hãy đảm bảo rằng tham số `mastersSchedulable` trong tệp `<installation_directory>/manifests/cluster-scheduler-02-config.yml` được đặt thành `true`. Điều này cho phép các khối lượng công việc (workload) ứng dụng của bạn chạy trên các nút mặt phẳng điều khiển. 
   * Không triển khai bất kỳ nút tính toán nào khi tạo các máy ảo chạy Red Hat Enterprise Linux CoreOS (RHCOS).
 
@@ -7995,11 +7995,11 @@ $ ./openshift-install create manifests --dir <installation_directory>
 
 Trong đó: `<installation_directory>` chỉ định thư mục cài đặt chứa tệp install-config.yaml mà bạn đã tạo.
 
-> **Cảnh báo:** Nếu bạn đang cài đặt một cụm gồm ba nút, hãy bỏ qua bước sau để cho phép các nút trong mặt phẳng điều khiển (control plane) có thể nhận các tác vụ được lập lịch.
+> **Cảnh báo:** Nếu bạn đang cài đặt một cụm gồm ba nút, hãy bỏ qua bước sau để cho phép các nút trong control plane có thể nhận các tác vụ được lập lịch.
 
 > **Quan trọng:** Khi bạn cấu hình các nút mặt phẳng điều khiển từ trạng thái mặc định không thể lập lịch sang trạng thái có thể lập lịch, bạn cần thêm các gói đăng ký vì các nút mặt phẳng điều khiển khi đó sẽ trở thành các nút tính toán.
 
-2. Hãy xác minh rằng tham số `mastersSchedulable` trong tệp manifest Kubernetes `<installation_directory>/manifests/cluster-scheduler-02-config.yml` được đặt thành `false`. Thiết lập này ngăn không cho các pod được lập lịch trên các máy thuộc mặt phẳng điều khiển (control plane):
+2. Hãy xác minh rằng tham số `mastersSchedulable` trong tệp manifest Kubernetes `<installation_directory>/manifests/cluster-scheduler-02-config.yml` được đặt thành `false`. Thiết lập này ngăn không cho các pod được lập lịch trên các máy thuộc control plane:
 
   * Mở tệp `<installation_directory>/manifests/cluster-scheduler-02-config.yml`. 
   * Tìm tham số `mastersSchedulable` và xác minh rằng nó được đặt thành `false`. 
@@ -8056,7 +8056,7 @@ storage:
         logdir /var/log/chrony
 ```
 
-  * `name: 99-worker-chrony` - Chỉ định tên cho tệp cấu hình máy (machine config file). Đối với các nút trong mặt phẳng điều khiển (control plane nodes), hãy thay thế `worker` bằng `master`. 
+  * `name: 99-worker-chrony` - Chỉ định tên cho tệp cấu hình máy (machine config file). Đối với các nút trong control plane, hãy thay thế `worker` bằng `master`. 
   * `machineconfiguration.openshift.io/role: worker` - Đối với các nút trong mặt phẳng điều khiển, hãy thay thế `worker` bằng `master`. 
   * `mode: 0644` - Chỉ định giá trị bát phân (octal value) cho trường `mode` trong tệp cấu hình máy. Sau khi tạo tệp và áp dụng các thay đổi, giá trị này sẽ được chuyển đổi sang dạng thập phân. Bạn có thể kiểm tra tệp YAML bằng lệnh: `oc get mc <mc-name> -o yaml`. 
   * `pool 0.rhel.pool.ntp.org iburst` - Chỉ định bất kỳ nguồn thời gian hợp lệ và có thể truy cập được nào, chẳng hạn như nguồn do máy chủ DHCP của bạn cung cấp.
@@ -9642,7 +9642,7 @@ INFO It is now safe to remove the bootstrap resources
 
 Thời gian chờ hoàn tất quá trình khởi động ban đầu (bootstrapping) khác nhau tùy theo từng nền tảng.
 
-Lệnh này sẽ thực thi thành công khi Kubernetes API server phát tín hiệu xác nhận rằng quá trình khởi động ban đầu đã hoàn tất trên các máy thuộc mặt phẳng điều khiển (control plane).
+Lệnh này sẽ thực thi thành công khi Kubernetes API server phát tín hiệu xác nhận rằng quá trình khởi động ban đầu đã hoàn tất trên các máy thuộc control plane.
 
 2. Sau khi quá trình khởi động ban đầu hoàn tất, hãy loại bỏ máy khởi động (bootstrap machine) khỏi bộ cân bằng tải (load balancer).
 
@@ -9805,7 +9805,7 @@ worker-1  Ready     worker  11m  v1.35.4
 > **Lưu ý:** Bạn có thể cần đợi vài phút sau khi các CSR máy chủ được phê duyệt để các máy chuyển sang trạng thái `Ready`.
 
 ##### II.3.16. Cấu hình Operator ban đầu
-Sau khi mặt phẳng điều khiển (control plane) khởi tạo xong, bạn cần lập tức cấu hình một số Operator để đảm bảo tất cả chúng đều ở trạng thái sẵn sàng.
+Sau khi control plane khởi tạo xong, bạn cần lập tức cấu hình một số Operator để đảm bảo tất cả chúng đều ở trạng thái sẵn sàng.
 
 **Điều kiện tiên quyết**
 
@@ -10735,12 +10735,12 @@ Các tham số cấu hình cài đặt tùy chọn được mô tả trong bản
 * `compute: platform:` Bắt buộc nếu bạn sử dụng tính năng tính toán (compute). Hãy sử dụng tham số này để chỉ định nhà cung cấp dịch vụ đám mây sẽ lưu trữ các máy worker. Giá trị của tham số này phải khớp với giá trị của tham số `controlPlane.platform`. Các giá trị có thể chọn: `aws`, `azure`, `gcp`, `ibmcloud`, `nutanix`, `openstack`, `powervs`, `vsphere` hoặc `{}`.
 * `compute: replicas:` Số lượng máy tính (còn được gọi là máy thực thi - worker machine) cần cung cấp. Giá trị: Một số nguyên dương lớn hơn hoặc bằng `2`. Giá trị mặc định là `3`.
 * `featureSet:` Cho phép sử dụng một tập hợp tính năng (feature set) cho cụm. Tập hợp tính năng là một nhóm các tính năng của OpenShift Container Platform không được bật theo mặc định. Để biết thêm thông tin về cách bật tập hợp tính năng trong quá trình cài đặt, hãy xem phần "Bật các tính năng bằng cách sử dụng feature gate". Giá trị: Chuỗi (String). Tên của tập hợp tính năng cần bật, chẳng hạn như `TechPreviewNoUpgrade`.
-* `controlPlane:` Cấu hình cho các máy tạo nên mặt phẳng điều khiển (control plane). Giá trị: Mảng các đối tượng `MachinePool`.
+* `controlPlane:` Cấu hình cho các máy tạo nên control plane. Giá trị: Mảng các đối tượng `MachinePool`.
 * `controlPlane: architecture:` Xác định kiến trúc tập lệnh của các máy trong nhóm (pool). Hiện tại, các cụm (cluster) có kiến trúc khác nhau không được hỗ trợ. Tất cả các nhóm phải chỉ định cùng một kiến trúc. Các giá trị hợp lệ là amd64 và arm64. Giá trị: Chuỗi (String)
-* `controlPlane: hyperthreading:` Quyết định bật hay tắt tính năng đa luồng đồng thời (simultaneous multithreading) – hay còn gọi là siêu phân luồng (hyperthreading) – trên các máy thuộc mặt phẳng điều khiển (control plane). Theo mặc định, tính năng đa luồng đồng thời được bật để tăng hiệu suất cho các nhân (core) của máy. Lưu ý quan trọng: Nếu bạn tắt tính năng này, hãy đảm bảo rằng kế hoạch phân bổ năng lực (capacity planning) của bạn đã tính đến việc hiệu suất máy sẽ sụt giảm đáng kể. Giá trị: `Enabled` hoặc `Disabled`.
+* `controlPlane: hyperthreading:` Quyết định bật hay tắt tính năng đa luồng đồng thời (simultaneous multithreading) – hay còn gọi là siêu phân luồng (hyperthreading) – trên các máy thuộc control plane. Theo mặc định, tính năng đa luồng đồng thời được bật để tăng hiệu suất cho các nhân (core) của máy. Lưu ý quan trọng: Nếu bạn tắt tính năng này, hãy đảm bảo rằng kế hoạch phân bổ năng lực (capacity planning) của bạn đã tính đến việc hiệu suất máy sẽ sụt giảm đáng kể. Giá trị: `Enabled` hoặc `Disabled`.
 * `controlPlane: name:` Bắt buộc nếu bạn sử dụng `controlPlane`. Tên của nhóm máy (machine pool). Giá trị: `master`
-* `controlPlane: platform:` Bắt buộc nếu bạn sử dụng `controlPlane`. Hãy dùng tham số này để chỉ định nhà cung cấp dịch vụ đám mây lưu trữ các máy thuộc mặt phẳng điều khiển (control plane). Giá trị của tham số này phải khớp với giá trị của tham số `compute.platform`. Các giá trị có thể chọn: `aws`, `azure`, `gcp`, `ibmcloud`, `nutanix`, `openstack`, `powervs`, `vsphere` hoặc `{}`.
-* `controlPlane: replicas:`: Số lượng máy thuộc mặt phẳng điều khiển (control plane) cần cung cấp. Giá trị: Các giá trị được hỗ trợ là `3`, hoặc `1` khi triển khai OpenShift trên một nút duy nhất (single-node).
+* `controlPlane: platform:` Bắt buộc nếu bạn sử dụng `controlPlane`. Hãy dùng tham số này để chỉ định nhà cung cấp dịch vụ đám mây lưu trữ các máy thuộc control plane. Giá trị của tham số này phải khớp với giá trị của tham số `compute.platform`. Các giá trị có thể chọn: `aws`, `azure`, `gcp`, `ibmcloud`, `nutanix`, `openstack`, `powervs`, `vsphere` hoặc `{}`.
+* `controlPlane: replicas:`: Số lượng máy thuộc control plane cần cung cấp. Giá trị: Các giá trị được hỗ trợ là `3`, hoặc `1` khi triển khai OpenShift trên một nút duy nhất (single-node).
 * `arbiter: name:` Cụm OpenShift Container Platform yêu cầu một tên cho các nút trọng tài (arbiter nodes). Ví dụ: `arbiter`.
 * `arbiter: replicas:` Tham số `replicas` thiết lập số lượng nút trọng tài (arbiter node) cho cụm OpenShift Container Platform. Bạn không thể đặt giá trị cho trường này lớn hơn 1.
 * `credentialsMode:` Chế độ Cloud Credential Operator (CCO). Nếu không có chế độ nào được chỉ định, CCO sẽ tự động xác định các khả năng của thông tin xác thực được cung cấp, trong đó ưu tiên chế độ "mint" (tạo mới) trên các nền tảng hỗ trợ nhiều chế độ. Lưu ý: Không phải tất cả các chế độ CCO đều được hỗ trợ cho mọi nhà cung cấp dịch vụ đám mây. Để biết thêm thông tin về các chế độ CCO, hãy xem mục "Quản lý thông tin xác thực của nhà cung cấp dịch vụ đám mây" (Managing cloud provider credentials) trong phần nội dung về Xác thực và ủy quyền (Authentication and authorization). Giá trị: `Mint`, `Passthrough`, `Manual` hoặc một chuỗi trống (`""`).
@@ -10765,7 +10765,7 @@ Sơ đồ dưới đây minh họa giai đoạn 1 của quá trình triển khai
 
 Đối với quá trình cài đặt, các thành phần chính trong sơ đồ giai đoạn một của quá trình triển khai bao gồm:
 
-* **Provisioner (Máy cung cấp)**: Một máy vật lý chạy chương trình cài đặt và lưu trữ máy ảo bootstrap (bootstrap VM) – máy ảo thực hiện triển khai mặt phẳng điều khiển (control plane) cho cụm OpenShift Container Platform mới. 
+* **Provisioner (Máy cung cấp)**: Một máy vật lý chạy chương trình cài đặt và lưu trữ máy ảo bootstrap (bootstrap VM) – máy ảo thực hiện triển khai control plane cho cụm OpenShift Container Platform mới. 
 * **Bootstrap VM**: Một máy ảo được sử dụng trong quá trình triển khai cụm OpenShift Container Platform. 
 * **Network bridge (Cầu nối mạng)**: Bootstrap VM kết nối với mạng bare metal (mạng máy vật lý) và mạng cung cấp (provisioning network – nếu có) thông qua các cầu nối mạng, cụ thể là `eno1` và `eno2`. 
 * **API VIP**: Một địa chỉ IP ảo (VIP) dành cho API, được sử dụng để cung cấp khả năng chuyển đổi dự phòng (failover) cho máy chủ API giữa các nút trong mặt phẳng điều khiển. Ban đầu, API VIP nằm trên bootstrap VM. Một tập lệnh sẽ tạo tệp cấu hình `keepalived.conf` trước khi khởi chạy dịch vụ. Sau khi quá trình bootstrap hoàn tất và bootstrap VM dừng hoạt động, VIP sẽ được chuyển sang một trong các nút thuộc mặt phẳng điều khiển.
@@ -10774,7 +10774,7 @@ Sơ đồ dưới đây minh họa giai đoạn 1 của quá trình triển khai
 
 Trong giai đoạn 2 của quá trình triển khai, máy cung cấp (provisioner) sẽ tự động xóa bootstrap VM và chuyển các địa chỉ IP ảo (VIP) sang các nút tương ứng.
 
-Tệp `keepalived.conf` thiết lập các máy trong mặt phẳng điều khiển với mức độ ưu tiên VRRP (Virtual Router Redundancy Protocol) thấp hơn so với bootstrap VM. Điều này đảm bảo rằng API trên các máy thuộc mặt phẳng điều khiển đã hoạt động ổn định trước khi API VIP được chuyển từ bootstrap VM sang mặt phẳng điều khiển. Khi API VIP đã chuyển sang một trong các nút thuộc mặt phẳng điều khiển, lưu lượng truy cập từ các máy khách bên ngoài gửi đến API VIP sẽ được định tuyến tới bộ cân bằng tải HAProxy đang chạy trên nút đó. Phiên bản HAProxy này thực hiện cân bằng tải lưu lượng truy cập đến API VIP trên các nút thuộc mặt phẳng điều khiển (control plane nodes).
+Tệp `keepalived.conf` thiết lập các máy trong mặt phẳng điều khiển với mức độ ưu tiên VRRP (Virtual Router Redundancy Protocol) thấp hơn so với bootstrap VM. Điều này đảm bảo rằng API trên các máy thuộc mặt phẳng điều khiển đã hoạt động ổn định trước khi API VIP được chuyển từ bootstrap VM sang mặt phẳng điều khiển. Khi API VIP đã chuyển sang một trong các nút thuộc mặt phẳng điều khiển, lưu lượng truy cập từ các máy khách bên ngoài gửi đến API VIP sẽ được định tuyến tới bộ cân bằng tải HAProxy đang chạy trên nút đó. Phiên bản HAProxy này thực hiện cân bằng tải lưu lượng truy cập đến API VIP trên các nút thuộc control plane.
 
 Ingress VIP được chuyển sang các nút tính toán (compute nodes). Phiên bản keepalived cũng đảm nhiệm việc quản lý Ingress VIP này.
 
@@ -10783,7 +10783,7 @@ Sơ đồ dưới đây minh họa giai đoạn 2 của quá trình triển khai
 **Hình 3.2. Giai đoạn triển khai thứ hai**
 ![Hình 3.2](img/210_OpenShift_Baremetal_IPI_Deployment_updates_0122_2.png)
 
-Sau thời điểm này, nút (node) được trình cung cấp (provisioner) sử dụng có thể được loại bỏ hoặc tái sử dụng cho mục đích khác. Kể từ đây, mọi tác vụ cung cấp bổ sung đều do mặt phẳng điều khiển (control plane) thực hiện.
+Sau thời điểm này, nút (node) được trình cung cấp (provisioner) sử dụng có thể được loại bỏ hoặc tái sử dụng cho mục đích khác. Kể từ đây, mọi tác vụ cung cấp bổ sung đều do control plane thực hiện.
 
 > **Lưu ý:** Đối với các quy trình cài đặt cơ sở hạ tầng do trình cài đặt (installer) cung cấp, CoreDNS sẽ mở cổng 53 ở cấp độ nút, cho phép truy cập từ các mạng khác có khả năng định tuyến đến đó.
 
@@ -10861,7 +10861,7 @@ Hãy định cấu hình cụm bare-metal của bạn một cách chính xác tr
 ##### III.2.3.1. Các yêu cầu về tính sẵn sàng cao (HA) đối với OpenShift Virtualization
 Khi thảo luận về các tính năng sẵn sàng cao (High Availability - HA) trong ngữ cảnh của OpenShift Virtualization, thuật ngữ này chỉ đề cập đến mô hình sao chép (replication model) của các thành phần cốt lõi trong cụm (cluster). Mô hình này được xác định bởi các trường `controlPlaneTopology` và `infrastructureTopology` trong tài nguyên tùy chỉnh (Custom Resource - CR) có tên là `Infrastructure`. Việc thiết lập các trường này thành `HighlyAvailable` sẽ cung cấp cơ chế dự phòng cho các thành phần; điều này khác với tính năng HA dành cho ứng dụng trên toàn bộ cụm. Ngược lại, nếu thiết lập các trường này thành `SingleReplica`, cơ chế dự phòng cho các thành phần sẽ bị vô hiệu hóa, đồng nghĩa với việc các tính năng HA của OpenShift Virtualization cũng sẽ không khả dụng.
 
-Nếu dự định sử dụng các tính năng HA của OpenShift Virtualization, bạn bắt buộc phải có ba nút (node) thuộc mặt phẳng điều khiển (control plane) tại thời điểm cài đặt cụm. Trạng thái `controlPlaneTopology` trong tài nguyên `Infrastructure` của cụm phải được đặt là `HighlyAvailable`.
+Nếu dự định sử dụng các tính năng HA của OpenShift Virtualization, bạn bắt buộc phải có ba nút (node) thuộc control plane tại thời điểm cài đặt cụm. Trạng thái `controlPlaneTopology` trong tài nguyên `Infrastructure` của cụm phải được đặt là `HighlyAvailable`.
 
 > **Lưu ý:** Bạn có thể cài đặt OpenShift Virtualization trên một cụm chỉ gồm một nút duy nhất (single-node cluster), nhưng cấu hình này không hỗ trợ các tính năng HA.
 
@@ -10968,11 +10968,11 @@ Một số cổng nhất định phải được mở giữa các nút (node) tr
 | `69`       | Khi sử dụng mạng cung cấp (provisioning network), các nút trong cụm (cluster nodes) giao tiếp với máy chủ TFTP qua cổng `69` thông qua các giao diện mạng cung cấp của chúng. Máy chủ TFTP chạy trên máy ảo khởi động (bootstrap VM). Máy ảo khởi động này lại chạy trên nút cung cấp (provisioner node).                                                                                                                                                               |
 | `80`       | Khi không sử dụng tùy chọn lưu trữ hình ảnh (image caching) hoặc khi sử dụng phương tiện ảo (virtual media), nút cung cấp (provisioner node) phải mở cổng `80` trên giao diện mạng của máy vật lý (baremetal) để truyền hình ảnh Red Hat Enterprise Linux CoreOS (RHCOS) từ nút cung cấp đó đến các nút trong cụm (cluster nodes).                                                                                                                                      |
 | `123`      | Các nút trong cụm phải truy cập máy chủ NTP qua cổng `123` bằng cách sử dụng mạng máy vật lý (`baremetal`).                                                                                                                                                                                                                                                                                                                                                             |
-| `5050`     | Ironic Inspector API chạy trên các nút thuộc mặt phẳng điều khiển (control plane) và lắng nghe trên cổng `5050`. API này đảm nhận nhiệm vụ kiểm tra phần cứng (hardware introspection) – quy trình thu thập thông tin về các đặc tính phần cứng của các nút máy chủ vật lý (bare-metal nodes).                                                                                                                                                                          |
+| `5050`     | Ironic Inspector API chạy trên các nút thuộc control plane và lắng nghe trên cổng `5050`. API này đảm nhận nhiệm vụ kiểm tra phần cứng (hardware introspection) – quy trình thu thập thông tin về các đặc tính phần cứng của các nút máy chủ vật lý (bare-metal nodes).                                                                                                                                                                          |
 | `5051`     | Cổng `5050` sử dụng cổng `5051` làm proxy.                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `6180`     | Khi triển khai bằng phương thức virtual media (phương tiện ảo) mà không sử dụng TLS, các nút provisioner (nút cung cấp tài nguyên) và các nút control plane (nút điều khiển) phải mở cổng `6180` trên giao diện mạng dành cho máy vật lý (`baremetal`), để bộ điều khiển quản lý bo mạch chủ (BMC) của các nút worker (nút thực thi) có thể truy cập vào ảnh đĩa RHCOS. Kể từ phiên bản OpenShift Container Platform 4.13, cổng HTTP mặc định được thiết lập là `6180`. |
 | `6183`     | Khi triển khai bằng phương thức virtual media (phương tiện ảo) và sử dụng TLS, các nút provisioner (nút cung cấp tài nguyên) và các nút control plane (nút điều khiển) phải mở cổng `6183` trên giao diện mạng của máy chủ vật lý (bare-metal), để BMC của các nút worker (nút thực thi) có thể truy cập vào hình ảnh hệ điều hành RHCOS.                                                                                                                               |
-| `6385`     | Máy chủ Ironic API ban đầu chạy trên máy ảo khởi động (bootstrap VM), sau đó chuyển sang các nút trong mặt phẳng điều khiển (control plane nodes) và lắng nghe trên cổng `6385`. Ironic API cho phép các client tương tác với Ironic để thực hiện việc cung cấp và quản lý các nút phần cứng vật lý (bare-metal nodes), bao gồm các thao tác như đăng ký nút mới, quản lý trạng thái nguồn, triển khai các image (hình ảnh hệ thống) và làm sạch phần cứng.             |
+| `6385`     | Máy chủ Ironic API ban đầu chạy trên máy ảo khởi động (bootstrap VM), sau đó chuyển sang các nút trong control plane và lắng nghe trên cổng `6385`. Ironic API cho phép các client tương tác với Ironic để thực hiện việc cung cấp và quản lý các nút phần cứng vật lý (bare-metal nodes), bao gồm các thao tác như đăng ký nút mới, quản lý trạng thái nguồn, triển khai các image (hình ảnh hệ thống) và làm sạch phần cứng.             |
 | `6388`     | Cổng `6385` sử dụng cổng `6388` làm proxy.                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `8080`     | Khi sử dụng tính năng lưu trữ đệm hình ảnh (image caching) mà không dùng TLS, cổng `8080` trên nút cung cấp (provisioner node) phải được mở và có thể truy cập được từ các giao diện BMC của các nút trong cụm.                                                                                                                                                                                                                                                         |
 | `8083`     | Khi sử dụng tùy chọn lưu trữ đệm hình ảnh (image caching) với TLS, cổng `8083` trên nút cung cấp (provisioner node) phải được mở và có thể truy cập được từ các giao diện BMC của các nút trong cụm.                                                                                                                                                                                                                                                                    |
@@ -10986,7 +10986,7 @@ OpenShift Container Platform triển khai với hai mạng:
 
 * provisioning (mạng cung cấp): Đây là một mạng tùy chọn, không có khả năng định tuyến (non-routable), được sử dụng để cung cấp (provision) hệ điều hành nền tảng trên mỗi nút (node) thuộc cụm OpenShift Container Platform. Đối với mạng này, giao diện mạng (network interface) trên mỗi nút trong cụm phải được cấu hình trong BIOS hoặc UEFI để hỗ trợ khởi động qua PXE (PXE boot). 
 
-Tham số cấu hình `provisioningNetworkInterface` xác định tên của card mạng (NIC) được dùng cho mạng cung cấp trên các nút thuộc mặt phẳng điều khiển (control plane nodes); tên này phải đồng nhất trên tất cả các nút thuộc mặt phẳng điều khiển. Tham số cấu hình `bootMACAddress` cho phép chỉ định một card mạng cụ thể trên mỗi nút để sử dụng cho mạng cung cấp. 
+Tham số cấu hình `provisioningNetworkInterface` xác định tên của card mạng (NIC) được dùng cho mạng cung cấp trên các nút thuộc control plane; tên này phải đồng nhất trên tất cả các nút thuộc mặt phẳng điều khiển. Tham số cấu hình `bootMACAddress` cho phép chỉ định một card mạng cụ thể trên mỗi nút để sử dụng cho mạng cung cấp. 
 
 Mạng cung cấp là tùy chọn, nhưng lại bắt buộc nếu sử dụng phương thức khởi động PXE. Nếu triển khai mà không có mạng cung cấp, bạn phải sử dụng tùy chọn truy cập BMC thông qua phương tiện ảo (virtual media), chẳng hạn như `redfish-virtualmedia` hoặc `idrac-virtualmedia`. 
 
@@ -11041,7 +11041,7 @@ Các quản trị viên mạng phải dành riêng (dự phòng) các địa ch�
   * Một địa chỉ IP ảo cho điểm cuối (endpoint) API. 
   * Một địa chỉ IP ảo cho điểm cuối ingress dạng wildcard. 
 2. Một địa chỉ IP cho nút cung cấp tài nguyên (provisioner node). 
-3. Một địa chỉ IP cho mỗi nút trong mặt phẳng điều khiển (control plane node). 
+3. Một địa chỉ IP cho mỗi nút trong control plane. 
 4. Một địa chỉ IP cho mỗi nút worker (worker node), nếu có.
 
 > **Quan trọng:** Ví dụ về việc dự phòng địa chỉ IP để tạo thành các địa chỉ IP tĩnh:  
@@ -11066,7 +11066,7 @@ Bảng dưới đây cung cấp ví dụ về các tên miền đủ điều ki�
 | Worker-1                        | `openshift-worker-2.<cluster_name>.<base_domain>`        | `<ip>` |
 | Worker-n                        | `openshift-worker-n.<cluster_name>.<base_domain>`        | `<ip>` |
 
-> **Lưu ý:** Nếu bạn không tạo các đặt trước DHCP (DHCP reservations), chương trình cài đặt sẽ yêu cầu phân giải DNS ngược (reverse DNS resolution) để thiết lập tên máy chủ (hostname) cho nút API Kubernetes, nút cung cấp tài nguyên (provisioner node), các nút mặt phẳng điều khiển (control plane nodes) và các nút worker (worker nodes).
+> **Lưu ý:** Nếu bạn không tạo các đặt trước DHCP (DHCP reservations), chương trình cài đặt sẽ yêu cầu phân giải DNS ngược (reverse DNS resolution) để thiết lập tên máy chủ (hostname) cho nút API Kubernetes, nút cung cấp tài nguyên (provisioner node), các nút control plane và các nút worker (worker nodes).
 
 ##### III.2.6.8. Các yêu cầu đối với nút cung cấp (provisioner node)
 Bạn phải chỉ định địa chỉ MAC cho nút cung cấp trong cấu hình cài đặt của mình. Thông số `bootMacAddress` thường gắn liền với quá trình khởi động qua mạng (PXE). Tuy nhiên, dịch vụ cung cấp Ironic cũng yêu cầu thông số `bootMacAddress` để nhận diện các nút trong quá trình kiểm tra cụm (cluster) hoặc khi triển khai lại các nút trong cụm đó.
@@ -11081,7 +11081,7 @@ Mỗi nút (node) OpenShift Container Platform trong cụm (cluster) đều ph�
 Đối với các cụm không kết nối với internet (disconnected clusters), bạn có thể cấu hình lại các nút điều khiển (control plane nodes) để đóng vai trò là máy chủ NTP, đồng thời cấu hình các nút worker (worker nodes) để lấy thông tin thời gian từ các nút điều khiển đó.
 
 ##### III.2.6.10. Truy cập cổng cho địa chỉ IP quản lý ngoài băng tần (out-of-band)
-Địa chỉ IP quản lý ngoài băng tần nằm trên một mạng tách biệt với nút (node). Để đảm bảo hệ thống quản lý ngoài băng tần có thể giao tiếp với nút cung cấp (provisioner node) trong quá trình cài đặt, địa chỉ IP quản lý ngoài băng tần phải được cấp quyền truy cập vào cổng `6180` trên nút cung cấp và trên các nút thuộc mặt phẳng điều khiển (control plane) của OpenShift Container Platform. Cổng TLS `6183` là bắt buộc đối với việc cài đặt thông qua phương tiện ảo (virtual media), chẳng hạn như khi sử dụng Redfish.
+Địa chỉ IP quản lý ngoài băng tần nằm trên một mạng tách biệt với nút (node). Để đảm bảo hệ thống quản lý ngoài băng tần có thể giao tiếp với nút cung cấp (provisioner node) trong quá trình cài đặt, địa chỉ IP quản lý ngoài băng tần phải được cấp quyền truy cập vào cổng `6180` trên nút cung cấp và trên các nút thuộc control plane của OpenShift Container Platform. Cổng TLS `6183` là bắt buộc đối với việc cài đặt thông qua phương tiện ảo (virtual media), chẳng hạn như khi sử dụng Redfish.
 
 #### III.2.7. Cấu hình các nút (node)
 Bạn có thể cấu hình các nút cho quá trình cài đặt OpenShift Container Platform trên hạ tầng vật lý (bare metal) – với quy trình cài đặt do trình cài đặt (installer) tự động thiết lập – bằng cách sử dụng mạng cung cấp (provisioning network), mạng hạ tầng vật lý (baremetal network), hoặc thông qua cơ chế khởi động an toàn (secure boot) được cấu hình thủ công.
@@ -11107,7 +11107,7 @@ Quy trình cài đặt Red Hat Enterprise Linux (RHEL) 9.x trên nút cung cấp
 
 > **Lưu ý:** Đảm bảo PXE đã được tắt trên tất cả các card mạng (NIC) khác.
 
-Cấu hình mặt phẳng điều khiển (control plane) và các nút worker như sau:
+Cấu hình control plane và các nút worker như sau:
 
 | PXE                                     | Thứ tự khởi động |
 |-----------------------------------------|------------------|
@@ -11228,7 +11228,7 @@ Sau khi hoàn tất trạng thái làm sạch, các nút chuyển sang trạng t
 
 IPA thực thi lệnh `coreos-installer` để cài đặt ảnh hệ điều hành Red Hat Enterprise Linux CoreOS (RHCOS) lên ổ đĩa được xác định bởi tham số `rootDeviceHints` trong tệp `install-config.yaml`. Sau đó, nút sẽ khởi động bằng RHCOS.
 
-Khi chương trình cài đặt đã cấu hình xong các nút thuộc mặt phẳng điều khiển (control plane nodes), quyền điều khiển sẽ được chuyển từ máy ảo bootstrap sang các nút này, và máy ảo bootstrap sẽ bị xóa bỏ.
+Khi chương trình cài đặt đã cấu hình xong các nút thuộc control plane, quyền điều khiển sẽ được chuyển từ máy ảo bootstrap sang các nút này, và máy ảo bootstrap sẽ bị xóa bỏ.
 
 Thành phần Bare-Metal Operator tiếp tục thực hiện triển khai các nút worker, nút lưu trữ (storage) và các nút hạ tầng (infra).
 
@@ -11322,7 +11322,7 @@ Trong trình duyệt web, hãy truy cập [phần cài đặt OpenShift trên n�
 #### III.3.3. Kiểm tra đồng bộ hóa với máy chủ NTP
 Chương trình cài đặt OpenShift Container Platform sẽ cài đặt dịch vụ Network Time Protocol (NTP) có tên là `chrony` trên các nút (node) của cụm (cluster). Để hoàn tất quá trình cài đặt, mỗi nút phải có quyền truy cập vào một máy chủ thời gian NTP. Bạn có thể xác minh trạng thái đồng bộ hóa với máy chủ NTP thông qua dịch vụ `chrony`.
 
-Đối với các cụm không kết nối internet (disconnected clusters), bạn cần cấu hình các máy chủ NTP trên các nút thuộc mặt phẳng điều khiển (control plane nodes). Để biết thêm thông tin, hãy xem phần "Cấu hình NTP cho các cụm không kết nối internet".
+Đối với các cụm không kết nối internet (disconnected clusters), bạn cần cấu hình các máy chủ NTP trên các nút thuộc control plane. Để biết thêm thông tin, hãy xem phần "Cấu hình NTP cho các cụm không kết nối internet".
 
 **Điều kiện tiên quyết**
 
@@ -11546,7 +11546,7 @@ lo                  aa030e0f-21ca-498f-b6ce-bac7d4d793f0  loopback  lo
 ```
 
 #### III.3.5. Công cụ baremetal-runtimecfg
-Để ngăn ngừa việc gán sai địa chỉ IP, hãy tìm hiểu cách công cụ `baremetal-runtimecfg` xác định địa chỉ IP của nút (node) trong mối tương quan giữa mạng vật lý của bạn và mặt phẳng điều khiển (control plane) của Kubernetes.
+Để ngăn ngừa việc gán sai địa chỉ IP, hãy tìm hiểu cách công cụ `baremetal-runtimecfg` xác định địa chỉ IP của nút (node) trong mối tương quan giữa mạng vật lý của bạn và control plane của Kubernetes.
 
 Công cụ `baremetal-runtimecfg` sử dụng trình tự logic lựa chọn sau đây để xác định địa chỉ IP cho một nút:
 
@@ -11838,7 +11838,7 @@ Trong quy trình này, cụm bao gồm hai mạng con:
   $ ip route
   ```
 
-  * Lặp lại các bước trước đó cho từng nút mặt phẳng điều khiển (control plane node) trong mạng con (subnet) đầu tiên.
+  * Lặp lại các bước trước đó cho từng nút control plane trong mạng con (subnet) đầu tiên.
   
   > **Lưu ý:** Hãy điều chỉnh các lệnh sao cho khớp với tên giao diện và cổng mặc định (gateway) thực tế của bạn.
 
@@ -11894,7 +11894,7 @@ Trong quy trình này, cụm bao gồm hai mạng con:
   $ ping <remote_node_ip_address>
   ```
 
-  Nếu lệnh `ping` thành công, điều đó có nghĩa là các nút mặt phẳng điều khiển (control plane nodes) trong mạng con thứ nhất có thể kết nối tới các nút từ xa trong mạng con thứ hai. Nếu không nhận được phản hồi, hãy kiểm tra lại các cấu hình mạng và thực hiện lại quy trình đó cho nút này.
+  Nếu lệnh `ping` thành công, điều đó có nghĩa là các nút control plane trong mạng con thứ nhất có thể kết nối tới các nút từ xa trong mạng con thứ hai. Nếu không nhận được phản hồi, hãy kiểm tra lại các cấu hình mạng và thực hiện lại quy trình đó cho nút này.
 
   * Từ các nút từ xa trong mạng con thứ hai, hãy thực hiện lệnh `ping` tới một nút mặt phẳng điều khiển trong mạng con thứ nhất bằng cách chạy lệnh sau:
 
@@ -11902,7 +11902,7 @@ Trong quy trình này, cụm bao gồm hai mạng con:
   $ ping <control_plane_node_ip_address>
   ```
 
-  Nếu lệnh `ping` thành công, điều đó có nghĩa là các nút tính toán từ xa trong mạng con thứ hai có thể kết nối tới mặt phẳng điều khiển (control plane) trong mạng con thứ nhất. Nếu bạn không nhận được phản hồi, hãy kiểm tra lại các cấu hình mạng và thực hiện lại quy trình đó cho nút này.
+  Nếu lệnh `ping` thành công, điều đó có nghĩa là các nút tính toán từ xa trong mạng con thứ hai có thể kết nối tới control plane trong mạng con thứ nhất. Nếu bạn không nhận được phản hồi, hãy kiểm tra lại các cấu hình mạng và thực hiện lại quy trình đó cho nút này.
 
 #### III.3.8. Tải xuống trình cài đặt OpenShift Container Platform
 Hãy sử dụng phiên bản stable-4.x của chương trình cài đặt cùng với kiến trúc hệ thống mà bạn đã chọn để triển khai phiên bản ổn định (stable) của OpenShift Container Platform.
@@ -12082,7 +12082,7 @@ Các tùy chọn cấu hình sau đây được hỗ trợ cho các bộ cân b�
 Trước khi định cấu hình bộ cân bằng tải do người dùng quản lý cho cụm OpenShift Container Platform của mình, hãy cân nhắc các thông tin sau:
 
 * Đối với địa chỉ IP phía trước (front-end), bạn có thể sử dụng cùng một địa chỉ IP cho bộ cân bằng tải của Ingress Controller và bộ cân bằng tải của API. Hãy kiểm tra tài liệu từ nhà cung cấp để xác nhận khả năng này. 
-* Đối với địa chỉ IP phía sau (back-end), hãy đảm bảo rằng địa chỉ IP của các nút trong mặt phẳng điều khiển (control plane node) của OpenShift Container Platform không thay đổi trong suốt vòng đời của bộ cân bằng tải do người dùng quản lý. Bạn có thể thực hiện việc này bằng một trong các cách sau:
+* Đối với địa chỉ IP phía sau (back-end), hãy đảm bảo rằng địa chỉ IP của các nút trong control plane của OpenShift Container Platform không thay đổi trong suốt vòng đời của bộ cân bằng tải do người dùng quản lý. Bạn có thể thực hiện việc này bằng một trong các cách sau:
   * Gán địa chỉ IP tĩnh cho từng nút trong mặt phẳng điều khiển. 
   * Định cấu hình để mỗi nút luôn nhận được cùng một địa chỉ IP từ DHCP mỗi khi nút đó yêu cầu cấp phát IP (DHCP lease). Tùy thuộc vào nhà cung cấp, cơ chế này có thể được thực hiện thông qua việc đặt trước địa chỉ IP (IP reservation) hoặc gán IP tĩnh qua DHCP. 
 * Bạn cần định nghĩa thủ công từng nút chạy Ingress Controller trong bộ cân bằng tải do người dùng quản lý dành cho dịch vụ back-end của Ingress Controller. Ví dụ: nếu Ingress Controller di chuyển sang một nút chưa được định nghĩa, kết nối có thể bị gián đoạn.
@@ -12106,7 +12106,7 @@ Danh sách dưới đây nêu chi tiết các điều kiện tiên quyết đố
   * Cổng 22623 có thể cung cấp các cấu hình khởi động (ignition startup configurations) cho các nút (node). 
 * Địa chỉ IP giao diện người dùng và cổng 6443 phải có thể truy cập được bởi tất cả người dùng trong hệ thống của bạn từ các vị trí bên ngoài cụm OpenShift Container Platform. 
 * Địa chỉ IP giao diện người dùng và cổng 22623 chỉ được phép truy cập bởi các nút (node) thuộc OpenShift Container Platform. 
-* Phần phụ trợ (backend) của bộ cân bằng tải phải có khả năng giao tiếp với các nút thuộc mặt phẳng điều khiển (control plane nodes) của OpenShift Container Platform thông qua các cổng 6443 và 22623.
+* Phần phụ trợ (backend) của bộ cân bằng tải phải có khả năng giao tiếp với các nút thuộc control plane của OpenShift Container Platform thông qua các cổng 6443 và 22623.
 
 Danh sách dưới đây nêu chi tiết các điều kiện tiên quyết đối với Ingress Controller:
 
@@ -12469,7 +12469,7 @@ Quá trình tra cứu DNS ngược diễn ra sau khi mạng đã được khởi
 > **Mẹo:** Bạn có thể tránh được sự chậm trễ trong việc thiết lập tên máy chủ bằng cách sử dụng DHCP để cung cấp tên máy chủ cho từng nút trong cụm. Ngoài ra, việc thiết lập tên máy chủ thông qua DHCP còn giúp tránh các lỗi cấu hình thủ công đối với bản ghi DNS trong các môi trường triển khai DNS theo cơ chế "split-horizon" (DNS phân tách theo nguồn truy vấn).
 
 #### III.3.13. Các điều kiện tiên quyết để cấu hình nút trọng tài cục bộ (local arbiter node)
-Để duy trì tính sẵn sàng cao (HA) đồng thời giảm chi phí cơ sở hạ tầng cho cụm (cluster) của mình, bạn có thể cấu hình cụm OpenShift Container Platform với hai nút mặt phẳng điều khiển (control plane node) và một nút trọng tài cục bộ (local arbiter node).
+Để duy trì tính sẵn sàng cao (HA) đồng thời giảm chi phí cơ sở hạ tầng cho cụm (cluster) của mình, bạn có thể cấu hình cụm OpenShift Container Platform với hai nút control plane và một nút trọng tài cục bộ (local arbiter node).
 
 Nút trọng tài cục bộ là một máy chủ có chi phí thấp hơn, được đặt cùng vị trí và tham gia vào các quyết định thiết lập hạn ngạch (quorum) của mặt phẳng điều khiển. Khác với nút mặt phẳng điều khiển tiêu chuẩn, nút trọng tài không chạy toàn bộ các dịch vụ của mặt phẳng điều khiển. Bạn có thể sử dụng cấu hình này để duy trì tính sẵn sàng cao trong cụm của mình chỉ với hai nút mặt phẳng điều khiển được thiết lập đầy đủ, thay vì ba nút.
 
@@ -12497,7 +12497,7 @@ Các nút mặt phẳng điều khiển phải đáp ứng các yêu cầu hệ 
 Ngoài ra, các nút mặt phẳng điều khiển cũng phải có đủ dung lượng lưu trữ cho khối lượng công việc (workload).
 
 #### III.3.14. Cấu hình nút trọng tài (arbiter node) cục bộ bằng cơ sở hạ tầng do trình cài đặt cung cấp
-Để duy trì tính sẵn sàng cao (HA) đồng thời giảm chi phí cơ sở hạ tầng cho cụm (cluster) của mình, bạn có thể cấu hình cụm OpenShift Container Platform với hai nút mặt phẳng điều khiển (control plane node) và một nút trọng tài cục bộ.
+Để duy trì tính sẵn sàng cao (HA) đồng thời giảm chi phí cơ sở hạ tầng cho cụm (cluster) của mình, bạn có thể cấu hình cụm OpenShift Container Platform với hai nút control plane và một nút trọng tài cục bộ.
 
 **Điều kiện tiên quyết**
 
@@ -12646,7 +12646,7 @@ sshKey: '<ssh_pub_key>'
 
 Trong đó:
 
-  * `compute.replicas`: Xác định giá trị cho tham số `compute.replicas`. Tham số này dùng để điều chỉnh quy mô các máy tính toán (compute machines) dựa trên số lượng nút tính toán (compute nodes) thuộc cụm OpenShift Container Platform. Các giá trị hợp lệ cho tham số replicas bao gồm `0` và các số nguyên lớn hơn hoặc bằng `2`. Nếu đặt số lượng bản sao (replicas) là `0`, hệ thống sẽ triển khai một cụm gồm ba nút, chỉ bao gồm ba máy thuộc mặt phẳng điều khiển (control plane). Cụm ba nút là loại cụm có quy mô nhỏ hơn, tiết kiệm tài nguyên hơn, phù hợp cho các mục đích thử nghiệm, phát triển và vận hành thực tế (production). Lưu ý rằng bạn không thể cài đặt cụm chỉ với một nút tính toán duy nhất.
+  * `compute.replicas`: Xác định giá trị cho tham số `compute.replicas`. Tham số này dùng để điều chỉnh quy mô các máy tính toán (compute machines) dựa trên số lượng nút tính toán (compute nodes) thuộc cụm OpenShift Container Platform. Các giá trị hợp lệ cho tham số replicas bao gồm `0` và các số nguyên lớn hơn hoặc bằng `2`. Nếu đặt số lượng bản sao (replicas) là `0`, hệ thống sẽ triển khai một cụm gồm ba nút, chỉ bao gồm ba máy thuộc control plane. Cụm ba nút là loại cụm có quy mô nhỏ hơn, tiết kiệm tài nguyên hơn, phù hợp cho các mục đích thử nghiệm, phát triển và vận hành thực tế (production). Lưu ý rằng bạn không thể cài đặt cụm chỉ với một nút tính toán duy nhất.
   * `platform.baremetal.additionalNTPServers`: Cho phép chỉ định danh sách các tên miền hoặc địa chỉ IP của máy chủ NTP bổ sung. Các thông tin này sẽ được thêm vào cấu hình của từng máy chủ trong cụm trong trường hợp đồng hồ của các máy chủ này không đồng bộ với nhau.
   * `platform.baremetal.bootstrapExternalStaticIP`: Xác định giá trị cho tham số `bootstrapExternalStaticIP`. Khi triển khai cụm sử dụng địa chỉ IP tĩnh, bạn cần thiết lập tham số này để chỉ định địa chỉ IP tĩnh cho máy ảo khởi động (bootstrap VM) trong trường hợp mạng bare metal không có máy chủ DHCP.
   * `platform.baremetal.bootstrapExternalStaticGateway`: Xác định giá trị cho tham số `bootstrapExternalStaticGateway`. Khi triển khai cụm sử dụng địa chỉ IP tĩnh, bạn cần thiết lập tham số này để chỉ định địa chỉ IP của cổng kết nối (gateway) cho máy ảo khởi động (bootstrap VM) trong trường hợp mạng bare metal không có máy chủ DHCP.
@@ -12713,8 +12713,8 @@ Một số tham số, chẳng hạn như tên miền cụm (cluster domain name)
 | `networking: machineNetwork: - cidr:`                 |          | CIDR (Classless Inter-Domain Routing - Định tuyến miền không phân lớp) công khai của mạng bên ngoài. Ví dụ: `10.0.0.0/24`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `compute: - name: worker`                             |          | Cụm OpenShift Container Platform yêu cầu phải có tên cho mỗi nút tính toán, ngay cả khi số lượng nút bằng không.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `compute: replicas: 2`                                |          | Replicas xác định số lượng nút tính toán trong cụm OpenShift Container Platform.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `controlPlane: name: master`                          |          | Cụm OpenShift Container Platform yêu cầu một tên gọi cho các nút mặt phẳng điều khiển (control plane nodes).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `controlPlane: replicas: 3`                           |          | Tham số "replicas" xác định số lượng các nút mặt phẳng điều khiển (control plane nodes) có trong cụm OpenShift Container Platform.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `controlPlane: name: master`                          |          | Cụm OpenShift Container Platform yêu cầu một tên gọi cho các nút control plane.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `controlPlane: replicas: 3`                           |          | Tham số "replicas" xác định số lượng các nút control plane có trong cụm OpenShift Container Platform.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `provisioningNetworkInterface`                        |          | Tên của giao diện mạng trên các nút được kết nối với mạng cung cấp (provisioning network). Đối với OpenShift Container Platform phiên bản 4.9 trở về sau, hãy sử dụng tham số `bootMACAddress` để cho phép Ironic xác định địa chỉ IP của card mạng (NIC), thay vì sử dụng tham số `provisioningNetworkInterface` để xác định tên của card mạng đó.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `defaultMachinePlatform`                              |          | Cấu hình mặc định được sử dụng cho các nhóm máy không có cấu hình nền tảng.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `apiVIPs`                                             |          | (Tùy chọn) Địa chỉ IP ảo dùng cho giao tiếp với Kubernetes API. Bạn phải cung cấp thiết lập này trong tệp `install-config.yaml` dưới dạng một địa chỉ IP dành riêng (nằm trong dải IP được xác định bởi tham số `MachineNetwork`), hoặc cấu hình trước trong hệ thống DNS để tên miền mặc định được phân giải chính xác. Khi thêm giá trị vào tham số `apiVIPs` trong tệp `install-config.yaml`, hãy sử dụng địa chỉ IP ảo thay vì tên miền đầy đủ (FQDN). Đối với mạng hỗ trợ cả hai giao thức (dual-stack), địa chỉ IP chính có thể là IPv4 hoặc IPv6. Nếu không được thiết lập, chương trình cài đặt sẽ sử dụng `api.<cluster_name>.<base_domain>` để truy vấn địa chỉ IP từ DNS. Lưu ý: Trước phiên bản OpenShift Container Platform 4.12, chương trình cài đặt cụm (cluster) chỉ chấp nhận một địa chỉ IPv4 hoặc IPv6 duy nhất cho tham số `apiVIP`. Kể từ phiên bản OpenShift Container Platform 4.12 trở đi, tham số `apiVIP` đã bị loại bỏ (deprecated). Thay vào đó, hãy sử dụng tham số `apiVIPs` với định dạng danh sách để chỉ định địa chỉ IPv4, IPv6 hoặc cả hai loại địa chỉ này.                                                              |
@@ -12729,7 +12729,7 @@ Một số tham số, chẳng hạn như tên miền cụm (cluster domain name)
 | `provisioningDHCPRange`                                                    | `172.22.0.10,172.22.0.100`                        | Xác định dải IP cho các nút trên mạng cung cấp (provisioning network).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `provisioningNetworkCIDR`                                                  | `172.22.0.0/24`                                   | CIDR của mạng được sử dụng cho quá trình cung cấp (provisioning). Nếu không sử dụng dải địa chỉ mặc định trên mạng cung cấp, bạn bắt buộc phải thiết lập tham số cấu hình này.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `clusterProvisioningIP`                                                    | Địa chỉ IP thứ ba của `provisioningNetworkCIDR`.  | Địa chỉ IP trong cụm nơi các dịch vụ cung cấp (provisioning services) hoạt động. Mặc định là địa chỉ IP thứ ba của mạng con cung cấp (provisioning subnet). Ví dụ: `172.22.0.3`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `bootstrapProvisioningIP`                                                  | Địa chỉ IP thứ hai của `provisioningNetworkCIDR`. | Địa chỉ IP trên máy ảo bootstrap – nơi các dịch vụ cung cấp (provisioning services) chạy trong khi chương trình cài đặt triển khai các nút mặt phẳng điều khiển (control plane nodes). Theo mặc định, đây là địa chỉ IP thứ hai trong mạng con cung cấp (provisioning subnet). Ví dụ: `172.22.0.2` hoặc `2620:52:0:1307::2`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `bootstrapProvisioningIP`                                                  | Địa chỉ IP thứ hai của `provisioningNetworkCIDR`. | Địa chỉ IP trên máy ảo bootstrap – nơi các dịch vụ cung cấp (provisioning services) chạy trong khi chương trình cài đặt triển khai các nút control plane. Theo mặc định, đây là địa chỉ IP thứ hai trong mạng con cung cấp (provisioning subnet). Ví dụ: `172.22.0.2` hoặc `2620:52:0:1307::2`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `externalBridge`                                                           | `baremetal`                                       | Tên của cầu nối (bridge) trên nền tảng phần cứng vật lý (bare metal) của hypervisor, được kết nối với mạng dành cho các thiết bị phần cứng vật lý.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `provisioningBridge`                                                       | `provisioning`                                    | Tên của cầu nối cấp phát (provisioning bridge) trên máy chủ `provisioner`, được kết nối với mạng cấp phát (provisioning network).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `architecture`                                                             |                                                   | Xác định kiến trúc máy chủ cho cụm của bạn. Các giá trị hợp lệ là `amd64` hoặc `arm64`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
@@ -12761,7 +12761,7 @@ Tham số `hosts` là danh sách các tài nguyên phần cứng vật lý (bare
 ##### III.3.15.2. Định địa chỉ BMC
 Intelligent Platform Management Interface (IPMI) và giao thức khởi động qua mạng Redfish là hai phương thức phổ biến để định địa chỉ cho Baseboard Management Controller (BMC).
 
-> **Lưu ý:** Để triển khai các cụm (cluster) với mặt phẳng điều khiển (control plane) được ảo hóa chạy trên các máy ảo (VM) OpenShift Virtualization thay vì trên các máy chủ vật lý, bạn có thể sử dụng KubeVirt Redfish để hiển thị các máy ảo này dưới dạng các điểm cuối (endpoint) Redfish. Bạn có thể áp dụng phương pháp này để triển khai các mặt phẳng điều khiển ảo hóa với cơ sở hạ tầng do trình cài đặt cung cấp (installer-provisioned infrastructure). Xem phần "Tìm hiểu về các mặt phẳng điều khiển ảo hóa" để biết thêm thông tin.
+> **Lưu ý:** Để triển khai các cụm (cluster) với control plane được ảo hóa chạy trên các máy ảo (VM) OpenShift Virtualization thay vì trên các máy chủ vật lý, bạn có thể sử dụng KubeVirt Redfish để hiển thị các máy ảo này dưới dạng các điểm cuối (endpoint) Redfish. Bạn có thể áp dụng phương pháp này để triển khai các mặt phẳng điều khiển ảo hóa với cơ sở hạ tầng do trình cài đặt cung cấp (installer-provisioned infrastructure). Xem phần "Tìm hiểu về các mặt phẳng điều khiển ảo hóa" để biết thêm thông tin.
 
 Hầu hết các nhà cung cấp đều hỗ trợ định địa chỉ Baseboard Management Controller (BMC) thông qua Intelligent Platform Management Interface (IPMI). IPMI không mã hóa dữ liệu truyền tải, do đó chỉ phù hợp để sử dụng trong trung tâm dữ liệu trên một mạng quản lý chuyên dụng hoặc mạng đã được bảo mật. Hãy kiểm tra với nhà cung cấp của bạn xem họ có hỗ trợ khởi động qua mạng bằng Redfish hay không.
 
@@ -13506,7 +13506,7 @@ Thay thế các giá trị `<nic1_name>`, `<ip_address>`, `<dns_ip_address>`, `<
 > **Quan trọng:** Sau khi triển khai cụm (cluster), bạn không thể sửa đổi thiết lập `networkConfig` trong tệp `install-config.yaml` để thay đổi cấu hình giao diện mạng của host. Hãy sử dụng Kubernetes NMState Operator để thực hiện các thay đổi đối với giao diện mạng của host sau khi đã triển khai.
 
 ##### III.3.15.13. Cấu hình các giao diện mạng máy chủ cho các mạng con (subnet)
-Đối với các kịch bản điện toán biên (edge computing), việc đặt các nút tính toán (compute node) gần biên hơn có thể mang lại nhiều lợi ích. Để đặt các nút từ xa (remote node) vào các mạng con, bạn có thể sử dụng các phân đoạn mạng hoặc mạng con khác biệt so với mạng con dành cho mặt phẳng điều khiển (control plane) và các nút tính toán cục bộ.
+Đối với các kịch bản điện toán biên (edge computing), việc đặt các nút tính toán (compute node) gần biên hơn có thể mang lại nhiều lợi ích. Để đặt các nút từ xa (remote node) vào các mạng con, bạn có thể sử dụng các phân đoạn mạng hoặc mạng con khác biệt so với mạng con dành cho control plane và các nút tính toán cục bộ.
 
 Việc thiết lập các mạng con cho các kịch bản điện toán biên giúp giảm độ trễ tại biên và tăng cường khả năng mở rộng.
 
@@ -13830,7 +13830,7 @@ WARNING Discarding the OpenShift Manifest that was provided in the target direct
 ```
 
 ##### III.3.16.2. Cấu hình NTP cho các cụm không kết nối mạng
-Bạn có thể cấu hình các máy chủ NTP trên các nút mặt phẳng điều khiển (control plane nodes) và thiết lập các nút tính toán (compute nodes) làm máy khách NTP (NTP clients) để đảm bảo đồng bộ hóa thời gian trong các cụm không kết nối mạng — nơi không thể truy cập vào các máy chủ NTP bên ngoài.
+Bạn có thể cấu hình các máy chủ NTP trên các nút control plane và thiết lập các nút tính toán (compute nodes) làm máy khách NTP (NTP clients) để đảm bảo đồng bộ hóa thời gian trong các cụm không kết nối mạng — nơi không thể truy cập vào các máy chủ NTP bên ngoài.
 
 OpenShift Container Platform cài đặt dịch vụ Giao thức Thời gian Mạng (NTP) có tên là `chrony` trên các nút của cụm.
 
@@ -13953,8 +13953,8 @@ Trong đó:
 $ butane 99-worker-chrony-conf-override.bu -o 99-worker-chrony-conf-override.yaml
 ```
 
-##### III.3.16.3. Cấu hình các thành phần mạng để chạy trên mặt phẳng điều khiển (control plane)
-Bạn có thể cấu hình các thành phần mạng để chỉ chạy trên các nút thuộc mặt phẳng điều khiển (control plane nodes).
+##### III.3.16.3. Cấu hình các thành phần mạng để chạy trên control plane
+Bạn có thể cấu hình các thành phần mạng để chỉ chạy trên các nút thuộc control plane.
 
 Theo mặc định, OpenShift Container Platform cho phép bất kỳ nút nào trong nhóm cấu hình máy (machine config pool) lưu trữ địa chỉ IP ảo `ingressVIP`. Tuy nhiên, trong một số môi trường, các nút tính toán (compute nodes) được triển khai trên các mạng con (subnet) tách biệt với các nút thuộc mặt phẳng điều khiển; điều này đòi hỏi phải cấu hình để địa chỉ IP ảo `ingressVIP` chỉ chạy trên các nút thuộc mặt phẳng điều khiển.
 
@@ -14003,7 +14003,7 @@ spec:
             source: data:,
 ```
 
-Tệp manifest này đặt địa chỉ IP ảo (virtual IP - VIP) ingressVIP lên các nút mặt phẳng điều khiển (control plane nodes). Ngoài ra, tệp manifest này còn triển khai các tiến trình sau đây, chỉ trên các nút mặt phẳng điều khiển:
+Tệp manifest này đặt địa chỉ IP ảo (virtual IP - VIP) ingressVIP lên các nút control plane. Ngoài ra, tệp manifest này còn triển khai các tiến trình sau đây, chỉ trên các nút mặt phẳng điều khiển:
 
   * `openshift-ingress-operator`
   * `keepalived`
@@ -14031,7 +14031,7 @@ spec:
 $ sed -i "s;mastersSchedulable: false;mastersSchedulable: true;g" clusterconfigs/manifests/cluster-scheduler-02-config.yml
 ```
 
-> **Lưu ý:** Nếu các nút mặt phẳng điều khiển (control plane nodes) không thể lập lịch sau khi hoàn tất quy trình này, việc triển khai cụm sẽ thất bại.
+> **Lưu ý:** Nếu các nút control plane không thể lập lịch sau khi hoàn tất quy trình này, việc triển khai cụm sẽ thất bại.
 
 ##### III.3.16.4. Triển khai các bộ định tuyến (router) trên các nút tính toán (compute node)
 Để xử lý lưu lượng truy cập bên ngoài cho các dịch vụ trong cụm OpenShift Container Platform của bạn, hãy tạo một tệp YAML thiết lập số lượng bản sao (replica) bộ định tuyến phù hợp.
@@ -14040,7 +14040,7 @@ Trong quá trình cài đặt, chương trình cài đặt sẽ triển khai cá
 
 > **Quan trọng:** Việc triển khai một cụm chỉ với một nút tính toán không được hỗ trợ. Mặc dù việc điều chỉnh số lượng bản sao bộ định tuyến có thể giải quyết các vấn đề liên quan đến trạng thái suy giảm (degraded state) khi triển khai với một nút tính toán duy nhất, nhưng cụm đó sẽ mất khả năng sẵn sàng cao (high availability) đối với API truy cập vào (ingress API), điều này không phù hợp cho các môi trường sản xuất.
 
-> **Lưu ý:** Theo mặc định, chương trình cài đặt sẽ triển khai hai bộ định tuyến. Nếu cụm không có nút tính toán nào, chương trình cài đặt sẽ triển khai hai bộ định tuyến đó trên các nút mặt phẳng điều khiển (control plane node).
+> **Lưu ý:** Theo mặc định, chương trình cài đặt sẽ triển khai hai bộ định tuyến. Nếu cụm không có nút tính toán nào, chương trình cài đặt sẽ triển khai hai bộ định tuyến đó trên các nút control plane.
 
 **Quy trình**
 
@@ -14663,7 +14663,7 @@ $ ssh core@172.22.0.2
 $ sudo podman logs -f <container_name>
 ```
 
-Thay thế `<container_name>` bằng một trong các giá trị: ironic hoặc ironic-inspector. Nếu bạn gặp sự cố trong đó các nút (node) thuộc mặt phẳng điều khiển (control plane) không khởi động được qua PXE, hãy kiểm tra pod ironic. Pod này chứa thông tin về quá trình khởi động các nút trong cụm (cluster), vì nó thực hiện thao tác đăng nhập vào các nút đó thông qua IPMI.
+Thay thế `<container_name>` bằng một trong các giá trị: ironic hoặc ironic-inspector. Nếu bạn gặp sự cố trong đó các nút (node) thuộc control plane không khởi động được qua PXE, hãy kiểm tra pod ironic. Pod này chứa thông tin về quá trình khởi động các nút trong cụm (cluster), vì nó thực hiện thao tác đăng nhập vào các nút đó thông qua IPMI.
 
 **Kết quả**
 
@@ -14731,7 +14731,7 @@ $ sudo podman logs ironic
 ```
 
 #### III.5.4. Điều tra tình trạng Kubernetes API không khả dụng
-Khi Kubernetes API không khả dụng, hãy kiểm tra các nút (node) trong mặt phẳng điều khiển (control plane) để đảm bảo rằng chúng đang chạy các thành phần cần thiết. Ngoài ra, hãy kiểm tra cơ chế phân giải tên máy chủ (hostname resolution).
+Khi Kubernetes API không khả dụng, hãy kiểm tra các nút (node) trong control plane để đảm bảo rằng chúng đang chạy các thành phần cần thiết. Ngoài ra, hãy kiểm tra cơ chế phân giải tên máy chủ (hostname resolution).
 
 **Quy trình**
 
@@ -15110,7 +15110,7 @@ Quy trình này không áp dụng cho trường hợp cài đặt cụm OpenShif
 
 Ví dụ:
 
-  * Các thiết lập cho nút mặt phẳng điều khiển (control plane node)
+  * Các thiết lập cho nút control plane
 
   ```
   bootMACAddress: 24:6E:96:1B:96:90 # MAC of bootable provisioning NIC
@@ -15159,7 +15159,7 @@ $ oc --kubeconfig=${INSTALL_DIR}/auth/kubeconfig \
 #### III.5.11. Khắc phục sự cố với Cluster Network Operator
 Để khắc phục các sự cố liên quan đến Cluster Network Operator trong quá trình cài đặt, hãy xác minh rằng cấu hình mạng đã tồn tại và đang hoạt động.
 
-Cluster Network Operator triển khai các thành phần mạng từ giai đoạn đầu của quá trình cài đặt — sau khi các nút mặt phẳng điều khiển (control plane nodes) đã khởi chạy, nhưng trước khi chương trình cài đặt loại bỏ mặt phẳng điều khiển khởi động (bootstrap control plane). Các vấn đề phát sinh với Operator này có thể là dấu hiệu cho thấy chương trình cài đặt đang gặp lỗi.
+Cluster Network Operator triển khai các thành phần mạng từ giai đoạn đầu của quá trình cài đặt — sau khi các nút control plane đã khởi chạy, nhưng trước khi chương trình cài đặt loại bỏ mặt phẳng điều khiển khởi động (bootstrap control plane). Các vấn đề phát sinh với Operator này có thể là dấu hiệu cho thấy chương trình cài đặt đang gặp lỗi.
 
 **Quy trình**
 
@@ -15341,7 +15341,7 @@ Sau khi triển khai cụm, bạn có thể gặp phải lỗi sau:
 runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:Network plugin returns error: Missing CNI default network
 ```
 
-Cluster Network Operator chịu trách nhiệm triển khai các thành phần mạng dựa trên một đối tượng đặc biệt được tạo bởi chương trình cài đặt. Thành phần này hoạt động từ rất sớm trong quá trình cài đặt: sau khi các nút (node) thuộc mặt phẳng điều khiển (control plane) đã khởi chạy, nhưng trước khi mặt phẳng điều khiển khởi động (bootstrap control plane) bị loại bỏ. Những vấn đề liên quan đến thành phần này có thể là dấu hiệu cho thấy các trục trặc tinh vi hơn trong chương trình cài đặt, chẳng hạn như độ trễ kéo dài khi khởi chạy các nút thuộc mặt phẳng điều khiển hoặc các vấn đề trong giao tiếp với `apiserver`.
+Cluster Network Operator chịu trách nhiệm triển khai các thành phần mạng dựa trên một đối tượng đặc biệt được tạo bởi chương trình cài đặt. Thành phần này hoạt động từ rất sớm trong quá trình cài đặt: sau khi các nút (node) thuộc control plane đã khởi chạy, nhưng trước khi mặt phẳng điều khiển khởi động (bootstrap control plane) bị loại bỏ. Những vấn đề liên quan đến thành phần này có thể là dấu hiệu cho thấy các trục trặc tinh vi hơn trong chương trình cài đặt, chẳng hạn như độ trễ kéo dài khi khởi chạy các nút thuộc mặt phẳng điều khiển hoặc các vấn đề trong giao tiếp với `apiserver`.
 
 **Quy trình**
 
@@ -15449,7 +15449,7 @@ id:00:03:00:01:18:db:f2:8c:d5:9f,openshift-master-1,[2620:52:0:1302::6]
 ##### III.5.16.4. Khắc phục lỗi các nút trong cụm (cluster nodes) không nhận được tên máy chủ (hostname) chính xác qua DHCP
 Trong quá trình triển khai IPv6, các nút trong cụm phải nhận được tên máy chủ (hostname) thông qua DHCP. Đôi khi, NetworkManager không gán tên máy chủ ngay lập tức.
 
-Một nút thuộc mặt phẳng điều khiển (control plane node) có thể báo lỗi, chẳng hạn như:
+Một nút thuộc control plane có thể báo lỗi, chẳng hạn như:
 
 ```
 Failed Units: 2
@@ -15469,7 +15469,7 @@ Lỗi này cho thấy nút (node) trong cụm có khả năng đã khởi độn
 
 Nếu tên máy chủ (hostname) là `localhost`, hãy thực hiện các bước sau:
 
-> Lưu ý: Trong đó X là số thứ tự của nút mặt phẳng điều khiển (control plane node).
+> Lưu ý: Trong đó X là số thứ tự của nút control plane.
 
 2. Buộc nút cụm (cluster node) gia hạn thuê DHCP bằng cách chạy lệnh sau:
 
@@ -15546,7 +15546,7 @@ Trong quá trình cài đặt, có thể xảy ra xung đột Giao thức dự p
 
 Xung đột này xảy ra khi một nút (node) OpenShift Container Platform đang hoạt động từ một lần triển khai cũ vẫn sử dụng tên cụm (cluster name) hiện tại của bạn, mặc dù nút đó không thực sự thuộc về lần triển khai mới.
 
-Ví dụ: một cụm được triển khai với tên là `openshift`, bao gồm ba nút mặt phẳng điều khiển (control plane node) và ba nút worker (worker node). Sau đó, một quá trình cài đặt khác lại sử dụng cùng tên cụm là `openshift`, nhưng lần triển khai này chỉ thiết lập ba nút mặt phẳng điều khiển, khiến ba nút worker từ lần triển khai trước vẫn ở trạng thái đang hoạt động (ON). Điều này có thể dẫn đến xung đột Định danh bộ định tuyến ảo (Virtual Router Identifier - VRID) và xung đột VRRP.
+Ví dụ: một cụm được triển khai với tên là `openshift`, bao gồm ba nút control plane và ba nút worker (worker node). Sau đó, một quá trình cài đặt khác lại sử dụng cùng tên cụm là `openshift`, nhưng lần triển khai này chỉ thiết lập ba nút mặt phẳng điều khiển, khiến ba nút worker từ lần triển khai trước vẫn ở trạng thái đang hoạt động (ON). Điều này có thể dẫn đến xung đột Định danh bộ định tuyến ảo (Virtual Router Identifier - VRID) và xung đột VRRP.
 
 **Quy trình**
 
@@ -15569,7 +15569,7 @@ NAME              TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
 oauth-openshift   ClusterIP   172.30.19.162   <none>        443/TCP   59m
 ```
 
-3. Hãy thử truy cập dịch vụ từ một nút mặt phẳng điều khiển (control plane node) bằng cách chạy lệnh sau:
+3. Hãy thử truy cập dịch vụ từ một nút control plane bằng cách chạy lệnh sau:
 
 ```shell
 [core@master0 ~]$ curl -k https://172.30.19.162
@@ -15680,7 +15680,7 @@ System clock synchronized: no
 
 4. Khắc phục tình trạng sai lệch đồng hồ (clock drift) tùy theo giai đoạn triển khai của bạn:
   * Xử lý đồng bộ hóa đồng hồ trong trường hợp xảy ra sai lệch trên một cụm (cluster) hiện có:
-    * Tạo một tệp cấu hình Butane bao gồm nội dung của tệp `chrony.conf` để phân phối đến các nút (node). Trong ví dụ dưới đây, hãy tạo tệp `99-master-chrony.bu` để thêm tệp này vào các nút thuộc mặt phẳng điều khiển (control plane nodes). Bạn có thể sửa đổi tệp này cho các nút tính toán (compute nodes) hoặc lặp lại quy trình tương tự cho vai trò nút tính toán.
+    * Tạo một tệp cấu hình Butane bao gồm nội dung của tệp `chrony.conf` để phân phối đến các nút (node). Trong ví dụ dưới đây, hãy tạo tệp `99-master-chrony.bu` để thêm tệp này vào các nút thuộc control plane. Bạn có thể sửa đổi tệp này cho các nút tính toán (compute nodes) hoặc lặp lại quy trình tương tự cho vai trò nút tính toán.
 
     ```yaml
     variant: openshift
@@ -15777,3 +15777,411 @@ master-2.example.com   Ready    master,worker   4h   v1.35.4
 ```shell
 $ oc get pods --all-namespaces | grep -iv running | grep -iv complete
 ```
+
+## 4. Cấu hình sau cài đặt
+Sau khi triển khai thành công cụm máy chủ vật lý (bare-metal cluster), bạn có thể thực hiện các quy trình sau cài đặt như cấu hình NTP, kích hoạt mạng cung cấp (provisioning network) và thiết lập bộ cân bằng tải do người dùng quản lý. Việc tùy chỉnh cụm máy chủ sẽ giúp bạn chuẩn bị hệ thống cho các khối lượng công việc cụ thể và các yêu cầu triển khai đặc thù.
+
+### 4.1. Giới thiệu về Cluster API
+OpenShift Container Platform phiên bản 4.19 trở về sau có thể quản lý các máy (machine) thông qua Cluster API.
+
+> **Quan trọng:** Việc quản lý các máy bằng Cluster API hiện chỉ là tính năng ở giai đoạn "Xem trước công nghệ" (Technology Preview). Các tính năng này không nằm trong phạm vi hỗ trợ theo các thỏa thuận cấp độ dịch vụ (SLA) dành cho môi trường sản xuất của Red Hat và có thể chưa hoàn thiện về mặt chức năng. Red Hat khuyến cáo không nên sử dụng các tính năng này trong môi trường sản xuất. Những tính năng này cung cấp quyền truy cập sớm vào các chức năng sắp ra mắt, cho phép khách hàng thử nghiệm và đóng góp phản hồi trong suốt quá trình phát triển.  
+> Để biết thêm thông tin về phạm vi hỗ trợ đối với các tính năng "Xem trước công nghệ" của Red Hat, vui lòng tham khảo mục [Technology Preview Features Support Scope](https://access.redhat.com/support/offerings/techpreview/).
+
+Bạn có thể sử dụng Cluster API để thực hiện các thao tác quản lý và cung cấp tài nguyên cho các nút tính toán (compute node) sau khi quá trình cài đặt cụm (cluster) hoàn tất. Cluster API cho phép quản lý linh hoạt các tập hợp máy (machine set) và các máy (machine) đóng vai trò là nút tính toán. Tuy nhiên, tính năng này không hỗ trợ quản lý các máy thuộc control plane.
+
+### 4.2. Cấu hình NTP cho các cụm không kết nối mạng ngoài
+Bạn có thể cấu hình các máy chủ NTP trên các nút control plane và thiết lập các nút tính toán (compute nodes) làm máy khách NTP để đảm bảo đồng bộ hóa thời gian trong các cụm không có kết nối với các máy chủ NTP bên ngoài.
+
+OpenShift Container Platform cài đặt dịch vụ Giao thức Thời gian Mạng (NTP) có tên là `chrony` trên các nút của cụm. Hãy thực hiện quy trình dưới đây để cấu hình các máy chủ NTP trên các nút mặt phẳng điều khiển, đồng thời thiết lập các nút tính toán làm máy khách NTP của các nút mặt phẳng điều khiển đó sau khi quá trình triển khai hoàn tất.
+
+**Hình 4.1. Cấu hình NTP cho các cụm không kết nối mạng ngoài**  
+![Hình 4.1](img/152_OpenShift_Config_NTP_0421.png)
+
+Các nút (node) trong OpenShift Container Platform cần thống nhất về ngày giờ để có thể vận hành đúng cách. Khi các nút tính toán (compute node) lấy thông tin ngày giờ từ các máy chủ NTP trên các nút điều khiển (control node), điều này cho phép thiết lập và vận hành các cụm (cluster) không kết nối với mạng có định tuyến — và do đó không thể truy cập vào các máy chủ NTP ở tầng cao hơn (stratum cao hơn).
+
+**Quy trình**
+
+1. Cài đặt Butane trên máy chủ cài đặt (installation host) của bạn bằng cách sử dụng lệnh sau:
+
+```shell
+$ sudo dnf -y install butane
+```
+
+2. Tạo một cấu hình Butane có tên `99-master-chrony-conf-override.bu`, bao gồm nội dung của tệp `chrony.conf` dành cho các nút control plane.
+
+```yaml
+variant: openshift
+version: 4.22.0
+metadata:
+  name: 99-master-chrony-conf-override
+  labels:
+    machineconfiguration.openshift.io/role: master
+storage:
+  files:
+    - path: /etc/chrony.conf
+      mode: 0644
+      overwrite: true
+      contents:
+        inline: |
+          # Use public servers from the pool.ntp.org project.
+          # Please consider joining the pool (https://www.pool.ntp.org/join.html).
+
+          # The Machine Config Operator manages this file
+          server openshift-master-0.<cluster-name>.<domain> iburst
+          server openshift-master-1.<cluster-name>.<domain> iburst
+          server openshift-master-2.<cluster-name>.<domain> iburst
+
+          stratumweight 0
+          driftfile /var/lib/chrony/drift
+          rtcsync
+          makestep 10 3
+          bindcmdaddress 127.0.0.1
+          bindcmdaddress ::1
+          keyfile /etc/chrony.keys
+          commandkey 1
+          generatecommandkey
+          noclientlog
+          logchange 0.5
+          logdir /var/log/chrony
+
+          # Configure the control plane nodes to serve as local NTP servers
+          # for all compute nodes, even if they are not in sync with an
+          # upstream NTP server.
+
+          # Allow NTP client access from the local network.
+          allow all
+          # Serve time even if not synchronized to a time source.
+          local stratum 3 orphan
+```
+
+Trong đó:
+
+  * `<cluster-name>`: Chỉ định tên của cụm (cluster).
+  * `<domain>`: Chỉ định tên miền đầy đủ (fully qualified domain name).
+
+3. Sử dụng Butane để tạo tệp đối tượng MachineConfig có tên `99-master-chrony-conf-override.yaml`, chứa cấu hình sẽ được chuyển đến các nút control plane:
+
+```shell
+$ butane 99-master-chrony-conf-override.bu -o 99-master-chrony-conf-override.yaml
+```
+
+4. Tạo một cấu hình Butane có tên `99-worker-chrony-conf-override.bu`, bao gồm nội dung của tệp `chrony.conf` dành cho các nút tính toán (compute nodes), trong đó tham chiếu đến các máy chủ NTP trên các nút điều khiển (control plane nodes).
+
+```yaml
+variant: openshift
+version: 4.22.0
+metadata:
+  name: 99-worker-chrony-conf-override
+  labels:
+    machineconfiguration.openshift.io/role: worker
+storage:
+  files:
+    - path: /etc/chrony.conf
+      mode: 0644
+      overwrite: true
+      contents:
+        inline: |
+          # The Machine Config Operator manages this file.
+          server openshift-master-0.<cluster-name>.<domain> iburst
+          server openshift-master-1.<cluster-name>.<domain> iburst
+          server openshift-master-2.<cluster-name>.<domain> iburst
+
+          stratumweight 0
+          driftfile /var/lib/chrony/drift
+          rtcsync
+          makestep 10 3
+          bindcmdaddress 127.0.0.1
+          bindcmdaddress ::1
+          keyfile /etc/chrony.keys
+          commandkey 1
+          generatecommandkey
+          noclientlog
+          logchange 0.5
+          logdir /var/log/chrony
+```
+
+Trong đó:
+
+  * `<cluster-name>`: Chỉ định tên của cụm (cluster).
+  * `<domain>`: Chỉ định tên miền đầy đủ (fully qualified domain name).
+
+5. Sử dụng Butane để tạo tệp đối tượng MachineConfig có tên 99-worker-chrony-conf-override.yaml, chứa cấu hình sẽ được chuyển đến các nút worker:
+
+```shell
+$ butane 99-worker-chrony-conf-override.bu -o 99-worker-chrony-conf-override.yaml
+```
+
+6. Áp dụng chính sách `99-master-chrony-conf-override.yaml` cho các nút control plane.
+
+```shell
+$ oc apply -f 99-master-chrony-conf-override.yaml
+```
+
+Ví dụ đầu ra
+
+```
+machineconfig.machineconfiguration.openshift.io/99-master-chrony-conf-override created
+```
+
+7. Áp dụng chính sách `99-worker-chrony-conf-override.yaml` cho các nút tính toán (compute nodes).
+
+```shell
+$ oc apply -f 99-worker-chrony-conf-override.yaml
+```
+
+Ví dụ đầu ra
+
+```
+machineconfig.machineconfiguration.openshift.io/99-worker-chrony-conf-override created
+```
+
+8. Kiểm tra trạng thái của các thiết lập NTP đã áp dụng.
+
+```shell
+$ oc describe machineconfigpool
+```
+
+### 4.3. Cấu hình chứng chỉ CA cục bộ hoặc tự ký cho Baseboard Management Controller (BMC)
+Bạn có thể cấu hình chứng chỉ CA cục bộ hoặc tự ký cho Baseboard Management Controller (BMC) trên một cụm (cluster) đã có sẵn chứng chỉ CA, hoặc thêm chứng chỉ này vào một cụm được cài đặt mà không có chứng chỉ CA trước đó.
+
+Việc cung cấp chứng chỉ CA cục bộ hoặc tự ký giúp bạn kiểm soát tốt hơn các kênh giao tiếp bảo mật với các BMC trên hệ thống phần cứng vật lý (bare metal).
+
+#### 4.3.1. Thay thế chứng chỉ CA của BMC hiện có
+Bạn có thể thay thế chứng chỉ CA của BMC bằng chứng chỉ CA cục bộ hoặc chứng chỉ CA tự ký của riêng mình bằng cách chỉnh sửa ConfigMap có tên `bmc-verify-ca` trong namespace `openshift-machine-api`. Việc cung cấp chứng chỉ CA riêng giúp bạn kiểm soát các kênh liên lạc bảo mật giữa cụm (cluster) của bạn và các BMC.
+
+**Điều kiện tiên quyết**
+
+* Bạn đã cài đặt một cụm trên nền tảng phần cứng vật lý (bare metal). 
+* Bạn đã cấu hình chứng chỉ CA cho hoạt động liên lạc với BMC trong quá trình cài đặt cụm. 
+* Bạn đã có sẵn một chứng chỉ CA cục bộ hoặc chứng chỉ CA tự ký.
+
+**Quy trình**
+
+1. Chỉnh sửa ConfigMap `bmc-verify-ca` bằng cách chạy lệnh sau:
+
+```shell
+$ oc edit configmap bmc-verify-ca -n openshift-machine-api
+```
+
+2. Hãy thay thế nội dung của phần `verify_ca.crt` bằng chứng chỉ CA cục bộ hoặc chứng chỉ CA tự ký của bạn, như trong ví dụ sau:
+
+```yaml
+apiVersion: v1
+data:
+  verify_ca.crt: |
+    -----BEGIN CERTIFICATE-----
+    <self_signed_certificate_contents>
+    -----END CERTIFICATE-----
+kind: ConfigMap
+```
+
+Trong đó: `<self_signed_certificate_contents>` chỉ định nội dung chứng chỉ CA cục bộ hoặc chứng chỉ CA tự ký của bạn.
+
+#### 4.3.2. Cài đặt chứng chỉ CA BMC mới
+Bạn có thể cài đặt chứng chỉ CA BMC cục bộ hoặc tự ký trên một cụm (cluster) vốn được thiết lập mà không có chứng chỉ CA BMC. Việc cung cấp chứng chỉ CA BMC của riêng bạn giúp bảo mật quá trình giao tiếp giữa cụm của bạn và cụm của BMC.
+
+**Điều kiện tiên quyết**
+
+* Bạn đã cài đặt một cụm trên nền tảng phần cứng vật lý (bare metal) mà không có chứng chỉ CA BMC. 
+* Bạn đã có sẵn một chứng chỉ CA cục bộ hoặc chứng chỉ CA tự ký.
+
+**Quy trình**
+
+1. Sử dụng trình soạn thảo văn bản để tạo một tệp có tên là `bmc-verify-ca.yaml` với nội dung như sau:
+
+```yaml
+apiVersion: v1
+data:
+  verify_ca.crt: |
+    -----BEGIN CERTIFICATE-----
+    <self_signed_certificate_contents>
+    -----END CERTIFICATE-----
+kind: ConfigMap
+metadata:
+  name: bmc-verify-ca
+  namespace: openshift-machine-api
+```
+
+Trong đó: `<self_signed_certificate_contents>` chỉ định nội dung chứng chỉ CA cục bộ hoặc chứng chỉ CA tự ký của bạn.
+
+2. Áp dụng `ConfigMap` bằng cách chạy lệnh sau:
+
+```shell
+$ oc apply -f bmc-verify-ca.yaml
+```
+
+3. Hãy xác minh rằng `ConfigMap` đã được gắn vào container Ironic bằng cách chạy lệnh sau:
+
+```shell
+$ oc exec -n openshift-machine-api \
+  $(oc get pods -n openshift-machine-api -l app=metal3 -o jsonpath='{.items[0].metadata.name}') \
+  -c metal3-ironic -- ls -l /certs/ca/bmc
+```
+
+Nếu thành công, lệnh này sẽ hiển thị tệp chứng chỉ.
+
+4. Đối với mỗi máy chủ vật lý (bare metal host) trong cụm mà bạn muốn bảo mật các kết nối BMC, hãy thực hiện theo quy trình có tiêu đề "Chỉnh sửa tài nguyên BareMetalHost" (Editing a BareMetalHost resource) và đảm bảo rằng tham số `disableCertificateVerification` được đặt thành `false`.
+
+### 4.4. Kích hoạt mạng cung cấp (provisioning network) sau khi cài đặt
+Bạn có thể kích hoạt mạng cung cấp (provisioning network) sau khi cài đặt bằng cách sử dụng Cluster Baremetal Operator (CBO) đối với các cụm máy chủ vật lý (bare-metal cluster) vốn được triển khai mà không có mạng này.
+
+Tính năng này hữu ích cho các cụm được triển khai ban đầu dưới dạng mô hình thử nghiệm (proof-of-concept) hoặc chỉ sử dụng phương thức "virtual media" thông qua giao thức Redfish, trong đó bộ điều khiển quản lý bo mạch chủ (baseboard management controller - BMC) của mỗi nút có thể truy cập được thông qua mạng dành cho máy chủ vật lý (bare-metal network).
+
+**Điều kiện tiên quyết**
+
+* Phải có một mạng vật lý chuyên dụng, được kết nối với tất cả các nút worker và nút control plane. 
+* Bạn phải tách biệt mạng vật lý gốc (native network) không gắn thẻ (untagged). 
+* Mạng này không được phép có máy chủ DHCP khi thiết lập cấu hình `provisioningNetwork` được đặt là `Managed`. 
+* Trong OpenShift Container Platform 4.10, bạn có thể bỏ qua thiết lập `provisioningInterface` và sử dụng thiết lập cấu hình `bootMACAddress` thay thế.
+
+**Quy trình**
+
+1. Khi thiết lập cấu hình `provisioningInterface`, trước tiên hãy xác định tên giao diện mạng cung cấp (provisioning interface) cho các nút trong cụm. Ví dụ: `eth0` hoặc `eno1`. 
+2. Kích hoạt môi trường thực thi trước khi khởi động (Preboot eXecution Environment - PXE) trên giao diện mạng cung cấp của các nút trong cụm. 
+3. Truy xuất trạng thái hiện tại của mạng cung cấp và lưu vào một tệp tài nguyên tùy chỉnh (Custom Resource - CR) dành cho mạng cung cấp:
+
+```shell
+$ oc get provisioning -o yaml > enable-provisioning-nw.yaml
+```
+
+3. Chỉnh sửa tệp CR `enable-provisioning-nw.yaml`:
+
+```shell
+$ vim ~/enable-provisioning-nw.yaml
+```
+
+Cuộn xuống thiết lập cấu hình `provisioningNetwork` và thay đổi giá trị từ `Disabled` thành `Managed`. Sau đó, thêm các thiết lập cấu hình `provisioningIP`, `provisioningNetworkCIDR`, `provisioningDHCPRange`, `provisioningInterface` và `watchAllNameSpaces` vào ngay sau thiết lập `provisioningNetwork`. Hãy cung cấp các giá trị phù hợp cho từng thiết lập này.
+
+```yaml
+apiVersion: v1
+items:
+- apiVersion: metal3.io/v1alpha1
+  kind: Provisioning
+  metadata:
+    name: provisioning-configuration
+  spec:
+    provisioningNetwork:
+    provisioningIP:
+    provisioningNetworkCIDR:
+    provisioningDHCPRange:
+    provisioningInterface:
+    watchAllNameSpaces:
+```
+
+Trong đó:
+
+* `items.spec.provisioningNetwork:` Xác định loại mạng cung cấp (provisioning network): `Managed` (được quản lý), `Unmanaged` (không được quản lý) hoặc `Disabled` (bị vô hiệu hóa). Khi được đặt là `Managed`, Metal3 sẽ quản lý mạng cung cấp và CBO sẽ triển khai pod Metal3 cùng với một máy chủ DHCP được cấu hình sẵn. Khi được đặt là `Unmanaged`, quản trị viên hệ thống sẽ tự cấu hình máy chủ DHCP theo cách thủ công.
+* `items.spec.provisioningIP:` Xác định địa chỉ IP tĩnh mà máy chủ DHCP và Ironic sử dụng để cung cấp mạng. Địa chỉ IP tĩnh này phải nằm trong mạng con (subnet) cung cấp và nằm ngoài phạm vi (dải) địa chỉ của DHCP. Nếu bạn cấu hình thiết lập này, nó phải là một địa chỉ IP hợp lệ, ngay cả khi mạng cung cấp đang ở trạng thái `Disabled`. Địa chỉ IP tĩnh này được gắn với pod Metal3. Nếu pod Metal3 gặp lỗi và chuyển sang một máy chủ khác, địa chỉ IP tĩnh đó cũng sẽ chuyển theo sang máy chủ mới.
+* `items.spec.provisioningNetworkCIDR:` Xác định địa chỉ theo định dạng CIDR (Classless Inter-Domain Routing). Nếu bạn cấu hình thiết lập này, nó phải là một địa chỉ CIDR hợp lệ, ngay cả khi mạng cung cấp đang ở trạng thái `Disabled`. Ví dụ: `192.168.0.1/24`.
+* `items.spec.provisioningDHCPRange:` Xác định phạm vi (dải) địa chỉ DHCP. Thiết lập này chỉ áp dụng cho mạng cung cấp ở chế độ `Managed`. Hãy bỏ qua thiết lập cấu hình này nếu mạng cung cấp đang ở trạng thái `Disabled`. Ví dụ: `192.168.0.64`, `192.168.0.253`.
+* `items.spec.provisioningInterface:` Xác định tên của card mạng (NIC) được sử dụng làm giao diện cung cấp trên các nút (node) của cụm (cluster). Thiết lập `provisioningInterface` chỉ áp dụng cho các mạng cung cấp ở chế độ `Managed` hoặc `Unmanaged`. Hãy bỏ qua thiết lập cấu hình `provisioningInterface` nếu mạng cung cấp đang ở trạng thái `Disabled`. Bạn cũng có thể bỏ qua thiết lập này để sử dụng cấu hình `bootMACAddress` thay thế.
+* `items.spec.watchAllNameSpaces`: Xác định xem Metal3 có theo dõi (watch) các namespace khác ngoài namespace mặc định là `openshift-machine-api` hay không. Đặt là true để theo dõi tất cả các namespace. Giá trị mặc định là `false`.
+
+5. Lưu các thay đổi vào tệp CR (Custom Resource) `enable-provisioning-nw.yaml`.
+6. Áp dụng tệp CR cấp phát vào cụm:
+
+```shell
+$ oc apply -f enable-provisioning-nw.yaml
+```
+
+### 4.5. Tạo đối tượng manifest bao gồm cầu nối br-ex tùy chỉnh
+Sử dụng cấu hình cầu nối OVS `br-ex` mặc định cho các môi trường tiêu chuẩn. Cấu hình này áp dụng khi bạn có một bộ điều khiển giao diện mạng (NIC) duy nhất và các thiết lập OVS tiêu chuẩn.
+
+Theo mặc định, OpenShift Container Platform sẽ tự động cấu hình cầu nối Open vSwitch (OVS) `br-ex` trên các nút (node) chạy trên phần cứng vật lý (bare-metal). Đối với các yêu cầu mạng nâng cao, bạn có thể ghi đè hành vi mặc định này trên các nền tảng bare-metal. Để thực hiện, hãy tạo một tài nguyên tùy chỉnh (Custom Resource - CR) có tên là `NodeNetworkConfigurationPolicy` (NNCP), trong đó bao gồm một tệp cấu hình NMState.
+
+Kubernetes NMState Operator sử dụng tệp cấu hình NMState để tạo cấu hình mạng cho cầu nối `br-ex` tùy chỉnh. Cấu hình này sẽ được áp dụng cho từng nút trong cụm (cluster) của bạn.
+
+> **Quan trọng:** Sau khi tạo CR `NodeNetworkConfigurationPolicy`, hãy sao chép nội dung từ tệp cấu hình NMState dùng cho cài đặt vào CR NNCP này. Một CR NNCP không đầy đủ có thể dẫn đến mất kết nối mạng, vì NNCP sẽ ghi đè lên tất cả các chính sách hiện có.
+
+Hãy cân nhắc sử dụng cấu hình cầu nối `br-ex` tùy chỉnh cho các trường hợp sau:
+
+* Bạn cần sửa đổi cầu nối `br-ex` sau khi đã cài đặt cụm. 
+* Bạn cần sửa đổi đơn vị truyền tải tối đa (MTU) cho cụm của mình. 
+* Bạn cần cập nhật các giá trị DNS. 
+* Bạn cần sửa đổi các thuộc tính cho một giao diện liên kết (bond interface) khác, chẳng hạn như MIImon (Media Independent Interface Monitor), chế độ liên kết (bonding mode), hoặc Chất lượng dịch vụ (QoS). 
+* Bạn cần bật Giao thức khám phá lớp liên kết (Link Layer Discovery Protocol - LLDP) để phát hiện và khắc phục sự cố kết nối với thiết bị chuyển mạch (switch).
+
+> **Cảnh báo:** Các tên giao diện trong danh sách dưới đây là các tên dành riêng; bạn không được sử dụng chúng trong các cấu hình NMState:  
+> `br-ext`, `br-int`, `br-local`, `br-nexthop`, `br0`, `ext-vxlan`, `ext`, `genev_sys_*`, `int`, `k8s-*`, `ovn-k8s-*`, `patch-br-*`, `tun0`, `vxlan_sys_*`
+
+**Điều kiện tiên quyết**
+
+* Bạn đã cài đặt Kubernetes NMState Operator. 
+* Bạn đã xác định các nút (node) cụ thể mà bạn muốn áp dụng chính sách.
+
+**Quy trình**
+
+* Tạo một đối tượng tùy chỉnh (CR) NodeNetworkConfigurationPolicy (NNCP) và xác định cấu hình mạng cho cầu nối (bridge) `br-ex` tùy chỉnh. NNCP CR cho `br-ex` phải bao gồm địa chỉ IP masquerade của OVN-Kubernetes cùng với mạng con (subnet) tương ứng. Ví dụ về NNCP CR bao gồm các giá trị mặc định trong các tham số `ipv4.address.ip` và `ipv6.address.ip`. Bạn có thể thiết lập địa chỉ IP masquerade trong tham số `ipv4.address.ip`, `ipv6.address.ip` hoặc cả hai. 
+
+> **Quan trọng:** Sau khi hoàn tất cài đặt, bạn không thể thay đổi địa chỉ IP chính của cầu nối `br-ex` đã tùy chỉnh. Nếu muốn chuyển đổi mạng cụm (cluster network) từ đơn ngăn xếp (single-stack) sang ngăn xếp kép (dual-stack), bạn có thể thêm hoặc thay đổi địa chỉ IPv6 phụ trong NNCP CR, nhưng địa chỉ IP chính hiện tại thì không thể thay đổi.
+
+```yaml
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: worker-0-br-ex
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: worker-0
+  desiredState:
+    interfaces:
+    - name: enp2s0
+      type: ethernet
+      state: up
+      mtu: 9000
+      ipv4:
+        enabled: false
+      ipv6:
+        enabled: false
+    - name: br-ex
+      type: ovs-bridge
+      state: up
+      ipv4:
+        enabled: false
+        dhcp: false
+      ipv6:
+        enabled: false
+        dhcp: false
+      bridge:
+        options:
+          mcast-snooping-enable: true
+        port:
+        - name: enp2s0
+        - name: br-ex
+    - name: br-ex
+      type: ovs-interface
+      state: up
+      copy-mac-from: enp2s0
+      mtu: 9000
+      ipv4:
+        enabled: true
+        dhcp: true
+        auto-route-metric: 48
+        address:
+        - ip: "169.254.0.2"
+          prefix-length: 17
+      ipv6:
+        enabled: true
+        dhcp: true
+        auto-route-metric: 48
+        address:
+        - ip: "fd69::2"
+        prefix-length: 112
+# ...
+```
+
+Trong đó:
+
+* `metadata.name`: Xác định tên của chính sách (policy). 
+* `interfaces.name`: Xác định tên của giao diện (interface). 
+* `interfaces.type`: Xác định loại giao diện Ethernet. 
+* `interfaces.state`: Xác định trạng thái mong muốn cho giao diện sau khi được tạo. 
+* `mtu`: Để đảm bảo tính ổn định và hiệu suất mạng, bạn phải khai báo rõ ràng giá trị MTU trong tệp cấu hình (manifest) cho mỗi giao diện. Không nên dựa vào cơ chế tự động cấu hình MTU. Giá trị MTU được thiết lập trên một cổng cầu nối (bridge port) hoặc giao diện có gắn thẻ VLAN không được vượt quá kích thước khung hình (frame size) tối đa mà phương tiện vật lý kết nối hỗ trợ. Nếu các giá trị này không khớp, dữ liệu có thể bị phân mảnh (packet fragmentation) hoặc gây mất kết nối. 
+* `ipv4.enabled`: Trong ví dụ này, tùy chọn này vô hiệu hóa cả IPv4 và IPv6. 
+* `port.name`: Xác định card mạng (NIC) của nút (node) mà cầu nối (bridge) sẽ được gắn vào. 
+* `address.ip`: Hiển thị các địa chỉ IP IPv4 và IPv6 mặc định. Hãy đảm bảo rằng bạn đã thiết lập các địa chỉ IP IPv4 và IPv6 theo cơ chế masquerade (che giấu địa chỉ) cho mạng của mình. 
+* `auto-route-metric`: Đặt tham số này thành `48` để đảm bảo tuyến đường mặc định (default route) của `br-ex` luôn có mức ưu tiên cao nhất (giá trị metric thấp nhất). Cấu hình này giúp ngăn ngừa xung đột định tuyến với bất kỳ giao diện nào khác được dịch vụ `NetworkManager` tự động cấu hình.
+
+**Các bước tiếp theo**
+
+* Mở rộng quy mô các nút tính toán (compute nodes) bằng cách áp dụng đối tượng manifest (chứa cấu hình cầu nối `br-ex` tùy chỉnh) cho từng nút tính toán hiện có trong cụm (cluster) của bạn. Để biết thêm thông tin, hãy xem phần "Mở rộng cụm" (Expanding the cluster) trong mục Tài nguyên bổ sung.
